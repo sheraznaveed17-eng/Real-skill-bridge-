@@ -40,14 +40,23 @@ function App() {
       setGigs([]);
       return;
     }
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(async ({ data }) => {
       setSession(data.session);
-      if (data.session) loadProfile(data.session.user);
+      if (data.session) {
+        await loadProfile(data.session.user);
+        setPage("dashboard");
+      }
     });
     const { data: listener } = supabase.auth.onAuthStateChange((_event, next) => {
       setSession(next);
-      if (next?.user) loadProfile(next.user);
-      else { setProfile(null); setOrders([]); }
+      if (next?.user) {
+        loadProfile(next.user);
+        if (_event === "SIGNED_IN") setPage("dashboard");
+      } else {
+        setProfile(null);
+        setOrders([]);
+        if (_event === "SIGNED_OUT") setPage("home");
+      }
     });
     loadGigs();
     return () => listener.subscription.unsubscribe();
