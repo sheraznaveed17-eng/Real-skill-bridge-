@@ -21,3 +21,14 @@
 .choice-copy small{font-size:12px;line-height:1.55;color:#758091}
 .choice-arrow{color:#159b70;flex:0 0 auto}
 @media(max-width:760px){.choice-section{margin:32px auto 0}.choice-heading h2{font-size:23px}.choice-grid{grid-template-columns:1fr;gap:11px}.choice-card{padding:17px}.choice-copy strong{font-size:16px}}
+
+
+/* Payment method selection and unavailable state */
+.payment-options{display:flex;flex-direction:column;gap:8px;margin:14px 0}
+.payment-group-title{font-size:11px;font-weight:800;color:#667085;text-transform:uppercase;letter-spacing:.6px;margin:8px 0 2px}
+.payment-option{display:flex;align-items:center;justify-content:space-between;width:100%;padding:12px 13px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink);font:600 12px Manrope,sans-serif;text-align:left}
+.payment-option.selected{border-color:#159b70;background:#f0faf6}
+.payment-option strong{font-size:10px;color:#159b70}
+.payment-unavailable{display:flex;flex-direction:column;gap:5px;margin:14px 0;padding:13px;border:1px solid #f1d6a8;background:#fff9ed;border-radius:9px;color:#80530c}
+.payment-unavailable strong{font-size:12px}
+.payment-unavailable span{font-size:11px;line-height:1.5}
