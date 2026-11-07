@@ -752,3 +752,7 @@
 .guest-account-trigger:hover{border-color:#18a779;color:#087d59;background:#f3fbf7}
 .guest-account-dropdown{min-width:190px;right:0;left:auto}
 @media(max-width:760px){.language-switcher-left{order:0;margin:0 0 0 auto;max-width:105px;padding:7px 5px;font-size:11px}.top-actions{gap:8px}.guest-account-trigger{width:36px;height:36px}}
+
+
+/* Checkout stays visibly unavailable until a real payment provider is integrated. */
+.checkout-box .checkout-disabled:disabled{opacity:.58;cursor:not-allowed;box-shadow:none;filter:saturate(.55)}
