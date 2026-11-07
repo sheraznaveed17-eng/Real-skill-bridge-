@@ -596,6 +596,7 @@ function App() {
           <div className="dashboard-side-label">WORKSPACE</div>
           <button className="dashboard-side-link active"><LayoutDashboard size={17}/> Overview</button>
           <button className="dashboard-side-link" onClick={()=>navigate("orders")}><PackageCheck size={17}/> {activeMode==="seller"?"Manage orders":"My purchases"}<ChevronRight size={15}/></button>
+          <button className="dashboard-side-link" onClick={()=>{setActiveOrder(null);setActiveConversation(null);navigate("messages");loadInbox();}}><MessageCircle size={17}/> Messages<ChevronRight size={15}/></button>
           <button className="dashboard-side-link" onClick={()=>navigate("saved")}><Bookmark size={17}/> Saved services<ChevronRight size={15}/></button>
           {activeMode==="seller" && <button className="dashboard-side-link" onClick={()=>navigate("portfolio")}><BriefcaseBusiness size={17}/> Portfolio<ChevronRight size={15}/></button>}
           {activeMode==="seller" && <button className="dashboard-side-link" onClick={()=>navigate("my-gigs")}><BriefcaseBusiness size={17}/> My services<ChevronRight size={15}/></button>}
@@ -616,8 +617,8 @@ function App() {
             <div className="dashboard-two-column">
               <section className="dashboard-panel">
                 <div className="dashboard-panel-heading"><div><h3>Priority tasks</h3><p>Things that may need your attention.</p></div><span className="dashboard-panel-icon"><Clock3 size={17}/></span></div>
-                {myOrders.filter(o=>o.seller_id===session?.user?.id && ["pending","in_progress","delivered"].includes(o.status)).length
-                  ? myOrders.filter(o=>o.seller_id===session?.user?.id && ["pending","in_progress","delivered"].includes(o.status)).slice(0,4).map(o=><div className="dashboard-task" key={o.id}><span className="dashboard-task-dot"/><div><strong>{o.status==="pending"?"Review new order":o.status==="in_progress"?"Continue active order":"Waiting for buyer approval"}</strong><small>{o.gigs?.title || "Marketplace service"} · {o.buyer?.full_name || "Buyer"}</small></div><span className={`status ${o.status}`}>{o.status.replace("_"," ")}</span></div>)
+                {myOrders.filter(o=>o.seller_id===session?.user?.id && ["pending","in_progress","delivered","revision_requested"].includes(o.status)).length
+                  ? myOrders.filter(o=>o.seller_id===session?.user?.id && ["pending","in_progress","delivered"].includes(o.status)).slice(0,4).map(o=><div className="dashboard-task" key={o.id}><span className="dashboard-task-dot"/><div><strong>{o.status==="pending"?"Review new order":o.status==="in_progress"?"Continue active order":o.status==="revision_requested"?"Complete requested revision":"Waiting for buyer approval"}</strong><small>{o.gigs?.title || "Marketplace service"} · {o.buyer?.full_name || "Buyer"}</small></div><span className={`status ${o.status}`}>{o.status.replace("_"," ")}</span></div>)
                   : <div className="dashboard-empty"><PackageCheck size={22}/><strong>You’re all caught up</strong><span>New order requests and active work will appear here.</span></div>}
                 <button className="dashboard-panel-footer" onClick={()=>navigate("orders")}>Open order manager <ArrowRight size={15}/></button>
               </section>
