@@ -744,3 +744,11 @@
  .page-content .section-heading{flex-direction:column;align-items:stretch}
  .page-content .section-heading>.btn,.page-content .section-heading>.outline-btn{align-self:flex-start}
 }
+
+/* Header refinements: language selector on the left, compact guest account icon */
+.language-switcher-left{flex:0 0 auto;margin-left:4px;margin-right:4px}
+.guest-account-wrap{position:relative;display:flex;align-items:center}
+.guest-account-trigger{width:40px;height:40px;border:1px solid #e5eaf0;border-radius:50%;background:#fff;color:#344054;transition:.18s}
+.guest-account-trigger:hover{border-color:#18a779;color:#087d59;background:#f3fbf7}
+.guest-account-dropdown{min-width:190px;right:0;left:auto}
+@media(max-width:760px){.language-switcher-left{order:0;margin:0 0 0 auto;max-width:105px;padding:7px 5px;font-size:11px}.top-actions{gap:8px}.guest-account-trigger{width:36px;height:36px}}
