@@ -876,3 +876,25 @@ body{background:#fff;color:var(--ink);-webkit-font-smoothing:antialiased}
 .page-content .dashboard-activity-row time{font-size:10px;color:#89938d;white-space:nowrap}
 .page-content .dashboard-activity-row>svg{color:#98a29c;flex:0 0 auto}
 @media(max-width:760px){.page-content .dashboard-activity-row{gap:8px}.page-content .dashboard-activity-row time{font-size:9px}.page-content .dashboard-activity-copy strong{font-size:11px}}
+
+
+/* Notification center */
+.notification-wrap{position:relative;display:flex;align-items:center}
+.notification-trigger{position:relative;width:38px;height:38px;border-radius:50%;background:#f7faf8;color:#354254}
+.notification-trigger:hover,.notification-trigger[aria-expanded="true"]{background:#edf7f1;color:#087d59}
+.notification-count{position:absolute;top:0;right:0;min-width:17px;height:17px;padding:0 4px;border-radius:20px;background:#d94b43;color:#fff;font-size:9px;font-weight:800;display:grid;place-items:center;border:2px solid #fff}
+.notification-dropdown{position:absolute;right:0;top:calc(100% + 12px);width:min(360px,calc(100vw - 28px));max-height:430px;overflow:auto;background:#fff;border:1px solid #e6ebe8;border-radius:14px;box-shadow:0 18px 48px #17203324;z-index:80;animation:accountDrop .14s ease-out}
+.notification-heading{position:sticky;top:0;z-index:1;display:flex;align-items:center;justify-content:space-between;padding:14px 15px;background:#fff;border-bottom:1px solid #edf0ee}
+.notification-heading strong{font-size:14px;color:#172033}
+.notification-heading button{border:0;background:none;color:#087d59;font-size:11px;font-weight:700}
+.notification-item{width:100%;display:flex;align-items:flex-start;gap:10px;padding:13px 14px;border:0;border-bottom:1px solid #f0f2f1;background:#fff;text-align:left}
+.notification-item:hover{background:#f8fbf9}
+.notification-item.unread{background:#f3faf6}
+.notification-dot{width:7px;height:7px;flex:0 0 7px;margin-top:5px;border-radius:50%;background:transparent}
+.notification-item.unread .notification-dot{background:#079568}
+.notification-copy{min-width:0;display:flex;flex-direction:column;gap:4px}
+.notification-copy strong{font-size:12px;color:#243246}
+.notification-copy small{font-size:11px;line-height:1.45;color:#667085;overflow-wrap:anywhere}
+.notification-copy time{font-size:9px;color:#98a2b3}
+.notification-empty{padding:25px 20px;text-align:center;color:#667085;font-size:12px;line-height:1.6}
+@media(max-width:760px){.notification-dropdown{right:-54px;top:calc(100% + 10px);width:min(340px,calc(100vw - 24px))}.notification-trigger{width:35px;height:35px}}
