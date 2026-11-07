@@ -567,6 +567,16 @@ function App() {
 
   const myGigs = sellerGigs;
   const myOrders = orders.filter(o => o.buyer_id === session?.user?.id || o.seller_id === session?.user?.id);
+  const sellerOrders = myOrders.filter(o => o.seller_id === session?.user?.id);
+  const buyerOrders = myOrders.filter(o => o.buyer_id === session?.user?.id);
+  const profileProgressItems = activeMode === "seller"
+    ? [profile?.full_name, profile?.avatar_url, profile?.bio, profile?.professional_title, profile?.country || profile?.city, profile?.skills?.length, profile?.languages?.length]
+    : [profile?.full_name, profile?.avatar_url, profile?.bio];
+  const profileProgress = Math.round(profileProgressItems.filter(Boolean).length / profileProgressItems.length * 100);
+  const recentDashboardActivity = [
+    ...myOrders.map(o => ({id:"order-"+o.id,kind:"order",title:o.gigs?.title || "Marketplace service",detail:"Order "+String(o.status||"").replaceAll("_"," "),date:o.updated_at || o.created_at,order:o})),
+    ...conversations.map(c => ({id:"conversation-"+c.id,kind:"message",title:c.gigs?.title || "Service discussion",detail:c.last_message || "Conversation started",date:c.updated_at,conversation:c}))
+  ].filter(x=>x.date).sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,5);
   const isAdmin = profile?.role === "admin";
   useEffect(() => { if (isAdmin) loadReports(); }, [isAdmin]);
   useEffect(() => { if (selectedGig?.id) setSelectedPackage(selectedGig.packages?.[0]?.name || "Basic"); }, [selectedGig?.id]);
@@ -763,10 +773,12 @@ function App() {
           {activeMode==="seller" ? <>
             <div className="dashboard-section-heading"><div><h3>Business overview</h3><p>Here’s what’s happening with your services.</p></div><button className="text-action" onClick={()=>navigate("orders")}>View all orders <ArrowRight size={15}/></button></div>
             <div className="dashboard-stats">
-              <div className="dashboard-stat"><span>Active orders</span><strong>{myOrders.filter(o=>o.seller_id===session?.user?.id && !["completed","cancelled"].includes(o.status)).length}</strong><small><Clock3 size={14}/> Currently in progress</small></div>
-              <div className="dashboard-stat"><span>New order requests</span><strong>{myOrders.filter(o=>o.seller_id===session?.user?.id && o.status==="pending").length}</strong><small><PackageCheck size={14}/> Waiting for your response</small></div>
-              <div className="dashboard-stat"><span>Completed orders</span><strong>{myOrders.filter(o=>o.seller_id===session?.user?.id && o.status==="completed").length}</strong><small><CheckCircle2 size={14}/> Successfully completed</small></div>
-              <div className="dashboard-stat"><span>Active services</span><strong>{myGigs.filter(g=>g.is_active).length}</strong><small><BriefcaseBusiness size={14}/> Visible in marketplace</small></div>
+              <div className="dashboard-stat"><span>Total services</span><strong>{myGigs.length}</strong><small><BriefcaseBusiness size={14}/> Published listings</small></div>
+              <div className="dashboard-stat"><span>Active services</span><strong>{myGigs.filter(g=>g.is_active).length}</strong><small><CheckCircle2 size={14}/> Visible in marketplace</small></div>
+              <div className="dashboard-stat"><span>Active orders</span><strong>{sellerOrders.filter(o=>!["completed","cancelled"].includes(o.status)).length}</strong><small><Clock3 size={14}/> Not yet completed</small></div>
+              <div className="dashboard-stat"><span>New order requests</span><strong>{sellerOrders.filter(o=>o.status==="pending").length}</strong><small><PackageCheck size={14}/> Waiting for your response</small></div>
+              <div className="dashboard-stat"><span>Completed orders</span><strong>{sellerOrders.filter(o=>o.status==="completed").length}</strong><small><CheckCircle2 size={14}/> Successfully completed</small></div>
+              <div className="dashboard-stat"><span>Unread messages</span><strong>{unreadMessages}</strong><small><MessageCircle size={14}/> Need your attention</small></div>
               <div className="dashboard-stat"><span>Average rating</span><strong>{sellerReviews.filter(r=>r.seller_id===session?.user?.id).length ? (sellerReviews.filter(r=>r.seller_id===session?.user?.id).reduce((sum,r)=>sum+Number(r.rating||0),0)/sellerReviews.filter(r=>r.seller_id===session?.user?.id).length).toFixed(1) : "—"}</strong><small><Star size={14}/> {sellerReviews.filter(r=>r.seller_id===session?.user?.id).length} order reviews</small></div>
             </div>
             <div className="dashboard-two-column">
@@ -783,8 +795,9 @@ function App() {
                 <div className="dashboard-account-row"><span>Profile name</span><strong>{profile?.full_name || "Not set"}</strong></div>
                 <div className="dashboard-account-row"><span>Profile photo</span><strong>{profile?.avatar_url?"Added":"Not added"}</strong></div>
                 <div className="dashboard-account-row"><span>Earnings</span><strong className="muted-value">Unavailable</strong></div>
+                <div className="dashboard-profile-progress"><div><strong>Profile progress</strong><b>{profileProgress}%</b></div><div className="dashboard-progress-track"><span style={{width:profileProgress+"%"}}/></div><small>{activeMode==="seller"?"Add your skills, location and languages to help buyers understand your services.":"Add a photo and short introduction so sellers can recognise you."}</small></div>
                 <p className="dashboard-note">Payments are not active yet, so no earnings or payout balance is being displayed.</p>
-                <button className="dashboard-panel-footer" onClick={()=>navigate("profile")}>Complete your profile <ArrowRight size={15}/></button>
+                <button className="dashboard-panel-footer" onClick={()=>navigate("profile")}>Improve your profile <ArrowRight size={15}/></button>
               </section>
             </div>
             <section className="dashboard-panel dashboard-gig-analytics"><div className="dashboard-panel-heading"><div><h3>Gig performance</h3><p>Real views and clicks recorded by Skill Bridge.</p></div><span className="dashboard-panel-icon"><Eye size={17}/></span></div>{myGigs.length?<div className="gig-analytics-list">{myGigs.map(g=>{const stats=gigAnalytics[g.id]||{impressions:0,clicks:0};const ctr=stats.impressions?((stats.clicks/stats.impressions)*100).toFixed(1):"0.0";return <div className="gig-analytics-row" key={g.id}><div><strong>{g.title}</strong><small>{g.is_active?"Live listing":"Paused listing"}</small></div><span><b>{stats.impressions}</b><small>Views</small></span><span><b>{stats.clicks}</b><small>Clicks</small></span><span><b>{ctr}%</b><small>CTR</small></span></div>;})}</div>:<div className="dashboard-empty"><Eye size={22}/><strong>No service data yet</strong><span>Create a service to start tracking views and clicks.</span></div>}</section>
@@ -795,19 +808,25 @@ function App() {
           </> : <>
             <div className="dashboard-section-heading"><div><h3>Your projects</h3><p>Keep track of the services you’ve ordered.</p></div><button className="text-action" onClick={()=>navigate("home")}>Explore services <ArrowRight size={15}/></button></div>
             <div className="dashboard-stats buyer-stats">
-              <div className="dashboard-stat"><span>Active projects</span><strong>{myOrders.filter(o=>o.buyer_id===session?.user?.id && !["completed","cancelled"].includes(o.status)).length}</strong><small><Clock3 size={14}/> Work in progress</small></div>
-              <div className="dashboard-stat"><span>Orders placed</span><strong>{myOrders.filter(o=>o.buyer_id===session?.user?.id).length}</strong><small><PackageCheck size={14}/> Your purchases</small></div>
-              <div className="dashboard-stat"><span>Completed projects</span><strong>{myOrders.filter(o=>o.buyer_id===session?.user?.id && o.status==="completed").length}</strong><small><CheckCircle2 size={14}/> Finished work</small></div>
+              <div className="dashboard-stat"><span>Active projects</span><strong>{buyerOrders.filter(o=>!["completed","cancelled"].includes(o.status)).length}</strong><small><Clock3 size={14}/> Work in progress</small></div>
+              <div className="dashboard-stat"><span>Orders placed</span><strong>{buyerOrders.length}</strong><small><PackageCheck size={14}/> Your purchases</small></div>
+              <div className="dashboard-stat"><span>Completed projects</span><strong>{buyerOrders.filter(o=>o.status==="completed").length}</strong><small><CheckCircle2 size={14}/> Finished work</small></div>
+              <div className="dashboard-stat"><span>Saved services</span><strong>{favoriteGigs.length}</strong><small><Bookmark size={14}/> Your shortlist</small></div>
+              <div className="dashboard-stat"><span>Unread messages</span><strong>{unreadMessages}</strong><small><MessageCircle size={14}/> Replies waiting</small></div>
             </div>
             <section className="dashboard-panel buyer-orders-panel">
               <div className="dashboard-panel-heading"><div><h3>Recent orders</h3><p>Updates from the people working with you.</p></div><button className="outline-btn" onClick={()=>navigate("orders")}>All orders</button></div>
-              {myOrders.filter(o=>o.buyer_id===session?.user?.id).length ? <div className="dashboard-service-list">{myOrders.filter(o=>o.buyer_id===session?.user?.id).slice(0,5).map(o=><div className="dashboard-service-row" key={o.id}><span className="dashboard-service-art"><PackageCheck size={18}/></span><div><strong>{o.gigs?.title || "Marketplace service"}</strong><small>Seller: {o.seller?.full_name || "Skill Bridge member"}</small></div><span className={`status ${o.status}`}>{o.status.replace("_"," ")}</span><button className="text-action" onClick={()=>loadMessages(o)}>Message <ArrowRight size={14}/></button></div>)}</div> : <div className="dashboard-empty"><ShoppingBag size={22}/><strong>No projects yet</strong><span>Explore services and find the right person for your next task.</span><button className="btn btn-dark btn-small" onClick={()=>navigate("home")}><Search size={15}/> Explore services</button></div>}
+              {buyerOrders.length ? <div className="dashboard-service-list">{buyerOrders.slice(0,5).map(o=><div className="dashboard-service-row" key={o.id}><span className="dashboard-service-art"><PackageCheck size={18}/></span><div><strong>{o.gigs?.title || "Marketplace service"}</strong><small>Seller: {o.seller?.full_name || "Skill Bridge member"}</small></div><span className={`status ${o.status}`}>{o.status.replace("_"," ")}</span><button className="text-action" onClick={()=>loadMessages(o)}>Message <ArrowRight size={14}/></button></div>)}</div> : <div className="dashboard-empty"><ShoppingBag size={22}/><strong>No projects yet</strong><span>Explore services and find the right person for your next task.</span><button className="btn btn-dark btn-small" onClick={()=>navigate("home")}><Search size={15}/> Explore services</button></div>}
             </section>
             <section className="dashboard-panel buyer-discovery-panel">
               <div className="dashboard-panel-heading"><div><h3>Get started</h3><p>Everything you need to use Skill Bridge.</p></div></div>
-              <div className="buyer-action-grid"><button onClick={()=>navigate("home")}><Search size={20}/><strong>Find a service</strong><span>Browse digital and local services</span></button><button onClick={()=>navigate("orders")}><PackageCheck size={20}/><strong>Track an order</strong><span>Check progress and delivery updates</span></button><button onClick={()=>navigate("profile")}><UserRound size={20}/><strong>Update your profile</strong><span>Manage your account details</span></button></div>
+              <div className="buyer-action-grid"><button onClick={()=>navigate("home")}><Search size={20}/><strong>Find a service</strong><span>Browse digital and local services</span></button><button onClick={()=>navigate("orders")}><PackageCheck size={20}/><strong>Track an order</strong><span>Check progress and delivery updates</span></button><button onClick={()=>navigate("saved")}><Bookmark size={20}/><strong>Saved services</strong><span>Return to your shortlisted services</span></button><button onClick={()=>navigate("profile")}><UserRound size={20}/><strong>Update your profile</strong><span>Manage your account details</span></button></div>
             </section>
           </>}
+          <section className="dashboard-panel dashboard-recent-activity">
+            <div className="dashboard-panel-heading"><div><h3>Recent activity</h3><p>Your latest order updates and conversations.</p></div><button className="text-action" onClick={()=>{setActiveOrder(null);setActiveConversation(null);navigate("messages");loadInbox();}}>Open inbox <ArrowRight size={14}/></button></div>
+            {recentDashboardActivity.length ? <div className="dashboard-activity-list">{recentDashboardActivity.map(item=><button className="dashboard-activity-row" key={item.id} onClick={()=>item.kind==="order"?loadMessages(item.order):(loadConversation(item.conversation),navigate("messages"))}><span className="dashboard-activity-icon">{item.kind==="order"?<PackageCheck size={17}/>:<MessageCircle size={17}/>}</span><span className="dashboard-activity-copy"><strong>{item.kind==="order"?"Order update":"Message thread"} · {item.title}</strong><small>{item.detail}</small></span><time>{new Date(item.date).toLocaleDateString()}</time><ChevronRight size={15}/></button>)}</div> : <div className="dashboard-empty"><Clock3 size={22}/><strong>No recent activity yet</strong><span>Your order updates and conversations will show here.</span></div>}
+          </section>
         </section>
       </div>
     </main>}
