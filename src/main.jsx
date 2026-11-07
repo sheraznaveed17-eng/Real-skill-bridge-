@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
   Search, BriefcaseBusiness, UserRound, Plus, LogOut, Menu, X, Star, Bookmark, Trash2, ExternalLink, Flag,
@@ -10,6 +10,16 @@ import "./style.css";
 
 const categories = ["All", "Graphics & Design", "Writing & Translation", "Programming & Tech", "Video & Animation", "Digital Marketing", "Business", "Construction", "Masonry & Labour", "Plumbing", "Electrical Work", "Painting", "Carpentry", "AC & Appliance Repair", "Vehicle Repair", "Cleaning & Home Services", "Gardening", "Transport", "Education & Tutoring", "Events & Catering"];
 const money = n => `Rs. ${Number(n || 0).toLocaleString("en-PK")}`;
+const getGigVisitorKey = () => {
+  try {
+    let key = localStorage.getItem("skillbridge-gig-visitor");
+    if (!key) {
+      key = globalThis.crypto?.randomUUID?.() || `visitor-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      localStorage.setItem("skillbridge-gig-visitor", key);
+    }
+    return key;
+  } catch { return null; }
+};
 const uiTranslations = {
   en:{explore:"Explore",orders:"Orders",messages:"Messages",myServices:"My services",dashboard:"Dashboard",login:"Log in",join:"Join Skill Bridge",heroEyebrow:"THE MARKETPLACE FOR EVERY KIND OF WORK",heroTitle:"Find work. Hire talent.",heroTitle2:"Get things done.",heroText:"From digital services to hands-on local jobs, connect with skilled people for every task — all in one simple place.",getStarted:"GET STARTED",whatDo:"What would you like to do?",findWork:"Find Work",hireSomeone:"Hire Someone",discover:"DISCOVER SERVICES",exploreAll:"Explore all services",search:"Search"},
   ur:{explore:"دریافت کریں",orders:"آرڈرز",messages:"پیغامات",myServices:"میری خدمات",dashboard:"ڈیش بورڈ",login:"لاگ اِن",join:"اسکل برج جوائن کریں",heroEyebrow:"ہر قسم کے کام کے لیے مارکیٹ پلیس",heroTitle:"کام تلاش کریں۔ ہنر خریدیں۔",heroTitle2:"کام مکمل کریں۔",heroText:"ڈیجیٹل خدمات سے لے کر مقامی کاموں تک، ہر کام کے لیے ماہر افراد سے رابطہ کریں۔",getStarted:"شروع کریں",whatDo:"آپ کیا کرنا چاہتے ہیں؟",findWork:"کام تلاش کریں",hireSomeone:"کسی کو کام دیں",discover:"خدمات دریافت کریں",exploreAll:"تمام خدمات دیکھیں",search:"تلاش"},
@@ -83,7 +93,7 @@ function App() {
   const [portfolioItems, setPortfolioItems] = useState([]);
   const [sellerGigs, setSellerGigs] = useState([]);
   const [gigAnalytics, setGigAnalytics] = useState({});
-  const [impressedGigIds, setImpressedGigIds] = useState([]);
+
   const [editingGigId, setEditingGigId] = useState(null);
   const [editGigForm, setEditGigForm] = useState({title:"",description:"",category:"Graphics & Design",price:"",delivery_days:"3",image_url:""});
   const [editExtraPackages,setEditExtraPackages]=useState([{name:"Standard",description:"",price:"",delivery_days:"5",revisions:"2"},{name:"Premium",description:"",price:"",delivery_days:"7",revisions:"3"}]);
@@ -155,16 +165,6 @@ function App() {
       }).subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [session?.user?.id]);
-
-  useEffect(() => {
-    if (!gigs.length) return;
-    const unseen = gigs.filter(g => (!session?.user || g.seller_id !== session.user.id) && !impressedGigIds.includes(g.id));
-    if (!unseen.length) return;
-    const ids = unseen.map(g => g.id);
-    supabase.from("gig_events").insert(unseen.map(g => ({gig_id:g.id,actor_id:session?.user?.id||null,event_type:"impression"}))).then(({error}) => {
-      if (!error) setImpressedGigIds(prev => [...prev,...ids]);
-    });
-  }, [gigs, session?.user?.id, impressedGigIds]);
 
   const loadProfile = async user => {
     const { data } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
@@ -343,6 +343,17 @@ function App() {
       setGigAnalytics(stats);
     }
   };
+
+  const trackGigImpression = useCallback(async gig => {
+    const userId = session?.user?.id || null;
+    if (userId && gig.seller_id === userId) return;
+    const visitorKey = userId ? null : getGigVisitorKey();
+    if (!userId && !visitorKey) return;
+    const { error } = await supabase.from("gig_events").insert({
+      gig_id: gig.id, actor_id: userId, visitor_key: visitorKey, event_type: "impression"
+    });
+    if (error && error.code !== "23505") console.warn("Could not record gig view:", error.message);
+  }, [session?.user?.id]);
 
   const trackGigClick = async gig => {
     if (session?.user && gig.seller_id===session.user.id) return;
@@ -729,7 +740,7 @@ function App() {
         <div className="section-heading"><div><div className="eyebrow muted">{t.discover}</div><h2>{t.exploreAll}</h2><p>Browse digital skills, skilled trades and everyday services.</p></div><button className="outline-btn" onClick={()=>{setSearch("");setCategory("All");setLocationFilter("");setMinBudget("");setMaxBudget("");setDeliveryFilter("any");setSortBy("newest");}}><Filter size={16}/> Clear filters</button></div>
         <div className="category-row">{categories.map(c=><button key={c} className={category===c?"category active":"category"} onClick={()=>setCategory(c)}>{c}</button>)}</div>
         <div className="marketplace-filters"><label>City or country<input value={locationFilter} onChange={e=>setLocationFilter(e.target.value)} placeholder="e.g. Lahore"/></label><label>Min budget (PKR)<input type="number" min="0" value={minBudget} onChange={e=>setMinBudget(e.target.value)} placeholder="Any"/></label><label>Max budget (PKR)<input type="number" min="0" value={maxBudget} onChange={e=>setMaxBudget(e.target.value)} placeholder="Any"/></label><label>Delivery time<select value={deliveryFilter} onChange={e=>setDeliveryFilter(e.target.value)}><option value="any">Any time</option><option value="1">Within 1 day</option><option value="3">Within 3 days</option><option value="7">Within 7 days</option></select></label><label>Sort by<select value={sortBy} onChange={e=>setSortBy(e.target.value)}><option value="newest">Newest first</option><option value="price-low">Price: low to high</option><option value="price-high">Price: high to low</option></select></label></div>
-        <div className="gig-grid">{filteredGigs.map(g=><GigCard key={g.id} gig={g} onClick={()=>{trackGigClick(g);setPage("home");setOrderDetails("");setSelectedGig(g);}}/> )}</div>
+        <div className="gig-grid">{filteredGigs.map(g=><GigCard key={g.id} gig={g} onImpression={trackGigImpression} onClick={()=>{trackGigClick(g);setPage("home");setOrderDetails("");setSelectedGig(g);}}/> )}</div>
         {!filteredGigs.length && <Empty icon={<BriefcaseBusiness/>} title="No services found yet" text={demoMode?"The marketplace is getting ready.":"Try another search or category. You can be the first to list a service."}/>}
         {activeMode==="seller" && <div className="join-banner"><div><h3>Ready to offer your skills?</h3><p>Create a service listing and let buyers discover what you do best.</p></div><button className="btn btn-dark" onClick={()=>navigate("create-gig")}><Plus size={17}/> Create a gig</button></div>}
       </main>
@@ -797,9 +808,9 @@ function App() {
       </div>
     </main>}
 
-    {page === "seller-profile" && publicSeller && <main className="content page-content public-seller-page"><button className="back-link" onClick={()=>navigate("home")}>← Back to services</button><section className="public-seller-hero"><div className="public-seller-avatar">{publicSeller.avatar_url?<img src={publicSeller.avatar_url} alt=""/>:(publicSeller.full_name||"S").slice(0,1).toUpperCase()}</div><div className="public-seller-info"><div className="eyebrow muted">SKILL BRIDGE SELLER</div><h2>{publicSeller.full_name||"Seller"}</h2><strong>{publicSeller.professional_title||"Independent service provider"}</strong><p>{publicSeller.bio||"This seller has not added an introduction yet."}</p><div className="public-seller-meta"><span>{[publicSeller.city,publicSeller.country].filter(Boolean).join(", ")||"Location not added"}</span><span>{publicSeller.experience_years?publicSeller.experience_years+" years experience":"Experience not listed"}</span><span><Star size={15}/> {publicSellerReviews.length?(publicSellerReviews.reduce((n,r)=>n+Number(r.rating),0)/publicSellerReviews.length).toFixed(1)+" ("+publicSellerReviews.length+" reviews)":"No reviews yet"}</span></div></div>{session?.user?.id!==publicSeller.id&&<button className="btn btn-dark" onClick={()=>{const first=publicSellerGigs[0];if(first)startConversation(first);else show("This seller has no active service to start a conversation from.");}}><MessageCircle size={16}/> Contact seller</button>}</section><section className="public-seller-section"><div className="section-heading"><div><h2>Services</h2><p>Active services offered by this seller.</p></div></div><div className="gig-grid">{publicSellerGigs.map(g=><GigCard key={g.id} gig={g} onClick={()=>{trackGigClick(g);setSelectedGig(g);setPage("home");}}/> )}</div>{!publicSellerGigs.length&&<Empty icon={<BriefcaseBusiness/>} title="No active services" text="This seller has not published an active service yet."/>}</section><section className="public-seller-section"><div className="section-heading"><div><h2>Portfolio</h2><p>Examples of previous work.</p></div></div><div className="portfolio-grid">{publicSellerPortfolio.map(item=><article className="portfolio-card" key={item.id}><img src={item.image_url} alt={item.title} loading="lazy"/><div><h3>{item.title}</h3><p>{item.description}</p><a href={item.project_url} target="_blank" rel="noreferrer"><ExternalLink size={14}/> View project</a></div></article>)}</div>{!publicSellerPortfolio.length&&<p className="subtext">No portfolio projects have been added yet.</p>}</section><section className="public-seller-section"><div className="section-heading"><div><h2>Client reviews</h2><p>Feedback from completed orders.</p></div></div>{publicSellerReviews.map(r=><article className="public-review" key={r.id}><div><strong>{r.buyer?.full_name||"Buyer"}</strong><span><Star size={14}/> {r.rating}/5</span></div><p>{r.comment||"No written comment."}</p><small>{new Date(r.created_at).toLocaleDateString()}</small></article>)}{!publicSellerReviews.length&&<p className="subtext">No reviews yet.</p>}</section></main>}
+    {page === "seller-profile" && publicSeller && <main className="content page-content public-seller-page"><button className="back-link" onClick={()=>navigate("home")}>← Back to services</button><section className="public-seller-hero"><div className="public-seller-avatar">{publicSeller.avatar_url?<img src={publicSeller.avatar_url} alt=""/>:(publicSeller.full_name||"S").slice(0,1).toUpperCase()}</div><div className="public-seller-info"><div className="eyebrow muted">SKILL BRIDGE SELLER</div><h2>{publicSeller.full_name||"Seller"}</h2><strong>{publicSeller.professional_title||"Independent service provider"}</strong><p>{publicSeller.bio||"This seller has not added an introduction yet."}</p><div className="public-seller-meta"><span>{[publicSeller.city,publicSeller.country].filter(Boolean).join(", ")||"Location not added"}</span><span>{publicSeller.experience_years?publicSeller.experience_years+" years experience":"Experience not listed"}</span><span><Star size={15}/> {publicSellerReviews.length?(publicSellerReviews.reduce((n,r)=>n+Number(r.rating),0)/publicSellerReviews.length).toFixed(1)+" ("+publicSellerReviews.length+" reviews)":"No reviews yet"}</span></div></div>{session?.user?.id!==publicSeller.id&&<button className="btn btn-dark" onClick={()=>{const first=publicSellerGigs[0];if(first)startConversation(first);else show("This seller has no active service to start a conversation from.");}}><MessageCircle size={16}/> Contact seller</button>}</section><section className="public-seller-section"><div className="section-heading"><div><h2>Services</h2><p>Active services offered by this seller.</p></div></div><div className="gig-grid">{publicSellerGigs.map(g=><GigCard key={g.id} gig={g} onImpression={trackGigImpression} onClick={()=>{trackGigClick(g);setSelectedGig(g);setPage("home");}}/> )}</div>{!publicSellerGigs.length&&<Empty icon={<BriefcaseBusiness/>} title="No active services" text="This seller has not published an active service yet."/>}</section><section className="public-seller-section"><div className="section-heading"><div><h2>Portfolio</h2><p>Examples of previous work.</p></div></div><div className="portfolio-grid">{publicSellerPortfolio.map(item=><article className="portfolio-card" key={item.id}><img src={item.image_url} alt={item.title} loading="lazy"/><div><h3>{item.title}</h3><p>{item.description}</p><a href={item.project_url} target="_blank" rel="noreferrer"><ExternalLink size={14}/> View project</a></div></article>)}</div>{!publicSellerPortfolio.length&&<p className="subtext">No portfolio projects have been added yet.</p>}</section><section className="public-seller-section"><div className="section-heading"><div><h2>Client reviews</h2><p>Feedback from completed orders.</p></div></div>{publicSellerReviews.map(r=><article className="public-review" key={r.id}><div><strong>{r.buyer?.full_name||"Buyer"}</strong><span><Star size={14}/> {r.rating}/5</span></div><p>{r.comment||"No written comment."}</p><small>{new Date(r.created_at).toLocaleDateString()}</small></article>)}{!publicSellerReviews.length&&<p className="subtext">No reviews yet.</p>}</section></main>}
 
-    {page === "saved" && <main className="content page-content"><div className="section-heading"><div><div className="eyebrow muted">YOUR COLLECTION</div><h2>Saved services</h2><p>Services you bookmarked for later.</p></div><button className="outline-btn" onClick={()=>navigate("home")}>Explore services <ArrowRight size={15}/></button></div><div className="gig-grid">{favoriteGigs.map(g=><GigCard key={g.id} gig={g} onClick={()=>{setSelectedGig(g);setPage("home");}}/> )}</div>{!favoriteGigs.length&&<Empty icon={<Bookmark/>} title="No saved services yet" text="Open a service and tap Save service to keep it here."/>}</main>}
+    {page === "saved" && <main className="content page-content"><div className="section-heading"><div><div className="eyebrow muted">YOUR COLLECTION</div><h2>Saved services</h2><p>Services you bookmarked for later.</p></div><button className="outline-btn" onClick={()=>navigate("home")}>Explore services <ArrowRight size={15}/></button></div><div className="gig-grid">{favoriteGigs.map(g=><GigCard key={g.id} gig={g} onImpression={trackGigImpression} onClick={()=>{setSelectedGig(g);setPage("home");}}/> )}</div>{!favoriteGigs.length&&<Empty icon={<Bookmark/>} title="No saved services yet" text="Open a service and tap Save service to keep it here."/>}</main>}
 
     {page === "portfolio" && <main className="content page-content"><div className="section-heading"><div><div className="eyebrow muted">SELLER STUDIO</div><h2>My portfolio</h2><p>Show buyers examples of work you have completed.</p></div></div><section className="dashboard-panel portfolio-create"><h3>Add a project</h3><form className="stack-form" onSubmit={addPortfolioItem}><label>Project title<input required maxLength="100" value={portfolioForm.title} onChange={e=>setPortfolioForm({...portfolioForm,title:e.target.value})} placeholder="e.g. Brand identity for a local business"/></label><label>Project description<textarea required rows="3" maxLength="800" value={portfolioForm.description} onChange={e=>setPortfolioForm({...portfolioForm,description:e.target.value})} placeholder="What was the work and what did you deliver?"/></label><label>Project link<input required type="url" value={portfolioForm.project_url} onChange={e=>setPortfolioForm({...portfolioForm,project_url:e.target.value})} placeholder="https://your-project.example"/></label><label>Preview image URL<input required type="url" value={portfolioForm.image_url} onChange={e=>setPortfolioForm({...portfolioForm,image_url:e.target.value})} placeholder="https://.../project-image.jpg"/></label><button className="btn btn-dark" disabled={busy}><Plus size={16}/> Add to portfolio</button></form></section><div className="portfolio-grid">{portfolioItems.map(item=><article className="portfolio-card" key={item.id}><img src={item.image_url} alt={item.title} loading="lazy"/><div><h3>{item.title}</h3><p>{item.description}</p><div className="portfolio-card-actions"><a href={item.project_url} target="_blank" rel="noreferrer"><ExternalLink size={14}/> View project</a><button className="outline-btn" onClick={()=>removePortfolioItem(item.id)}><Trash2 size={14}/> Remove</button></div></div></article>)}</div>{!portfolioItems.length&&<Empty icon={<BriefcaseBusiness/>} title="Your portfolio is empty" text="Add your first project above to show buyers what you can do."/>}</main>}
 
@@ -866,7 +877,7 @@ function App() {
                 <button className="dashboard-panel-footer" onClick={()=>navigate("profile")}>Improve your profile <ArrowRight size={15}/></button>
               </section>
             </div>
-            <section className="dashboard-panel dashboard-gig-analytics"><div className="dashboard-panel-heading"><div><h3>Gig performance</h3><p>Real views and clicks recorded by Skill Bridge.</p></div><span className="dashboard-panel-icon"><Eye size={17}/></span></div>{myGigs.length?<div className="gig-analytics-list">{myGigs.map(g=>{const stats=gigAnalytics[g.id]||{impressions:0,clicks:0};const ctr=stats.impressions?((stats.clicks/stats.impressions)*100).toFixed(1):"0.0";return <div className="gig-analytics-row" key={g.id}><div><strong>{g.title}</strong><small>{g.is_active?"Live listing":"Paused listing"}</small></div><span><b>{stats.impressions}</b><small>Views</small></span><span><b>{stats.clicks}</b><small>Clicks</small></span><span><b>{ctr}%</b><small>CTR</small></span></div>;})}</div>:<div className="dashboard-empty"><Eye size={22}/><strong>No service data yet</strong><span>Create a service to start tracking views and clicks.</span></div>}</section>
+            <section className="dashboard-panel dashboard-gig-analytics"><div className="dashboard-panel-heading"><div><h3>Gig performance</h3><p>A view counts when a service card is at least half visible; clicks count when opened.</p></div><span className="dashboard-panel-icon"><Eye size={17}/></span></div>{myGigs.length?<div className="gig-analytics-list">{myGigs.map(g=>{const stats=gigAnalytics[g.id]||{impressions:0,clicks:0};const ctr=stats.impressions?((stats.clicks/stats.impressions)*100).toFixed(1):"0.0";return <div className="gig-analytics-row" key={g.id}><div><strong>{g.title}</strong><small>{g.is_active?"Live listing":"Paused listing"}</small></div><span><b>{stats.impressions}</b><small>Views</small></span><span><b>{stats.clicks}</b><small>Clicks</small></span><span><b>{ctr}%</b><small>CTR</small></span></div>;})}</div>:<div className="dashboard-empty"><Eye size={22}/><strong>No service data yet</strong><span>Create a service to start tracking views and clicks.</span></div>}</section>
             <section className="dashboard-panel dashboard-services-panel">
               <div className="dashboard-panel-heading"><div><h3>Your services</h3><p>Manage the services buyers can discover.</p></div><button className="outline-btn" onClick={()=>navigate("my-gigs")}>Manage services</button></div>
               {myGigs.length ? <div className="dashboard-service-list">{myGigs.slice(0,4).map(g=><div className="dashboard-service-row" key={g.id}><span className="dashboard-service-art"><BriefcaseBusiness size={18}/></span><div><strong>{g.title}</strong><small>{g.category} · {g.delivery_days} day delivery</small></div><strong>{money(g.price)}</strong>{g.is_active ? <span className="service-live"><i/> Active</span> : <span className="service-paused"><i/> Paused</span>}</div>)}</div> : <div className="dashboard-empty"><BriefcaseBusiness size={22}/><strong>Your first service starts here</strong><span>Create a service listing to appear in Skill Bridge search.</span><button className="btn btn-dark btn-small" onClick={()=>navigate("create-gig")}><Plus size={15}/> Create a service</button></div>}
@@ -927,10 +938,24 @@ function App() {
   </div>;
 }
 
-function GigCard({gig,onClick}) {
+function GigCard({gig,onClick,onImpression}) {
+  const cardRef = useRef(null);
+  useEffect(() => {
+    const card = cardRef.current;
+    if (!card || !onImpression || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(entries => {
+      const entry = entries[0];
+      if (entry?.isIntersecting && entry.intersectionRatio >= 0.5) {
+        observer.disconnect();
+        onImpression(gig);
+      }
+    }, { threshold: 0.5 });
+    observer.observe(card);
+    return () => observer.disconnect();
+  }, [gig.id, onImpression]);
   const palettes = ["art-purple","art-blue","art-orange","art-green"];
   const index = (gig.title?.length || 0) % palettes.length;
-  return <button className="gig-card" onClick={onClick}><div className={`gig-art ${palettes[index]}`}>{gig.image_url?<img src={gig.image_url} alt={gig.title} loading="lazy"/>:<Sparkles size={28}/>}<span>{gig.category}</span></div><div className="gig-info"><div className="seller-line">{gig.profiles?.avatar_url?<img className="avatar gig-seller-avatar" src={gig.profiles.avatar_url} alt=""/>:<span className="avatar">{(gig.profiles?.full_name||"S").slice(0,1).toUpperCase()}</span>}<span>{gig.profiles?.full_name||"Skill Bridge seller"}</span><span className="seller-tag">Seller</span></div><h3>{gig.title}</h3><div className="gig-meta"><span><Clock3 size={14}/> {gig.delivery_days} days</span><span><Star size={14}/> {gig.sellerRating?`${gig.sellerRating} (${gig.sellerReviewCount})`:"New seller"}</span></div><div className="gig-price"><small>STARTING AT</small><strong>{money(gig.price)}</strong></div></div></button>;
+  return <button ref={cardRef} className="gig-card" onClick={onClick}><div className={`gig-art ${palettes[index]}`}>{gig.image_url?<img src={gig.image_url} alt={gig.title} loading="lazy"/>:<Sparkles size={28}/>}<span>{gig.category}</span></div><div className="gig-info"><div className="seller-line">{gig.profiles?.avatar_url?<img className="avatar gig-seller-avatar" src={gig.profiles.avatar_url} alt=""/>:<span className="avatar">{(gig.profiles?.full_name||"S").slice(0,1).toUpperCase()}</span>}<span>{gig.profiles?.full_name||"Skill Bridge seller"}</span><span className="seller-tag">Seller</span></div><h3>{gig.title}</h3><div className="gig-meta"><span><Clock3 size={14}/> {gig.delivery_days} days</span><span><Star size={14}/> {gig.sellerRating?`${gig.sellerRating} (${gig.sellerReviewCount})`:"New seller"}</span></div><div className="gig-price"><small>STARTING AT</small><strong>{money(gig.price)}</strong></div></div></button>;
 }
 
 function OrderCard({order,userId,onUpdate,onRevision,onMessage,onReview,reviewForm,setReviewForm}) {
