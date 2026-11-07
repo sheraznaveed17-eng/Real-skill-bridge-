@@ -519,15 +519,27 @@ function App() {
 
   const respondToOffer = async (offer,status) => {
     if(!session?.user || offer.buyer_id!==session.user.id || offer.status!=="pending" || !["accepted","declined"].includes(status)) return;
-    const {data,error}=await supabase.from("custom_offers").update({status}).eq("id",offer.id).eq("buyer_id",session.user.id).eq("status","pending").select("id").maybeSingle();
-    if (error) { show(error.message); return; }
-    if (!data) { show("This offer has already been answered."); await loadConversation(activeConversation); return; }
-    const note=status==="accepted"?"Custom offer accepted: "+offer.title:"Custom offer declined: "+offer.title;
+    setBusy(true);
+    let orderId=null;
+    if(status==="accepted"){
+      const {data,error}=await supabase.rpc("accept_custom_offer",{p_offer_id:offer.id});
+      if(error){show(error.message);setBusy(false);return;}
+      orderId=data;
+    }else{
+      const {data,error}=await supabase.from("custom_offers").update({status:"declined"}).eq("id",offer.id).eq("buyer_id",session.user.id).eq("status","pending").select("id").maybeSingle();
+      if(error){show(error.message);setBusy(false);return;}
+      if(!data){show("This offer has already been answered.");await loadConversation(activeConversation);setBusy(false);return;}
+    }
+    const note=status==="accepted"?"Custom offer accepted. Order created: "+orderId:"Custom offer declined: "+offer.title;
     const messageResult=await supabase.from("messages").insert({conversation_id:activeConversation.id,sender_id:session.user.id,body:note});
     await supabase.from("conversations").update({last_message:note,updated_at:new Date().toISOString()}).eq("id",activeConversation.id);
-    show(status==="accepted"?"Offer accepted. No order or payment has started.":"Offer declined.");
+    if(status==="accepted"){
+      await loadOrders();
+      show("Offer accepted. Your order has been created. No payment was taken.");
+    }else show("Offer declined.");
     await loadConversation(activeConversation); await loadInbox();
-    if(messageResult.error) show("Offer response saved, but its chat update could not be sent.");
+    if(messageResult.error) show("Your response was saved, but the chat update could not be sent.");
+    setBusy(false);
   };
 
   const sendMessage = async e => {
@@ -842,7 +854,7 @@ function App() {
         <section className="inbox-chat">{activeConversation ? <>
           <div className="inbox-chat-head"><div><strong>{(activeConversation.buyer_id===session?.user?.id?activeConversation.seller:activeConversation.buyer)?.full_name||"Member"}</strong><small>{activeConversation.gigs?.title||"Service discussion"}</small></div><span className="seller-tag">Inbox</span></div>
           <div className="inbox-chat-body">{messages.map(m=><div key={m.id} className={m.sender_id===session?.user?.id?"chat-msg own":"chat-msg"}><strong>{m.profiles?.full_name||(m.sender_id===session?.user?.id?"You":"Member")}</strong><p>{m.body}</p><small className="chat-msg-meta"><time dateTime={m.created_at}>{new Date(m.created_at).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}</time>{m.sender_id===session?.user?.id&&<span className={m.read_at?"chat-read-status seen":"chat-read-status"}>{m.read_at?"Seen":"Sent"}</span>}</small></div>)}{!messages.length&&<div className="empty-chat">Say hello and discuss the work.</div>}
-            {conversationOffers.map(o=><div className={"custom-offer-card offer-"+o.status} key={o.id}><div className="offer-card-top"><div className="eyebrow muted">CUSTOM OFFER</div><span className={"offer-status "+o.status}>{o.status==="pending"?"Awaiting response":o.status==="accepted"?"Accepted":"Declined"}</span></div><h3>{o.title}</h3><p>{o.description}</p><div className="custom-offer-meta"><strong>{money(o.amount)}</strong><span>{o.delivery_days} days delivery</span></div>{o.status==="pending"&&o.buyer_id===session?.user?.id&&<div className="offer-actions"><button type="button" className="outline-btn" onClick={()=>respondToOffer(o,"declined")}>Decline</button><button type="button" className="btn btn-dark btn-small" onClick={()=>respondToOffer(o,"accepted")}>Accept offer</button></div>}{o.status==="accepted"&&<p className="offer-disclaimer">Agreed price only. An order has not been created and no payment has been taken.</p>}</div>)}
+            {conversationOffers.map(o=><div className={"custom-offer-card offer-"+o.status} key={o.id}><div className="offer-card-top"><div className="eyebrow muted">CUSTOM OFFER</div><span className={"offer-status "+o.status}>{o.status==="pending"?"Awaiting response":o.status==="accepted"?"Accepted":"Declined"}</span></div><h3>{o.title}</h3><p>{o.description}</p><div className="custom-offer-meta"><strong>{money(o.amount)}</strong><span>{o.delivery_days} days delivery</span></div>{o.status==="pending"&&o.buyer_id===session?.user?.id&&<div className="offer-actions"><button type="button" className="outline-btn" onClick={()=>respondToOffer(o,"declined")}>Decline</button><button type="button" className="btn btn-dark btn-small" onClick={()=>respondToOffer(o,"accepted")}>Accept offer</button></div>}{o.status==="accepted"&&<div className="offer-disclaimer">{o.order_id?<><strong>Order created</strong><span> · No payment has been taken.</span><button type="button" className="text-action" onClick={()=>navigate("orders")}>View order <ArrowRight size={14}/></button></>:<>Offer accepted. Order record is being refreshed. No payment has been taken.</>}</div>}</div>)}
           </div>
           {activeConversation.seller_id===session?.user?.id&&<form className="custom-offer-form" onSubmit={sendCustomOffer}><strong>Send a custom offer</strong><small className="offer-form-hint">Agree on the work, price and delivery time here. Accepting an offer will not create an order or take payment yet.</small><div className="two-fields"><input required placeholder="Offer title" value={offerForm.title} onChange={e=>setOfferForm({...offerForm,title:e.target.value})}/><input required type="number" min="1" placeholder="Price (PKR)" value={offerForm.amount} onChange={e=>setOfferForm({...offerForm,amount:e.target.value})}/></div><textarea required rows="2" placeholder="Describe the work..." value={offerForm.description} onChange={e=>setOfferForm({...offerForm,description:e.target.value})}/><div className="offer-send-row"><label>Delivery days<input required type="number" min="1" max="365" value={offerForm.delivery_days} onChange={e=>setOfferForm({...offerForm,delivery_days:e.target.value})}/></label><button className="outline-btn">Send offer</button></div></form>}
           <form className="chat-compose" onSubmit={sendConversationMessage}><input value={messageText} onChange={e=>setMessageText(e.target.value)} placeholder="Write a message..." required/><button className="btn btn-dark"><Send size={17}/></button></form>
