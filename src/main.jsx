@@ -27,6 +27,7 @@ function App() {
   const [authForm, setAuthForm] = useState({ email:"", password:"", name:"", role:"buyer" });
   const [gigForm, setGigForm] = useState({ title:"", description:"", category:"Graphics & Design", price:"", delivery_days:"3" });
   const [orderDetails, setOrderDetails] = useState("");
+  const [selectedPayment, setSelectedPayment] = useState("JazzCash");
   const [messages, setMessages] = useState([]);
   const [messageText, setMessageText] = useState("");
   const [activeOrder, setActiveOrder] = useState(null);
@@ -124,16 +125,7 @@ function App() {
   };
 
   const placeOrder = async () => {
-    if (!session?.user || !profile) return show("Order place karne ke liye pehle login karein.");
-    if (selectedGig.seller_id === session.user.id) return show("Aap apni gig khud order nahi kar sakte.");
-    setBusy(true);
-    const { error } = await supabase.from("orders").insert({
-      gig_id:selectedGig.id, buyer_id:session.user.id, seller_id:selectedGig.seller_id,
-      requirements:orderDetails, amount:selectedGig.price, status:"pending", payment_status:"simulated"
-    });
-    if (error) show(error.message);
-    else { show("Demo checkout successful — koi real payment nahi hui."); await loadOrders(); setSelectedGig(null); navigate("orders"); }
-    setBusy(false);
+    show("Payment service is currently unavailable. Please try again later.");
   };
 
   const updateOrder = async (id, status) => {
@@ -212,7 +204,7 @@ function App() {
           </button>
         </div>
       </section>
-      <section className="trust-strip"><span><ShieldCheck size={18}/> For every kind of work</span><span><CheckCircle2 size={18}/> Simulated checkout</span><span><MessageCircle size={18}/> Buyer-seller messaging</span></section>
+      <section className="trust-strip"><span><ShieldCheck size={18}/> For every kind of work</span><span><CheckCircle2 size={18}/> Multiple payment options</span><span><MessageCircle size={18}/> Buyer-seller messaging</span></section>
       <main className="content" id="explore">
         <div className="section-heading"><div><div className="eyebrow muted">DISCOVER SERVICES</div><h2>Explore all services</h2><p>Browse digital skills, skilled trades and everyday services.</p></div><button className="outline-btn" onClick={()=>{setSearch("");setCategory("All")}}><Filter size={16}/> Clear filters</button></div>
         <div className="category-row">{categories.map(c=><button key={c} className={category===c?"category active":"category"} onClick={()=>setCategory(c)}>{c}</button>)}</div>
@@ -251,9 +243,9 @@ function App() {
 
     {page === "admin" && <main className="content page-content"><div className="eyebrow muted">ADMINISTRATION</div><h2>Admin overview</h2><p className="subtext">Basic marketplace moderation view.</p><div className="dashboard-grid"><div className="metric-card"><span>Total active gigs</span><strong>{gigs.length}</strong></div><div className="metric-card"><span>Total orders</span><strong>{orders.length}</strong></div><div className="metric-card"><span>Marketplace members</span><strong>—</strong><small>Use Supabase dashboard for user management</small></div></div><h3 className="list-title">Recent gigs</h3>{gigs.slice(0,10).map(g=><div className="admin-row" key={g.id}><div><strong>{g.title}</strong><small>{g.profiles?.full_name} · {g.category}</small></div><strong>{money(g.price)}</strong><button className="outline-btn" onClick={async()=>{const {error}=await supabase.from("gigs").update({is_active:false}).eq("id",g.id);if(error)show(error.message);else{show("Gig deactivated.");loadGigs();}}}>Deactivate</button></div>)}</main>}
 
-    {selectedGig && <div className="modal-backdrop" onClick={()=>setSelectedGig(null)}><div className="gig-modal" onClick={e=>e.stopPropagation()}><button className="modal-close" onClick={()=>setSelectedGig(null)}><X/></button><div className="gig-art large-art"><Sparkles size={34}/></div><div className="eyebrow muted">{selectedGig.category}</div><h2>{selectedGig.title}</h2><div className="seller-line"><span className="avatar">{(selectedGig.profiles?.full_name||"S").slice(0,1).toUpperCase()}</span><strong>{selectedGig.profiles?.full_name || "Skill Bridge seller"}</strong><span className="seller-tag">Seller</span></div><p>{selectedGig.description}</p><div className="gig-facts"><span><Clock3 size={16}/> {selectedGig.delivery_days} day delivery</span><span><ShieldCheck size={16}/> Simulated checkout</span></div><div className="modal-bottom"><div><small>Starting at</small><strong>{money(selectedGig.price)}</strong></div>{profile?.role==="buyer"||!profile?<button className="btn btn-dark" onClick={()=>{if(!session){setSelectedGig(null);navigate("auth");show("Please log in as a buyer to continue.");}else setPage("checkout");}}>Continue <ArrowRight size={17}/></button>:<span className="subtext">Log in as a buyer to order</span>}</div>{page==="checkout"&&<div className="checkout-box"><h3>Confirm your demo order</h3><label>Project requirements<textarea rows="3" value={orderDetails} onChange={e=>setOrderDetails(e.target.value)} placeholder="Tell the seller what you need..."/></label><div className="demo-payment"><Wallet size={18}/><div><strong>Demo checkout</strong><small>No real money is charged. No card details are requested.</small></div><span>TEST</span></div><button className="btn btn-dark full" disabled={busy} onClick={placeOrder}>Place demo order · {money(selectedGig.price)}</button></div>}</div></div>}
+    {selectedGig && <div className="modal-backdrop" onClick={()=>setSelectedGig(null)}><div className="gig-modal" onClick={e=>e.stopPropagation()}><button className="modal-close" onClick={()=>setSelectedGig(null)}><X/></button><div className="gig-art large-art"><Sparkles size={34}/></div><div className="eyebrow muted">{selectedGig.category}</div><h2>{selectedGig.title}</h2><div className="seller-line"><span className="avatar">{(selectedGig.profiles?.full_name||"S").slice(0,1).toUpperCase()}</span><strong>{selectedGig.profiles?.full_name || "Skill Bridge seller"}</strong><span className="seller-tag">Seller</span></div><p>{selectedGig.description}</p><div className="gig-facts"><span><Clock3 size={16}/> {selectedGig.delivery_days} day delivery</span><span><ShieldCheck size={16}/> Simulated checkout</span></div><div className="modal-bottom"><div><small>Starting at</small><strong>{money(selectedGig.price)}</strong></div>{profile?.role==="buyer"||!profile?<button className="btn btn-dark" onClick={()=>{if(!session){setSelectedGig(null);navigate("auth");show("Please log in as a buyer to continue.");}else setPage("checkout");}}>Continue <ArrowRight size={17}/></button>:<span className="subtext">Log in as a buyer to order</span>}</div>{page==="checkout"&&<div className="checkout-box"><h3>Choose a payment method</h3><label>Project requirements<textarea rows="3" value={orderDetails} onChange={e=>setOrderDetails(e.target.value)} placeholder="Tell the seller what you need..."/></label><div className="payment-options"><p className="payment-group-title">Pakistan</p>{["JazzCash","Easypaisa"].map(method=><button type="button" key={method} className={selectedPayment===method?"payment-option selected":"payment-option"} onClick={()=>setSelectedPayment(method)}><span>{method}</span><strong>{selectedPayment===method?"Selected":"Select"}</strong></button>)}<p className="payment-group-title">International</p>{["Visa / Mastercard","PayPal","International bank transfer"].map(method=><button type="button" key={method} className={selectedPayment===method?"payment-option selected":"payment-option"} onClick={()=>setSelectedPayment(method)}><span>{method}</span><strong>{selectedPayment===method?"Selected":"Select"}</strong></button>)}</div><div className="payment-unavailable"><strong>Payment service is currently unavailable.</strong><span>Please try again later. No payment has been taken.</span></div><button className="btn btn-dark full" onClick={placeOrder}>Continue to payment · {money(selectedGig.price)}</button></div>}</div></div>}
 
-    <footer className="footer"><div className="footer-brand"><span className="brand-mark"><Sparkles size={17}/></span><span className="brand-wordmark"><span>skill<span className="brand-accent">bridge</span></span><small>Made by Yousaf</small></span></div><p>A place where skills meet opportunity.</p><div className="footer-bottom"><span>© {new Date().getFullYear()} Skill Bridge · A place where skills meet opportunity</span><span>Demo checkout · No real payments</span></div></footer>
+    <footer className="footer"><div className="footer-brand"><span className="brand-mark"><Sparkles size={17}/></span><span className="brand-wordmark"><span>skill<span className="brand-accent">bridge</span></span><small>Made by Yousaf</small></span></div><p>A place where skills meet opportunity.</p><div className="footer-bottom"><span>© {new Date().getFullYear()} Skill Bridge · A place where skills meet opportunity</span><span>Payment options listed · Service unavailable</span></div></footer>
   </div>;
 }
 
