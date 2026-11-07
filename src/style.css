@@ -462,3 +462,5 @@
 .revision-request-form label{display:block;font-size:11px;font-weight:750;color:#475467}
 .revision-request-form textarea{display:block;width:100%;margin-top:7px;padding:10px;border:1px solid #dfe6e2;border-radius:8px;font:inherit;font-size:12px;resize:vertical}
 .revision-request-form>div{display:flex;justify-content:flex-end;align-items:center;gap:12px;margin-top:10px}
+
+.status.revision_requested{background:#fff4df;color:#8b6415;border:1px solid #f4dfb2}
