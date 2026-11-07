@@ -510,7 +510,7 @@ function App() {
   const packageOptions = selectedGig?.packages?.length ? selectedGig.packages : selectedGig ? [{name:"Basic",description:selectedGig.description,price:selectedGig.price,delivery_days:selectedGig.delivery_days,revisions:0}] : [];
   const activePackage = packageOptions.find(p=>p.name===selectedPackage) || packageOptions[0];
 
-  return <div className="app-shell">
+  return <div className="app-shell" lang={language} dir={["ur","pa","ar"].includes(language)?"rtl":"ltr"}>
     <header className="topbar">
       <button className="brand" onClick={() => navigate("home")}><span className="brand-mark"><Sparkles size={20}/></span><span className="brand-wordmark"><span>skill<span className="brand-accent">bridge</span></span><small>Made by Yousaf</small></span></button>
       <nav className="desktop-nav">
