@@ -425,14 +425,20 @@ function App() {
   };
 
   const updateOrder = async (id, status) => {
-    const { error } = await supabase.from("orders").update({ status }).eq("id", id);
-    if (error) show(error.message); else { show("Order status updated."); loadOrders(); }
+    const { error } = await supabase.rpc("transition_order_status", {
+      p_order_id:id, p_next_status:status, p_revision_note:null
+    });
+    if (error) { show(error.message); return; }
+    show(status==="completed"?"Order completed successfully.":status==="delivered"?"Delivery submitted to the buyer.":"Order accepted and moved to In Progress.");
+    await loadOrders();
   };
 
   const requestRevision = async (order,note) => {
     const clean=String(note||"").trim();
-    if (!clean) return show("Please explain what needs to be revised.");
-    const {error}=await supabase.from("orders").update({status:"revision_requested",revision_note:clean}).eq("id",order.id).eq("buyer_id",session.user.id);
+    if (clean.length<3) return show("Please explain what needs to be revised.");
+    const {error}=await supabase.rpc("transition_order_status",{
+      p_order_id:order.id,p_next_status:"revision_requested",p_revision_note:clean
+    });
     if (error) { show(error.message); return; }
     const {error:messageError}=await supabase.from("messages").insert({order_id:order.id,sender_id:session.user.id,body:"Revision requested: "+clean});
     await loadOrders();
