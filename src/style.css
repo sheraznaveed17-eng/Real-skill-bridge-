@@ -518,7 +518,7 @@
 
 
 /* Marketplace advanced filters */
-.marketplace-filters{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:15px 0 20px;padding:13px;border:1px solid #e7ece9;border-radius:10px;background:#fbfdfc}
+.marketplace-filters{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:15px 0 20px;padding:13px;border:1px solid #e7ece9;border-radius:10px;background:#fbfdfc}
 .marketplace-filters label{display:grid;gap:6px;color:#667085;font-size:10px;font-weight:750}
 .marketplace-filters input,.marketplace-filters select{width:100%;min-width:0;height:36px;padding:0 9px;border:1px solid #dfe5e2;border-radius:7px;background:#fff;color:#344054;font:inherit;font-size:11px}
 @media(max-width:640px){.marketplace-filters{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;padding:10px}.marketplace-filters label{font-size:9px}}
