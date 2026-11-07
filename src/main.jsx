@@ -53,6 +53,7 @@ function App() {
   const [selectedPayment, setSelectedPayment] = useState("JazzCash");
   const [messages, setMessages] = useState([]);
   const [conversations, setConversations] = useState([]);
+  const [unreadMessages,setUnreadMessages]=useState(0);
   const [activeConversation, setActiveConversation] = useState(null);
   const [conversationOffers, setConversationOffers] = useState([]);
   const [offerForm, setOfferForm] = useState({title:"",description:"",amount:"",delivery_days:"3"});
@@ -418,8 +419,12 @@ function App() {
 
   const loadInbox = async () => {
     if (!session?.user) return;
-    const {data,error} = await supabase.from("conversations").select("*, gigs(title), buyer:profiles!conversations_buyer_id_fkey(full_name,avatar_url), seller:profiles!conversations_seller_id_fkey(full_name,avatar_url)").or("buyer_id.eq."+session.user.id+",seller_id.eq."+session.user.id).order("updated_at",{ascending:false});
-    if (!error) setConversations(data || []);
+    const [threads,unread]=await Promise.all([
+      supabase.from("conversations").select("*, gigs(title), buyer:profiles!conversations_buyer_id_fkey(full_name,avatar_url), seller:profiles!conversations_seller_id_fkey(full_name,avatar_url)").or("buyer_id.eq."+session.user.id+",seller_id.eq."+session.user.id).order("updated_at",{ascending:false}),
+      supabase.from("messages").select("id",{count:"exact",head:true}).neq("sender_id",session.user.id).is("read_at",null)
+    ]);
+    if (!threads.error) setConversations(threads.data || []);
+    if (!unread.error) setUnreadMessages(unread.count||0);
   };
 
   const loadConversation = async conversation => {
@@ -431,6 +436,7 @@ function App() {
     if (!mr.error) setMessages(mr.data || []);
     if (!offers.error) setConversationOffers(offers.data || []);
     await supabase.from("messages").update({read_at:new Date().toISOString()}).eq("conversation_id",conversation.id).neq("sender_id",session.user.id).is("read_at",null);
+    await loadInbox();
   };
 
   const startConversation = async gig => {
@@ -506,7 +512,7 @@ function App() {
       <nav className="desktop-nav">
         <button onClick={() => navigate("home")}>{t.explore}</button>
         {session && <button onClick={() => navigate("orders")}>{t.orders}</button>}
-        {session && <button onClick={() => {setActiveOrder(null);setActiveConversation(null);setPage("messages");loadInbox();}}>{t.messages}</button>}
+        {session && <button onClick={() => {setActiveOrder(null);setActiveConversation(null);setPage("messages");loadInbox();}}>{t.messages}{unreadMessages>0&&<span className="unread-count">{unreadMessages>9?"9+":unreadMessages}</span>}</button>}
         {session && activeMode==="seller" && <button onClick={() => navigate("my-gigs")}>{t.myServices}</button>}
         {isAdmin && <button onClick={() => navigate("admin")}>Admin</button>}
       </nav>
@@ -542,7 +548,7 @@ function App() {
     <nav className="marketplace-subnav" aria-label="Popular categories">
       {categories.slice(1,11).map(c=><button key={c} className={category===c?"selected":""} onClick={()=>{setCategory(c);navigate("home");document.getElementById("explore")?.scrollIntoView({behavior:"smooth"});}}>{c}</button>)}
     </nav>
-    {mobileMenu && <div className="mobile-menu"><button onClick={()=>navigate("home")}>Explore</button>{session ? <><button onClick={()=>navigate("dashboard")}>Dashboard</button><button onClick={()=>navigate("profile")}>My profile</button><button onClick={()=>navigate("saved")}>Saved services</button><button onClick={()=>navigate("orders")}>Orders</button>{activeMode==="seller"&&<button onClick={()=>navigate("portfolio")}>My portfolio</button>}<button onClick={()=>{setActiveOrder(null);setActiveConversation(null);setPage("messages");loadInbox();}}>Messages</button>{activeMode==="seller"&&<button onClick={()=>navigate("my-gigs")}>My services</button>}{isAdmin&&<button onClick={()=>navigate("admin")}>Admin moderation</button>}<button onClick={signOut}>Log out</button></> : <><button onClick={()=>{setAuthMode("login");navigate("auth")}}>Log in</button><button onClick={()=>{setAuthMode("signup");navigate("auth")}}>Join Skill Bridge</button></>}</div>}
+    {mobileMenu && <div className="mobile-menu"><button onClick={()=>navigate("home")}>Explore</button>{session ? <><button onClick={()=>navigate("dashboard")}>Dashboard</button><button onClick={()=>navigate("profile")}>My profile</button><button onClick={()=>navigate("saved")}>Saved services</button><button onClick={()=>navigate("orders")}>Orders</button>{activeMode==="seller"&&<button onClick={()=>navigate("portfolio")}>My portfolio</button>}<button onClick={()=>{setActiveOrder(null);setActiveConversation(null);setPage("messages");loadInbox();}}>Messages {unreadMessages>0&&"("+unreadMessages+")"}</button>{activeMode==="seller"&&<button onClick={()=>navigate("my-gigs")}>My services</button>}{isAdmin&&<button onClick={()=>navigate("admin")}>Admin moderation</button>}<button onClick={signOut}>Log out</button></> : <><button onClick={()=>{setAuthMode("login");navigate("auth")}}>Log in</button><button onClick={()=>{setAuthMode("signup");navigate("auth")}}>Join Skill Bridge</button></>}</div>}
     {demoMode && <div className="setup-banner"><span><Sparkles size={15}/> Setup required: connect your free Supabase project to enable real multi-user features.</span><button onClick={()=>show("README.md mein Android setup ke simple steps diye gaye hain.")}>How to connect</button></div>}
     {notice && <div className="toast"><CheckCircle2 size={18}/>{notice}<button onClick={()=>setNotice("")}><X size={16}/></button></div>}
 
