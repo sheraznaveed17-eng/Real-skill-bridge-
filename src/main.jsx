@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import {
   Search, BriefcaseBusiness, UserRound, Plus, LogOut, Menu, X, Star,
   MessageCircle, LayoutDashboard, ShieldCheck, ArrowRight, CheckCircle2,
-  Clock3, Wallet, Sparkles, Filter, PackageCheck, Send, ChevronRight
+  Clock3, Wallet, Sparkles, Filter, PackageCheck, Send, ChevronRight, Camera, Save, UserCircle, Settings
 } from "lucide-react";
 import { supabase, isConfigured } from "./supabase";
 import "./style.css";
@@ -32,6 +32,8 @@ function App() {
   const [messageText, setMessageText] = useState("");
   const [activeOrder, setActiveOrder] = useState(null);
   const [reviewForm, setReviewForm] = useState({ rating:"5", comment:"" });
+  const [profileForm, setProfileForm] = useState({ full_name:"", bio:"" });
+  const [avatarBusy, setAvatarBusy] = useState(false);
 
   const demoMode = !isConfigured;
 
@@ -71,11 +73,11 @@ function App() {
 
   const loadProfile = async user => {
     const { data } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
-    if (data) setProfile(data);
+    if (data) { setProfile(data); setProfileForm({ full_name:data.full_name || "", bio:data.bio || "" }); }
     else {
       const fallback = { id:user.id, full_name:user.user_metadata?.full_name || user.email?.split("@")[0], role:user.user_metadata?.role || "buyer" };
       const { data: created } = await supabase.from("profiles").upsert(fallback).select().single();
-      setProfile(created || fallback);
+      setProfile(created || fallback); setProfileForm({ full_name:fallback.full_name || "", bio:fallback.bio || "" });
     }
   };
 
@@ -130,6 +132,37 @@ function App() {
   };
 
   const signOut = async () => { if (!demoMode) await supabase.auth.signOut(); navigate("home"); show("You have logged out."); };
+
+  const saveProfile = async e => {
+    e.preventDefault();
+    if (!session?.user) return;
+    setBusy(true);
+    const { data, error } = await supabase.from("profiles").update({
+      full_name:profileForm.full_name.trim(), bio:profileForm.bio.trim()
+    }).eq("id", session.user.id).select().single();
+    if (error) show(error.message);
+    else { setProfile(data); show("Profile updated successfully."); }
+    setBusy(false);
+  };
+
+  const uploadAvatar = async e => {
+    const file = e.target.files?.[0];
+    if (!file || !session?.user) return;
+    if (!file.type.startsWith("image/")) return show("Please choose an image file.");
+    if (file.size > 3 * 1024 * 1024) return show("Image must be smaller than 3 MB.");
+    setAvatarBusy(true);
+    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+    const path = session.user.id + "/avatar-" + Date.now() + "." + ext;
+    const { error:uploadError } = await supabase.storage.from("avatars").upload(path, file, { upsert:true, contentType:file.type });
+    if (uploadError) { show(uploadError.message.includes("Bucket not found") ? "Avatar storage setup is required in Supabase before uploading." : uploadError.message); setAvatarBusy(false); return; }
+    const { data:urlData } = supabase.storage.from("avatars").getPublicUrl(path);
+    const { data, error } = await supabase.from("profiles").update({ avatar_url:urlData.publicUrl }).eq("id", session.user.id).select().single();
+    if (error) show(error.message);
+    else { setProfile(data); show("Profile picture updated."); }
+    setAvatarBusy(false);
+    e.target.value = "";
+  };
+
 
   const createGig = async e => {
     e.preventDefault();
@@ -191,13 +224,13 @@ function App() {
       <div className="top-actions">
         <button className="icon-btn mobile-only" onClick={() => setMobileMenu(!mobileMenu)}>{mobileMenu?<X/>:<Menu/>}</button>
         {session ? <>
-          <button className="nav-plain" onClick={() => navigate("dashboard")}><LayoutDashboard size={17}/> Dashboard</button>
+          <button className="nav-plain" onClick={() => navigate("dashboard")}><LayoutDashboard size={17}/> Dashboard</button><button className="nav-plain" onClick={() => navigate("profile")}><UserCircle size={17}/> Profile</button>
           <button className="profile-pill" onClick={() => navigate("dashboard")}><span className="avatar">{(profile?.full_name || "U").slice(0,1).toUpperCase()}</span><span>{profile?.full_name || "My account"}</span></button>
           <button className="icon-btn" title="Logout" onClick={signOut}><LogOut size={18}/></button>
         </> : <><button className="nav-plain" onClick={() => {setAuthMode("login");navigate("auth");}}>Log in</button><button className="btn btn-dark btn-small" onClick={() => {setAuthMode("signup");navigate("auth");}}>Join Skill Bridge</button></>}
       </div>
     </header>
-    {mobileMenu && <div className="mobile-menu"><button onClick={()=>navigate("home")}>Explore</button>{session && <><button onClick={()=>navigate("orders")}>Orders</button><button onClick={()=>navigate("dashboard")}>Dashboard</button></>}</div>}
+    {mobileMenu && <div className="mobile-menu"><button onClick={()=>navigate("home")}>Explore</button>{session && <><button onClick={()=>navigate("orders")}>Orders</button><button onClick={()=>navigate("dashboard")}>Dashboard</button><button onClick={()=>navigate("profile")}>Profile</button></>}</div>}
     {demoMode && <div className="setup-banner"><span><Sparkles size={15}/> Setup required: connect your free Supabase project to enable real multi-user features.</span><button onClick={()=>show("README.md mein Android setup ke simple steps diye gaye hain.")}>How to connect</button></div>}
     {notice && <div className="toast"><CheckCircle2 size={18}/>{notice}<button onClick={()=>setNotice("")}><X size={16}/></button></div>}
 
@@ -257,6 +290,32 @@ function App() {
 
     {page === "orders" && <main className="content page-content"><div className="eyebrow muted">WORKSPACE</div><h2>Your orders</h2><p className="subtext">Track purchases and manage projects from one place.</p><div className="orders-list">{myOrders.map(o=><OrderCard key={o.id} order={o} userId={session?.user?.id} onUpdate={updateOrder} onMessage={loadMessages} onReview={submitReview} reviewForm={reviewForm} setReviewForm={setReviewForm}/>)}</div>{!myOrders.length&&<Empty icon={<PackageCheck/>} title="No orders yet" text="When you place or receive an order, it will appear here."/>}</main>}
 
+
+    {page === "profile" && <main className="content page-content profile-page">
+      <div className="eyebrow muted">YOUR ACCOUNT</div><h2>My profile</h2><p className="subtext">Add a photo and tell people a little about yourself.</p>
+      <div className="profile-layout">
+        <section className="profile-card">
+          <div className="profile-avatar-wrap">
+            {profile?.avatar_url ? <img className="profile-avatar-large" src={profile.avatar_url} alt="Your profile"/> : <div className="profile-avatar-placeholder"><UserCircle size={58}/></div>}
+            <label className="avatar-upload-button"><Camera size={16}/>{avatarBusy?"Uploading...":"Change photo"}<input type="file" accept="image/*" onChange={uploadAvatar} disabled={avatarBusy}/></label>
+          </div>
+          <h3>{profile?.full_name || "Skill Bridge member"}</h3><span className="profile-role-label">{profile?.role || "Member"}</span>
+          <p>{profile?.bio || "Add a short introduction to your profile."}</p>
+          <small>JPG, PNG or WEBP · Maximum 3 MB</small>
+        </section>
+        <section className="profile-edit-card">
+          <h3><Settings size={18}/> Edit profile</h3>
+          <form className="stack-form" onSubmit={saveProfile}>
+            <label>Full name<input required maxLength="80" value={profileForm.full_name} onChange={e=>setProfileForm({...profileForm,full_name:e.target.value})} placeholder="Your full name"/></label>
+            <label>About me<textarea rows="5" maxLength="500" value={profileForm.bio} onChange={e=>setProfileForm({...profileForm,bio:e.target.value})} placeholder="Introduce yourself, your experience and the work you do..."/></label>
+            <label>Email address<input value={session?.user?.email || ""} readOnly/></label>
+            <label>Account type<input value={profile?.role || "buyer"} readOnly/></label>
+            <button className="btn btn-dark full" disabled={busy}><Save size={17}/>{busy?"Saving...":"Save changes"}</button>
+          </form>
+        </section>
+      </div>
+    </main>}
+
     {page === "dashboard" && <main className="content page-content">
       <div className="eyebrow muted">{profile?.role==="seller"?"SELLER WORKSPACE":"BUYER WORKSPACE"}</div>
       <h2>Hello, {profile?.full_name || "there"} 👋</h2>
@@ -277,7 +336,7 @@ function App() {
           <button onClick={()=>navigate("home")}><Search/> Find a service <ChevronRight/></button>
           <button onClick={()=>navigate("orders")}><PackageCheck/> View my orders <ChevronRight/></button>
         </>}
-        {isAdmin&&<button onClick={()=>navigate("admin")}><ShieldCheck/> Admin panel <ChevronRight/></button>}
+        <button onClick={()=>navigate("profile")}><UserCircle/> Edit my profile <ChevronRight/></button>{isAdmin&&<button onClick={()=>navigate("admin")}><ShieldCheck/> Admin panel <ChevronRight/></button>}
       </div>
     </main>}
 
