@@ -66,6 +66,7 @@ function App() {
   const [accountMenu, setAccountMenu] = useState(false);
   const [selectedGig, setSelectedGig] = useState(null);
   const [authMode, setAuthMode] = useState("login");
+  const [signupConfirmationPending, setSignupConfirmationPending] = useState(false);
   const [authForm, setAuthForm] = useState({ email:"", password:"", name:"", role:"buyer" });
   const [gigForm, setGigForm] = useState({ title:"", description:"", category:"Graphics & Design", price:"", delivery_days:"3", image_url:"" });
   const [extraPackages, setExtraPackages] = useState([{name:"Standard",description:"",price:"",delivery_days:"5",revisions:"2"},{name:"Premium",description:"",price:"",delivery_days:"7",revisions:"3"}]);
@@ -234,8 +235,14 @@ function App() {
           options:{ data:{ full_name:authForm.name, role:authForm.role, active_mode:authForm.role, account_modes:["buyer","seller"] } }
         });
         if (error) throw error;
-        if (data.session) show("Account ban gaya! Skill Bridge mein khush aamdeed.");
-        else show("Signup request complete. Email confirmation aaye to verify karein.");
+        if (data.session) {
+          setSignupConfirmationPending(false);
+          show("Account ban gaya! Skill Bridge mein khush aamdeed.");
+        } else {
+          setSignupConfirmationPending(true);
+          setAuthMode("login");
+          show("Confirmation email sent. Verify your email, then log in here.");
+        }
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email:authForm.email, password:authForm.password });
         if (error) throw error;
@@ -747,13 +754,14 @@ function App() {
     </>}
 
     {page === "auth" && <main className="narrow-page"><div className="auth-card"><div className="auth-logo"><span className="brand-mark"><Sparkles size={20}/></span></div><div className="eyebrow muted">WELCOME TO SKILL BRIDGE</div><h2>{authMode==="signup"?"Create your account":"Welcome back"}</h2><p className="subtext">{authMode==="signup"?"Join the community of buyers and independent sellers.":"Log in to manage your projects and services."}</p>
+      {signupConfirmationPending && authMode==="login" && <div className="auth-mode-note" role="status"><strong>Check your email to confirm your account.</strong><p>After confirming, return here and log in with the same email and password. If you opened the confirmation link on your phone, your laptop will not sign in automatically — sign in on this laptop after verification.</p></div>}
       <form onSubmit={signUpOrIn} className="stack-form">
         {authMode==="signup" && <><label>Full name<input required value={authForm.name} onChange={e=>setAuthForm({...authForm,name:e.target.value})} placeholder="Your name"/></label><p className="auth-mode-note">One account gives you both Buyer and Seller modes. You can switch anytime.</p></>}
         <label>Email address<input required type="email" value={authForm.email} onChange={e=>setAuthForm({...authForm,email:e.target.value})} placeholder="you@example.com"/></label>
         <label>Password<input required minLength="6" type="password" value={authForm.password} onChange={e=>setAuthForm({...authForm,password:e.target.value})} placeholder="At least 6 characters"/></label>
         <button className="btn btn-dark full" disabled={busy}>{busy?"Please wait...":authMode==="signup"?"Create account":"Log in"} <ArrowRight size={17}/></button>
       </form>
-      <div className="switch-auth">{authMode==="signup"?"Already have an account?":"New to Skill Bridge?"} <button onClick={()=>setAuthMode(authMode==="signup"?"login":"signup")}>{authMode==="signup"?"Log in":"Create an account"}</button></div>
+      <div className="switch-auth">{authMode==="signup"?"Already have an account?":"New to Skill Bridge?"} <button onClick={()=>{setAuthMode(authMode==="signup"?"login":"signup");if(authMode==="login")setSignupConfirmationPending(false);}}>{authMode==="signup"?"Log in":"Create an account"}</button></div>
       <button className="back-link" onClick={()=>navigate("home")}>← Back to marketplace</button>
     </div></main>}
 
