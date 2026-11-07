@@ -99,11 +99,11 @@ function App() {
   }, [session]);
 
   useEffect(() => {
-    if (!session?.user || !gigs.length) return;
-    const unseen = gigs.filter(g => g.seller_id !== session.user.id && !impressedGigIds.includes(g.id));
+    if (!gigs.length) return;
+    const unseen = gigs.filter(g => (!session?.user || g.seller_id !== session.user.id) && !impressedGigIds.includes(g.id));
     if (!unseen.length) return;
     const ids = unseen.map(g => g.id);
-    supabase.from("gig_events").insert(unseen.map(g => ({gig_id:g.id,actor_id:session.user.id,event_type:"impression"}))).then(({error}) => {
+    supabase.from("gig_events").insert(unseen.map(g => ({gig_id:g.id,actor_id:session?.user?.id||null,event_type:"impression"}))).then(({error}) => {
       if (!error) setImpressedGigIds(prev => [...prev,...ids]);
     });
   }, [gigs, session?.user?.id, impressedGigIds]);
@@ -266,8 +266,8 @@ function App() {
   };
 
   const trackGigClick = async gig => {
-    if (!session?.user || gig.seller_id===session.user.id) return;
-    const {error}=await supabase.from("gig_events").insert({gig_id:gig.id,actor_id:session.user.id,event_type:"click"});
+    if (session?.user && gig.seller_id===session.user.id) return;
+    const {error}=await supabase.from("gig_events").insert({gig_id:gig.id,actor_id:session?.user?.id||null,event_type:"click"});
     if (!error) setGigAnalytics(prev=>({...prev,[gig.id]:{impressions:prev[gig.id]?.impressions||0,clicks:(prev[gig.id]?.clicks||0)+1}}));
   };
 
@@ -336,7 +336,8 @@ function App() {
 
   const submitReport = async e => {
     e.preventDefault();
-    if (!session?.user || !selectedGig) return;
+    if (!session?.user) { setAuthMode("login"); setSelectedGig(null); navigate("auth"); show("Log in to submit a report."); return; }
+    if (!selectedGig) return;
     const {error}=await supabase.from("reports").insert({reporter_id:session.user.id,reported_user_id:selectedGig.seller_id,gig_id:selectedGig.id,reason:reportForm.reason,details:reportForm.details.trim()});
     if (error) show(error.message);
     else {setReportOpen(false);setReportForm({reason:"fake_service",details:""});show("Report submitted. Three reports from different users will automatically start an investigation.");}
@@ -643,7 +644,7 @@ function App() {
               <section className="dashboard-panel">
                 <div className="dashboard-panel-heading"><div><h3>Priority tasks</h3><p>Things that may need your attention.</p></div><span className="dashboard-panel-icon"><Clock3 size={17}/></span></div>
                 {myOrders.filter(o=>o.seller_id===session?.user?.id && ["pending","in_progress","delivered","revision_requested"].includes(o.status)).length
-                  ? myOrders.filter(o=>o.seller_id===session?.user?.id && ["pending","in_progress","delivered"].includes(o.status)).slice(0,4).map(o=><div className="dashboard-task" key={o.id}><span className="dashboard-task-dot"/><div><strong>{o.status==="pending"?"Review new order":o.status==="in_progress"?"Continue active order":o.status==="revision_requested"?"Complete requested revision":"Waiting for buyer approval"}</strong><small>{o.gigs?.title || "Marketplace service"} · {o.buyer?.full_name || "Buyer"}</small></div><span className={`status ${o.status}`}>{o.status.replace("_"," ")}</span></div>)
+                  ? myOrders.filter(o=>o.seller_id===session?.user?.id && ["pending","in_progress","delivered","revision_requested"].includes(o.status)).slice(0,4).map(o=><div className="dashboard-task" key={o.id}><span className="dashboard-task-dot"/><div><strong>{o.status==="pending"?"Review new order":o.status==="in_progress"?"Continue active order":o.status==="revision_requested"?"Complete requested revision":"Waiting for buyer approval"}</strong><small>{o.gigs?.title || "Marketplace service"} · {o.buyer?.full_name || "Buyer"}</small></div><span className={`status ${o.status}`}>{o.status.replace("_"," ")}</span></div>)
                   : <div className="dashboard-empty"><PackageCheck size={22}/><strong>You’re all caught up</strong><span>New order requests and active work will appear here.</span></div>}
                 <button className="dashboard-panel-footer" onClick={()=>navigate("orders")}>Open order manager <ArrowRight size={15}/></button>
               </section>
