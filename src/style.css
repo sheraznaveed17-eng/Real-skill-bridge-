@@ -452,3 +452,13 @@
 .gig-analytics-row>span b{font:800 16px Manrope;color:#263447}
 .danger-outline{color:#b42318!important;border-color:#f0c8c5!important}
 @media(max-width:640px){.gig-analytics-row{grid-template-columns:minmax(0,1fr) repeat(3,55px);gap:7px}.gig-analytics-row>div strong{font-size:10px}.gig-analytics-row>span b{font-size:13px}.gig-analytics-row>span small{font-size:8px}}
+
+
+/* Order revision workflow */
+.revision-note{margin:0 0 12px;padding:12px 14px;border-left:3px solid #d69b24;background:#fffaf0;border-radius:7px}
+.revision-note strong{font-size:11px;color:#805b12}
+.revision-note p{font-size:12px;line-height:1.55;color:#725b2b;margin:5px 0 0}
+.revision-request-form{margin:12px 0;padding:14px;border:1px solid #e7ece9;border-radius:9px;background:#fbfcfb}
+.revision-request-form label{display:block;font-size:11px;font-weight:750;color:#475467}
+.revision-request-form textarea{display:block;width:100%;margin-top:7px;padding:10px;border:1px solid #dfe6e2;border-radius:8px;font:inherit;font-size:12px;resize:vertical}
+.revision-request-form>div{display:flex;justify-content:flex-end;align-items:center;gap:12px;margin-top:10px}
