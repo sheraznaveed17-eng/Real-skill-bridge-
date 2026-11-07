@@ -241,8 +241,14 @@ function App() {
             </div>}
           </div>
         </> : <><button className="nav-plain" onClick={() => {setAuthMode("login");navigate("auth");}}>Log in</button><button className="btn btn-dark btn-small" onClick={() => {setAuthMode("signup");navigate("auth");}}>Join Skill Bridge</button></>}
+        <form className="header-search" onSubmit={e=>{e.preventDefault();navigate("home");document.getElementById("explore")?.scrollIntoView({behavior:"smooth"});}}>
+          <Search size={17}/><input aria-label="Search services" value={search} onChange={e=>setSearch(e.target.value)} placeholder="What service do you need?"/><button type="submit">Search</button>
+        </form>
       </div>
     </header>
+    <nav className="marketplace-subnav" aria-label="Popular categories">
+      {categories.slice(1,11).map(c=><button key={c} className={category===c?"selected":""} onClick={()=>{setCategory(c);navigate("home");document.getElementById("explore")?.scrollIntoView({behavior:"smooth"});}}>{c}</button>)}
+    </nav>
     {mobileMenu && <div className="mobile-menu"><button onClick={()=>navigate("home")}>Explore</button>{session ? <><button onClick={()=>navigate("dashboard")}>Dashboard</button><button onClick={()=>navigate("profile")}>My profile</button><button onClick={()=>navigate("orders")}>Orders</button>{profile?.role==="seller"&&<button onClick={()=>navigate("my-gigs")}>My services</button>}<button onClick={signOut}>Log out</button></> : <><button onClick={()=>{setAuthMode("login");navigate("auth")}}>Log in</button><button onClick={()=>{setAuthMode("signup");navigate("auth")}}>Join Skill Bridge</button></>}</div>}
     {demoMode && <div className="setup-banner"><span><Sparkles size={15}/> Setup required: connect your free Supabase project to enable real multi-user features.</span><button onClick={()=>show("README.md mein Android setup ke simple steps diye gaye hain.")}>How to connect</button></div>}
     {notice && <div className="toast"><CheckCircle2 size={18}/>{notice}<button onClick={()=>setNotice("")}><X size={16}/></button></div>}
@@ -366,7 +372,7 @@ function App() {
 function GigCard({gig,onClick}) {
   const palettes = ["art-purple","art-blue","art-orange","art-green"];
   const index = (gig.title?.length || 0) % palettes.length;
-  return <button className="gig-card" onClick={onClick}><div className={`gig-art ${palettes[index]}`}><Sparkles size={28}/><span>{gig.category}</span></div><div className="gig-info"><div className="seller-line"><span className="avatar">{(gig.profiles?.full_name||"S").slice(0,1).toUpperCase()}</span><span>{gig.profiles?.full_name||"Skill Bridge seller"}</span><span className="seller-tag">Seller</span></div><h3>{gig.title}</h3><div className="gig-meta"><span><Clock3 size={14}/> {gig.delivery_days} days</span><span><Star size={14}/> New seller</span></div><div className="gig-price"><small>STARTING AT</small><strong>{money(gig.price)}</strong></div></div></button>;
+  return <button className="gig-card" onClick={onClick}><div className={`gig-art ${palettes[index]}`}><Sparkles size={28}/><span>{gig.category}</span></div><div className="gig-info"><div className="seller-line">{gig.profiles?.avatar_url?<img className="avatar gig-seller-avatar" src={gig.profiles.avatar_url} alt=""/>:<span className="avatar">{(gig.profiles?.full_name||"S").slice(0,1).toUpperCase()}</span>}<span>{gig.profiles?.full_name||"Skill Bridge seller"}</span><span className="seller-tag">Seller</span></div><h3>{gig.title}</h3><div className="gig-meta"><span><Clock3 size={14}/> {gig.delivery_days} days</span><span><Star size={14}/> New seller</span></div><div className="gig-price"><small>STARTING AT</small><strong>{money(gig.price)}</strong></div></div></button>;
 }
 
 function OrderCard({order,userId,onUpdate,onMessage,onReview,reviewForm,setReviewForm}) {
