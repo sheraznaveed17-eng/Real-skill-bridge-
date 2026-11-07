@@ -335,30 +335,85 @@ function App() {
       </div>
     </main>}
 
-    {page === "dashboard" && <main className="content page-content">
-      <div className="eyebrow muted">{profile?.role==="seller"?"SELLER WORKSPACE":"BUYER WORKSPACE"}</div>
-      <h2>Hello, {profile?.full_name || "there"} 👋</h2>
-      <p className="subtext">{profile?.role==="seller"?"Manage your services, customers and active work from your seller workspace.":"Find services, keep track of your orders and manage your projects from your buyer workspace."}</p>
-      <div className="dashboard-grid">
-        <div className="metric-card"><span>Active orders</span><strong>{myOrders.filter(o=>!["completed","cancelled"].includes(o.status)).length}</strong><small><Clock3 size={14}/> Work in progress</small></div>
-        {profile?.role==="seller"
-          ? <div className="metric-card"><span>My published services</span><strong>{myGigs.length}</strong><small><BriefcaseBusiness size={14}/> Your gigs</small></div>
-          : <div className="metric-card"><span>Orders I placed</span><strong>{myOrders.filter(o=>o.buyer_id===session?.user?.id).length}</strong><small><PackageCheck size={14}/> Your purchases</small></div>}
-        <div className="metric-card"><span>Account type</span><strong className="role-value">{profile?.role || "Member"}</strong><small><UserRound size={14}/> Skill Bridge member</small></div>
+    {page === "dashboard" && <main className="content page-content dashboard-page">
+      <div className="dashboard-welcome">
+        <div>
+          <div className="eyebrow muted">{profile?.role==="seller"?"SELLER":"BUYER"} WORKSPACE</div>
+          <h2>{profile?.full_name || "Welcome back"}</h2>
+          <p>{profile?.role==="seller"?"Your business overview, orders and services — all in one place.":"Your projects, purchases and conversations — all in one place."}</p>
+        </div>
+        <div className="dashboard-welcome-actions">
+          {profile?.role==="seller"
+            ? <button className="btn btn-dark" onClick={()=>navigate("create-gig")}><Plus size={17}/> Create a service</button>
+            : <button className="btn btn-dark" onClick={()=>navigate("home")}><Search size={17}/> Find a service</button>}
+        </div>
       </div>
-      <div className="quick-actions">
-        {profile?.role==="seller" ? <>
-          <button onClick={()=>navigate("create-gig")}><Plus/> Create a service <ChevronRight/></button>
-          <button onClick={()=>navigate("my-gigs")}><BriefcaseBusiness/> Manage my services <ChevronRight/></button>
-          <button onClick={()=>navigate("orders")}><PackageCheck/> Manage orders <ChevronRight/></button>
-        </> : <>
-          <button onClick={()=>navigate("home")}><Search/> Find a service <ChevronRight/></button>
-          <button onClick={()=>navigate("orders")}><PackageCheck/> View my orders <ChevronRight/></button>
-        </>}
-        <button onClick={()=>navigate("profile")}><UserCircle/> Edit my profile <ChevronRight/></button>{isAdmin&&<button onClick={()=>navigate("admin")}><ShieldCheck/> Admin panel <ChevronRight/></button>}
+
+      <div className="dashboard-layout">
+        <aside className="dashboard-sidebar">
+          <div className="dashboard-sidebar-user">
+            {profile?.avatar_url ? <img src={profile.avatar_url} alt="" /> : <span>{(profile?.full_name||"U").slice(0,1).toUpperCase()}</span>}
+            <div><strong>{profile?.full_name || "Skill Bridge member"}</strong><small>{profile?.role==="seller"?"Service provider":"Customer"}</small></div>
+          </div>
+          <div className="dashboard-side-label">WORKSPACE</div>
+          <button className="dashboard-side-link active"><LayoutDashboard size={17}/> Overview</button>
+          <button className="dashboard-side-link" onClick={()=>navigate("orders")}><PackageCheck size={17}/> {profile?.role==="seller"?"Manage orders":"My purchases"}<ChevronRight size={15}/></button>
+          {profile?.role==="seller" && <button className="dashboard-side-link" onClick={()=>navigate("my-gigs")}><BriefcaseBusiness size={17}/> My services<ChevronRight size={15}/></button>}
+          <button className="dashboard-side-link" onClick={()=>navigate("profile")}><UserRound size={17}/> Profile settings<ChevronRight size={15}/></button>
+          <div className="dashboard-sidebar-help"><strong>Need to update your details?</strong><p>Keep your profile clear so other members know who they are working with.</p><button onClick={()=>navigate("profile")}>Edit profile <ArrowRight size={14}/></button></div>
+        </aside>
+
+        <section className="dashboard-main">
+          {profile?.role==="seller" ? <>
+            <div className="dashboard-section-heading"><div><h3>Business overview</h3><p>Here’s what’s happening with your services.</p></div><button className="text-action" onClick={()=>navigate("orders")}>View all orders <ArrowRight size={15}/></button></div>
+            <div className="dashboard-stats">
+              <div className="dashboard-stat"><span>Active orders</span><strong>{myOrders.filter(o=>o.seller_id===session?.user?.id && !["completed","cancelled"].includes(o.status)).length}</strong><small><Clock3 size={14}/> Currently in progress</small></div>
+              <div className="dashboard-stat"><span>New order requests</span><strong>{myOrders.filter(o=>o.seller_id===session?.user?.id && o.status==="pending").length}</strong><small><PackageCheck size={14}/> Waiting for your response</small></div>
+              <div className="dashboard-stat"><span>Completed orders</span><strong>{myOrders.filter(o=>o.seller_id===session?.user?.id && o.status==="completed").length}</strong><small><CheckCircle2 size={14}/> Successfully completed</small></div>
+              <div className="dashboard-stat"><span>Active services</span><strong>{myGigs.length}</strong><small><BriefcaseBusiness size={14}/> Visible in marketplace</small></div>
+            </div>
+            <div className="dashboard-two-column">
+              <section className="dashboard-panel">
+                <div className="dashboard-panel-heading"><div><h3>Priority tasks</h3><p>Things that may need your attention.</p></div><span className="dashboard-panel-icon"><Clock3 size={17}/></span></div>
+                {myOrders.filter(o=>o.seller_id===session?.user?.id && ["pending","in_progress","delivered"].includes(o.status)).length
+                  ? myOrders.filter(o=>o.seller_id===session?.user?.id && ["pending","in_progress","delivered"].includes(o.status)).slice(0,4).map(o=><div className="dashboard-task" key={o.id}><span className="dashboard-task-dot"/><div><strong>{o.status==="pending"?"Review new order":o.status==="in_progress"?"Continue active order":"Waiting for buyer approval"}</strong><small>{o.gigs?.title || "Marketplace service"} · {o.buyer?.full_name || "Buyer"}</small></div><span className={`status ${o.status}`}>{o.status.replace("_"," ")}</span></div>)
+                  : <div className="dashboard-empty"><PackageCheck size={22}/><strong>You’re all caught up</strong><span>New order requests and active work will appear here.</span></div>}
+                <button className="dashboard-panel-footer" onClick={()=>navigate("orders")}>Open order manager <ArrowRight size={15}/></button>
+              </section>
+              <section className="dashboard-panel">
+                <div className="dashboard-panel-heading"><div><h3>Account snapshot</h3><p>Your current seller setup.</p></div><span className="dashboard-panel-icon"><UserRound size={17}/></span></div>
+                <div className="dashboard-account-row"><span>Account type</span><strong>Seller</strong></div>
+                <div className="dashboard-account-row"><span>Profile name</span><strong>{profile?.full_name || "Not set"}</strong></div>
+                <div className="dashboard-account-row"><span>Profile photo</span><strong>{profile?.avatar_url?"Added":"Not added"}</strong></div>
+                <div className="dashboard-account-row"><span>Earnings</span><strong className="muted-value">Unavailable</strong></div>
+                <p className="dashboard-note">Payments are not active yet, so no earnings or payout balance is being displayed.</p>
+                <button className="dashboard-panel-footer" onClick={()=>navigate("profile")}>Complete your profile <ArrowRight size={15}/></button>
+              </section>
+            </div>
+            <section className="dashboard-panel dashboard-services-panel">
+              <div className="dashboard-panel-heading"><div><h3>Your services</h3><p>Manage the services buyers can discover.</p></div><button className="outline-btn" onClick={()=>navigate("my-gigs")}>Manage services</button></div>
+              {myGigs.length ? <div className="dashboard-service-list">{myGigs.slice(0,4).map(g=><div className="dashboard-service-row" key={g.id}><span className="dashboard-service-art"><BriefcaseBusiness size={18}/></span><div><strong>{g.title}</strong><small>{g.category} · {g.delivery_days} day delivery</small></div><strong>{money(g.price)}</strong><span className="service-live"><i/> Active</span></div>)}</div> : <div className="dashboard-empty"><BriefcaseBusiness size={22}/><strong>Your first service starts here</strong><span>Create a service listing to appear in Skill Bridge search.</span><button className="btn btn-dark btn-small" onClick={()=>navigate("create-gig")}><Plus size={15}/> Create a service</button></div>}
+            </section>
+          </> : <>
+            <div className="dashboard-section-heading"><div><h3>Your projects</h3><p>Keep track of the services you’ve ordered.</p></div><button className="text-action" onClick={()=>navigate("home")}>Explore services <ArrowRight size={15}/></button></div>
+            <div className="dashboard-stats buyer-stats">
+              <div className="dashboard-stat"><span>Active projects</span><strong>{myOrders.filter(o=>o.buyer_id===session?.user?.id && !["completed","cancelled"].includes(o.status)).length}</strong><small><Clock3 size={14}/> Work in progress</small></div>
+              <div className="dashboard-stat"><span>Orders placed</span><strong>{myOrders.filter(o=>o.buyer_id===session?.user?.id).length}</strong><small><PackageCheck size={14}/> Your purchases</small></div>
+              <div className="dashboard-stat"><span>Completed projects</span><strong>{myOrders.filter(o=>o.buyer_id===session?.user?.id && o.status==="completed").length}</strong><small><CheckCircle2 size={14}/> Finished work</small></div>
+            </div>
+            <section className="dashboard-panel buyer-orders-panel">
+              <div className="dashboard-panel-heading"><div><h3>Recent orders</h3><p>Updates from the people working with you.</p></div><button className="outline-btn" onClick={()=>navigate("orders")}>All orders</button></div>
+              {myOrders.filter(o=>o.buyer_id===session?.user?.id).length ? <div className="dashboard-service-list">{myOrders.filter(o=>o.buyer_id===session?.user?.id).slice(0,5).map(o=><div className="dashboard-service-row" key={o.id}><span className="dashboard-service-art"><PackageCheck size={18}/></span><div><strong>{o.gigs?.title || "Marketplace service"}</strong><small>Seller: {o.seller?.full_name || "Skill Bridge member"}</small></div><span className={`status ${o.status}`}>{o.status.replace("_"," ")}</span><button className="text-action" onClick={()=>loadMessages(o)}>Message <ArrowRight size={14}/></button></div>)}</div> : <div className="dashboard-empty"><ShoppingBag size={22}/><strong>No projects yet</strong><span>Explore services and find the right person for your next task.</span><button className="btn btn-dark btn-small" onClick={()=>navigate("home")}><Search size={15}/> Explore services</button></div>}
+            </section>
+            <section className="dashboard-panel buyer-discovery-panel">
+              <div className="dashboard-panel-heading"><div><h3>Get started</h3><p>Everything you need to use Skill Bridge.</p></div></div>
+              <div className="buyer-action-grid"><button onClick={()=>navigate("home")}><Search size={20}/><strong>Find a service</strong><span>Browse digital and local services</span></button><button onClick={()=>navigate("orders")}><PackageCheck size={20}/><strong>Track an order</strong><span>Check progress and delivery updates</span></button><button onClick={()=>navigate("profile")}><UserRound size={20}/><strong>Update your profile</strong><span>Manage your account details</span></button></div>
+            </section>
+          </>}
+        </section>
       </div>
     </main>}
-
+    
     {page === "messages" && <main className="content page-content"><button className="back-link" onClick={()=>navigate("orders")}>← Back to orders</button><h2>Order conversation</h2><p className="subtext">Messages stay connected to this order.</p><div className="chat-panel"><div className="chat-head"><MessageCircle/> {activeOrder?.gigs?.title || "Project messages"}</div><div className="chat-body">{messages.map(m=><div key={m.id} className={m.sender_id===session?.user?.id?"chat-msg own":"chat-msg"}><strong>{m.profiles?.full_name || (m.sender_id===session?.user?.id?"You":"Member")}</strong><p>{m.body}</p><small>{new Date(m.created_at).toLocaleString()}</small></div>)}{!messages.length&&<div className="empty-chat">No messages yet. Start the conversation below.</div>}</div><form className="chat-compose" onSubmit={sendMessage}><input value={messageText} onChange={e=>setMessageText(e.target.value)} placeholder="Write a message..." required/><button className="btn btn-dark"><Send size={17}/></button></form></div></main>}
 
     {page === "admin" && <main className="content page-content"><div className="eyebrow muted">ADMINISTRATION</div><h2>Admin overview</h2><p className="subtext">Basic marketplace moderation view.</p><div className="dashboard-grid"><div className="metric-card"><span>Total active gigs</span><strong>{gigs.length}</strong></div><div className="metric-card"><span>Total orders</span><strong>{orders.length}</strong></div><div className="metric-card"><span>Marketplace members</span><strong>—</strong><small>Use Supabase dashboard for user management</small></div></div><h3 className="list-title">Recent gigs</h3>{gigs.slice(0,10).map(g=><div className="admin-row" key={g.id}><div><strong>{g.title}</strong><small>{g.profiles?.full_name} · {g.category}</small></div><strong>{money(g.price)}</strong><button className="outline-btn" onClick={async()=>{const {error}=await supabase.from("gigs").update({is_active:false}).eq("id",g.id);if(error)show(error.message);else{show("Gig deactivated.");loadGigs();}}}>Deactivate</button></div>)}</main>}
