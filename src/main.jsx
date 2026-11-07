@@ -555,6 +555,7 @@ function App() {
   return <div className="app-shell" lang={language} dir={["ur","pa","ar"].includes(language)?"rtl":"ltr"}>
     <header className="topbar">
       <button className="brand" onClick={() => navigate("home")}><span className="brand-mark"><Sparkles size={20}/></span><span className="brand-wordmark"><span>skill<span className="brand-accent">bridge</span></span><small>Made by Yousaf</small></span></button>
+      <select className="language-switcher language-switcher-left" aria-label="Choose language" value={language} onChange={e=>setLanguage(e.target.value)}><option value="en">English</option><option value="ur">اردو</option><option value="pa">پنجابی</option><option value="hi">हिन्दी</option><option value="ar">العربية</option><option value="es">Español</option><option value="fr">Français</option><option value="zh">中文</option><option value="tr">Türkçe</option><option value="de">Deutsch</option></select>
       <nav className="desktop-nav">
         <button onClick={() => navigate("home")}>{t.explore}</button>
         {session && <button onClick={() => navigate("orders")}>{t.orders}</button>}
@@ -584,8 +585,13 @@ function App() {
               <button className="dropdown-logout" onClick={()=>{setAccountMenu(false);signOut()}}><LogOut size={17}/> {t.logout}</button>
             </div>}
           </div>
-        </> : <><button className="nav-plain" onClick={() => {setAuthMode("login");navigate("auth");}}>{t.login}</button><button className="btn btn-dark btn-small" onClick={() => {setAuthMode("signup");navigate("auth");}}>{t.join}</button></>}
-        <select className="language-switcher" aria-label="Choose language" value={language} onChange={e=>setLanguage(e.target.value)}><option value="en">English</option><option value="ur">اردو</option><option value="pa">پنجابی</option><option value="hi">हिन्दी</option><option value="ar">العربية</option><option value="es">Español</option><option value="fr">Français</option><option value="zh">中文</option><option value="tr">Türkçe</option><option value="de">Deutsch</option></select>
+        </> : <div className="account-menu-wrap guest-account-wrap">
+          <button className="icon-btn guest-account-trigger" aria-label="Login or sign up" title="Login or sign up" aria-expanded={accountMenu} onClick={() => setAccountMenu(v=>!v)}><UserRound size={22}/></button>
+          {accountMenu && <div className="account-dropdown guest-account-dropdown">
+            <button onClick={()=>{setAuthMode("login");setAccountMenu(false);navigate("auth");}}><UserRound size={17}/> {t.login}</button>
+            <button onClick={()=>{setAuthMode("signup");setAccountMenu(false);navigate("auth");}}><Plus size={17}/> {t.join}</button>
+          </div>}
+        </div>}
         <form className="header-search" onSubmit={e=>{e.preventDefault();navigate("home");document.getElementById("explore")?.scrollIntoView({behavior:"smooth"});}}>
           <Search size={17}/><input aria-label="Search services" value={search} onChange={e=>setSearch(e.target.value)} placeholder="What service do you need?"/><button type="submit">Search</button>
         </form>
