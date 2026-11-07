@@ -76,6 +76,7 @@ function App() {
       loadGigs();
       loadOrders();
       loadSellerReviews();
+      loadInbox();
     }
   }, [session]);
 
