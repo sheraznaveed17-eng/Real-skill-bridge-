@@ -515,7 +515,7 @@ function App() {
           <button className="dashboard-side-link active"><LayoutDashboard size={17}/> Overview</button>
           <button className="dashboard-side-link" onClick={()=>navigate("orders")}><PackageCheck size={17}/> {activeMode==="seller"?"Manage orders":"My purchases"}<ChevronRight size={15}/></button>
           <button className="dashboard-side-link" onClick={()=>navigate("saved")}><Bookmark size={17}/> Saved services<ChevronRight size={15}/></button>
-          {activeMode==="seller" && <button className="dashboard-side-link" onClick={()=>navigate("portfolio")}><BriefcaseBusiness size={17}/> Portfolio<ChevronRight size={15}/></button>
+          {activeMode==="seller" && <button className="dashboard-side-link" onClick={()=>navigate("portfolio")}><BriefcaseBusiness size={17}/> Portfolio<ChevronRight size={15}/></button>}
           {activeMode==="seller" && <button className="dashboard-side-link" onClick={()=>navigate("my-gigs")}><BriefcaseBusiness size={17}/> My services<ChevronRight size={15}/></button>}
           <button className="dashboard-side-link" onClick={()=>navigate("profile")}><UserRound size={17}/> Profile settings<ChevronRight size={15}/></button>
           <div className="dashboard-sidebar-help"><strong>Need to update your details?</strong><p>Keep your profile clear so other members know who they are working with.</p><button onClick={()=>navigate("profile")}>Edit profile <ArrowRight size={14}/></button></div>
