@@ -88,3 +88,51 @@
  .mobile-menu{display:flex;flex-direction:column;align-items:stretch;gap:0;top:65px;padding:8px 14px 14px;border-bottom:1px solid #e9eeeb}
  .mobile-menu button{width:100%;text-align:left;padding:13px 10px;border-bottom:1px solid #f0f2f1;font-size:13px}
 }
+
+
+/* Marketplace polish: compact search, discovery nav and consistent cards */
+.topbar{height:78px;padding-left:max(3.5vw,20px);padding-right:max(3.5vw,20px);gap:20px}
+.header-search{height:42px;display:flex;align-items:center;gap:9px;flex:1;max-width:430px;min-width:150px;border:1px solid #dfe5e2;border-radius:8px;padding:4px 5px 4px 12px;background:#fff;color:#8a9690}
+.header-search:focus-within{border-color:#18a779;box-shadow:0 0 0 3px #18a77918}
+.header-search input{min-width:0;flex:1;border:0;outline:0;color:#263447;font-size:12px;background:transparent}
+.header-search button{height:32px;padding:0 14px;border:0;border-radius:6px;background:#172033;color:#fff;font-size:11px;font-weight:700}
+.marketplace-subnav{height:43px;display:flex;align-items:center;justify-content:center;gap:clamp(13px,2.2vw,30px);padding:0 4vw;border-bottom:1px solid #edf0ee;background:#fff;overflow-x:auto;scrollbar-width:none;white-space:nowrap}
+.marketplace-subnav button{height:100%;flex:0 0 auto;border:0;border-bottom:2px solid transparent;background:none;color:#66736d;font-size:10px;font-weight:600;padding:0 2px}
+.marketplace-subnav button:hover,.marketplace-subnav button.selected{color:#07845c;border-bottom-color:#18a779}
+.hero{min-height:490px}
+.hero-inner{padding-top:58px;padding-bottom:58px}
+.hero h1{letter-spacing:-2.4px}
+.hero-search{box-shadow:0 8px 25px #07132126}
+.choice-section{margin-top:40px}
+.choice-card{box-shadow:0 2px 8px #17203306}
+.gig-grid{gap:20px}
+.gig-card{border-radius:10px;box-shadow:0 2px 8px #17203308}
+.gig-card:hover{transform:translateY(-3px);box-shadow:0 12px 26px #17203312}
+.gig-art{height:145px}
+.gig-seller-avatar{object-fit:cover}
+.seller-line{min-width:0}
+.seller-line>span:nth-child(2){overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dashboard-grid{gap:16px}
+.metric-card{background:linear-gradient(180deg,#fff,#fcfdfc);box-shadow:0 2px 8px #17203305}
+.quick-actions{box-shadow:0 2px 10px #17203306}
+.quick-actions button{min-height:57px}
+.profile-card,.profile-edit-card{box-shadow:0 4px 18px #17203308}
+.orders-list .order-card{box-shadow:0 2px 9px #17203306}
+.section-heading{margin-bottom:4px}
+@media(max-width:760px){
+ .topbar{height:65px;gap:8px}
+ .header-search{display:none}
+ .marketplace-subnav{height:40px;justify-content:flex-start;padding:0 15px;gap:20px}
+ .marketplace-subnav button{font-size:10px}
+ .hero{min-height:500px}
+ .hero-inner{padding-top:48px;padding-bottom:45px}
+ .choice-section{margin-top:32px}
+ .choice-grid{gap:10px}
+ .choice-card{padding:15px;gap:10px}
+ .choice-icon{width:40px;height:40px;flex-basis:40px}
+ .choice-copy strong{font-size:12px}
+ .choice-copy small{font-size:10px;line-height:1.45}
+ .gig-grid{gap:12px}
+ .gig-art{height:112px}
+ .page-content{margin-top:30px}
+}
