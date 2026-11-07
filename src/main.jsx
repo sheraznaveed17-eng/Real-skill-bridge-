@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import {
   Search, BriefcaseBusiness, UserRound, Plus, LogOut, Menu, X, Star,
   MessageCircle, LayoutDashboard, ShieldCheck, ArrowRight, CheckCircle2,
-  Clock3, Wallet, Sparkles, Filter, PackageCheck, Send, ChevronRight, ChevronDown, Camera, Save, UserCircle, Settings
+  Clock3, Wallet, Sparkles, Filter, PackageCheck, Send, ChevronRight, ChevronDown, Camera, Save, UserCircle, Settings, ShoppingBag
 } from "lucide-react";
 import { supabase, isConfigured } from "./supabase";
 import "./style.css";
