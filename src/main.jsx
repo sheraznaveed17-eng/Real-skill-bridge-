@@ -10,12 +10,25 @@ import "./style.css";
 
 const categories = ["All", "Graphics & Design", "Writing & Translation", "Programming & Tech", "Video & Animation", "Digital Marketing", "Business", "Construction", "Masonry & Labour", "Plumbing", "Electrical Work", "Painting", "Carpentry", "AC & Appliance Repair", "Vehicle Repair", "Cleaning & Home Services", "Gardening", "Transport", "Education & Tutoring", "Events & Catering"];
 const money = n => `Rs. ${Number(n || 0).toLocaleString("en-PK")}`;
+const uiTranslations = {
+  en:{explore:"Explore",orders:"Orders",messages:"Messages",myServices:"My services",dashboard:"Dashboard",login:"Log in",join:"Join Skill Bridge",heroEyebrow:"THE MARKETPLACE FOR EVERY KIND OF WORK",heroTitle:"Find work. Hire talent.",heroTitle2:"Get things done.",heroText:"From digital services to hands-on local jobs, connect with skilled people for every task — all in one simple place.",getStarted:"GET STARTED",whatDo:"What would you like to do?",findWork:"Find Work",hireSomeone:"Hire Someone",discover:"DISCOVER SERVICES",exploreAll:"Explore all services",search:"Search"},
+  ur:{explore:"دریافت کریں",orders:"آرڈرز",messages:"پیغامات",myServices:"میری خدمات",dashboard:"ڈیش بورڈ",login:"لاگ اِن",join:"اسکل برج جوائن کریں",heroEyebrow:"ہر قسم کے کام کے لیے مارکیٹ پلیس",heroTitle:"کام تلاش کریں۔ ہنر خریدیں۔",heroTitle2:"کام مکمل کریں۔",heroText:"ڈیجیٹل خدمات سے لے کر مقامی کاموں تک، ہر کام کے لیے ماہر افراد سے رابطہ کریں۔",getStarted:"شروع کریں",whatDo:"آپ کیا کرنا چاہتے ہیں؟",findWork:"کام تلاش کریں",hireSomeone:"کسی کو کام دیں",discover:"خدمات دریافت کریں",exploreAll:"تمام خدمات دیکھیں",search:"تلاش"},
+  pa:{explore:"کھوجو",orders:"آرڈر",messages:"پیغام",myServices:"میریاں خدمتاں",dashboard:"ڈیش بورڈ",login:"لاگ اِن",join:"سکل برج نال جڑو",heroEyebrow:"ہر قسم دے کم لئی مارکیٹ پلیس",heroTitle:"کم لبھو۔ ہنر مند لوک لبھو۔",heroTitle2:"کم پورا کرو۔",heroText:"ڈیجیٹل خدمتاں توں مقامی کم تک، ہر کم لئی ماہر بندیاں نال رابطہ کرو۔",getStarted:"شروع کرو",whatDo:"تسی کی کرنا چاہندے او؟",findWork:"کم لبھو",hireSomeone:"کسی نوں کم دیو",discover:"خدمتاں لبھو",exploreAll:"ساریاں خدمتاں ویکھو",search:"تلاش"},
+  hi:{explore:"खोजें",orders:"ऑर्डर",messages:"संदेश",myServices:"मेरी सेवाएँ",dashboard:"डैशबोर्ड",login:"लॉग इन",join:"स्किल ब्रिज से जुड़ें",heroEyebrow:"हर तरह के काम का मार्केटप्लेस",heroTitle:"काम खोजें। हुनरमंद लोग पाएँ।",heroTitle2:"काम पूरा करें।",heroText:"डिजिटल सेवाओं से लेकर स्थानीय काम तक, हर काम के लिए कुशल लोगों से जुड़ें।",getStarted:"शुरू करें",whatDo:"आप क्या करना चाहते हैं?",findWork:"काम खोजें",hireSomeone:"किसी को काम दें",discover:"सेवाएँ खोजें",exploreAll:"सभी सेवाएँ देखें",search:"खोजें"},
+  ar:{explore:"استكشف",orders:"الطلبات",messages:"الرسائل",myServices:"خدماتي",dashboard:"لوحة التحكم",login:"تسجيل الدخول",join:"انضم إلى Skill Bridge",heroEyebrow:"سوق لكل أنواع العمل",heroTitle:"ابحث عن عمل. وظّف المواهب.",heroTitle2:"أنجز مهامك.",heroText:"من الخدمات الرقمية إلى الأعمال المحلية، تواصل مع أصحاب المهارات لكل مهمة.",getStarted:"ابدأ الآن",whatDo:"ماذا تريد أن تفعل؟",findWork:"ابحث عن عمل",hireSomeone:"وظّف شخصاً",discover:"اكتشف الخدمات",exploreAll:"استكشف كل الخدمات",search:"بحث"},
+  es:{explore:"Explorar",orders:"Pedidos",messages:"Mensajes",myServices:"Mis servicios",dashboard:"Panel",login:"Iniciar sesión",join:"Únete a Skill Bridge",heroEyebrow:"EL MERCADO PARA TODO TIPO DE TRABAJO",heroTitle:"Encuentra trabajo. Contrata talento.",heroTitle2:"Hazlo realidad.",heroText:"Desde servicios digitales hasta trabajos locales, conecta con personas cualificadas.",getStarted:"EMPEZAR",whatDo:"¿Qué te gustaría hacer?",findWork:"Buscar trabajo",hireSomeone:"Contratar a alguien",discover:"DESCUBRIR SERVICIOS",exploreAll:"Explorar todos los servicios",search:"Buscar"},
+  fr:{explore:"Explorer",orders:"Commandes",messages:"Messages",myServices:"Mes services",dashboard:"Tableau de bord",login:"Connexion",join:"Rejoindre Skill Bridge",heroEyebrow:"LA PLACE DE MARCHÉ POUR TOUS LES TRAVAUX",heroTitle:"Trouvez du travail. Recrutez des talents.",heroTitle2:"Réalisez vos projets.",heroText:"Des services numériques aux travaux locaux, trouvez des personnes qualifiées.",getStarted:"COMMENCER",whatDo:"Que souhaitez-vous faire ?",findWork:"Trouver du travail",hireSomeone:"Engager quelqu’un",discover:"DÉCOUVRIR LES SERVICES",exploreAll:"Explorer tous les services",search:"Rechercher"},
+  zh:{explore:"探索",orders:"订单",messages:"消息",myServices:"我的服务",dashboard:"控制面板",login:"登录",join:"加入 Skill Bridge",heroEyebrow:"适合各种工作的服务市场",heroTitle:"寻找工作。雇用人才。",heroTitle2:"完成任务。",heroText:"从数字服务到本地工作，轻松联系各类技能人才。",getStarted:"开始使用",whatDo:"您想做什么？",findWork:"寻找工作",hireSomeone:"雇用人才",discover:"发现服务",exploreAll:"探索所有服务",search:"搜索"},
+  tr:{explore:"Keşfet",orders:"Siparişler",messages:"Mesajlar",myServices:"Hizmetlerim",dashboard:"Kontrol Paneli",login:"Giriş Yap",join:"Skill Bridge'e Katıl",heroEyebrow:"HER TÜRLÜ İŞ İÇİN PAZARYERİ",heroTitle:"İş bul. Yetenek kirala.",heroTitle2:"İşlerini hallet.",heroText:"Dijital hizmetlerden yerel işlere kadar her görev için uzmanlarla bağlantı kur.",getStarted:"BAŞLA",whatDo:"Ne yapmak istersiniz?",findWork:"İş Bul",hireSomeone:"Birini İşe Al",discover:"HİZMETLERİ KEŞFET",exploreAll:"Tüm hizmetleri keşfet",search:"Ara"},
+  de:{explore:"Entdecken",orders:"Bestellungen",messages:"Nachrichten",myServices:"Meine Dienste",dashboard:"Dashboard",login:"Anmelden",join:"Skill Bridge beitreten",heroEyebrow:"DER MARKTPLATZ FÜR JEDE ART VON ARBEIT",heroTitle:"Finde Arbeit. Engagiere Talente.",heroTitle2:"Erledige Aufgaben.",heroText:"Von digitalen Dienstleistungen bis zu lokalen Arbeiten – finde passende Fachkräfte.",getStarted:"LOSLEGEN",whatDo:"Was möchtest du tun?",findWork:"Arbeit finden",hireSomeone:"Jemanden beauftragen",discover:"DIENSTE ENTDECKEN",exploreAll:"Alle Dienste entdecken",search:"Suchen"}
+};
 
 function App() {
   const [session, setSession] = useState(null);
   const [profile, setProfile] = useState(null);
   const [activeMode, setActiveMode] = useState("buyer");
   const [page, setPage] = useState("home");
+  const [language,setLanguage]=useState(()=>{try{return localStorage.getItem("skillbridge-language")||"en";}catch{return "en";}});
   const [gigs, setGigs] = useState([]);
   const [orders, setOrders] = useState([]);
   const [search, setSearch] = useState("");
@@ -65,6 +78,8 @@ function App() {
   const [reportForm, setReportForm] = useState({reason:"fake_service",details:""});
 
   const demoMode = !isConfigured;
+  const t=uiTranslations[language]||uiTranslations.en;
+  useEffect(()=>{try{localStorage.setItem("skillbridge-language",language);}catch{}},[language]);
 
   useEffect(() => {
     if (!isConfigured) {
@@ -478,16 +493,16 @@ function App() {
     <header className="topbar">
       <button className="brand" onClick={() => navigate("home")}><span className="brand-mark"><Sparkles size={20}/></span><span className="brand-wordmark"><span>skill<span className="brand-accent">bridge</span></span><small>Made by Yousaf</small></span></button>
       <nav className="desktop-nav">
-        <button onClick={() => navigate("home")}>Explore</button>
-        {session && <button onClick={() => navigate("orders")}>Orders</button>}
-        {session && <button onClick={() => {setActiveOrder(null);setActiveConversation(null);setPage("messages");loadInbox();}}>Messages</button>}
-        {session && activeMode==="seller" && <button onClick={() => navigate("my-gigs")}>My services</button>}
+        <button onClick={() => navigate("home")}>{t.explore}</button>
+        {session && <button onClick={() => navigate("orders")}>{t.orders}</button>}
+        {session && <button onClick={() => {setActiveOrder(null);setActiveConversation(null);setPage("messages");loadInbox();}}>{t.messages}</button>}
+        {session && activeMode==="seller" && <button onClick={() => navigate("my-gigs")}>{t.myServices}</button>}
         {isAdmin && <button onClick={() => navigate("admin")}>Admin</button>}
       </nav>
       <div className="top-actions">
         <button className="icon-btn mobile-only" aria-label="Open navigation" onClick={() => setMobileMenu(!mobileMenu)}>{mobileMenu?<X/>:<Menu/>}</button>
         {session ? <>
-          <button className="nav-plain desktop-account-link" onClick={() => navigate("dashboard")}>Dashboard</button>
+          <button className="nav-plain desktop-account-link" onClick={() => navigate("dashboard")}>{t.dashboard}</button>
           <div className="account-menu-wrap">
             <button className="account-trigger" aria-expanded={accountMenu} onClick={() => setAccountMenu(v=>!v)}>
               {profile?.avatar_url ? <img className="avatar account-avatar" src={profile.avatar_url} alt=""/> : <span className="avatar account-avatar">{(profile?.full_name || "U").slice(0,1).toUpperCase()}</span>}
@@ -506,7 +521,8 @@ function App() {
               <button className="dropdown-logout" onClick={()=>{setAccountMenu(false);signOut()}}><LogOut size={17}/> Log out</button>
             </div>}
           </div>
-        </> : <><button className="nav-plain" onClick={() => {setAuthMode("login");navigate("auth");}}>Log in</button><button className="btn btn-dark btn-small" onClick={() => {setAuthMode("signup");navigate("auth");}}>Join Skill Bridge</button></>}
+        </> : <><button className="nav-plain" onClick={() => {setAuthMode("login");navigate("auth");}}>{t.login}</button><button className="btn btn-dark btn-small" onClick={() => {setAuthMode("signup");navigate("auth");}}>{t.join}</button></>}
+        <select className="language-switcher" aria-label="Choose language" value={language} onChange={e=>setLanguage(e.target.value)}><option value="en">English</option><option value="ur">اردو</option><option value="pa">پنجابی</option><option value="hi">हिन्दी</option><option value="ar">العربية</option><option value="es">Español</option><option value="fr">Français</option><option value="zh">中文</option><option value="tr">Türkçe</option><option value="de">Deutsch</option></select>
         <form className="header-search" onSubmit={e=>{e.preventDefault();navigate("home");document.getElementById("explore")?.scrollIntoView({behavior:"smooth"});}}>
           <Search size={17}/><input aria-label="Search services" value={search} onChange={e=>setSearch(e.target.value)} placeholder="What service do you need?"/><button type="submit">Search</button>
         </form>
@@ -522,9 +538,9 @@ function App() {
     {page === "home" && <>
       <section className="hero">
         <div className="hero-inner">
-          <div className="eyebrow"><span className="eyebrow-dot"></span> THE MARKETPLACE FOR EVERY KIND OF WORK</div>
-          <h1>Find work. Hire talent.<br/><span>Get things done.</span></h1>
-          <p>From digital services to hands-on local jobs, connect with skilled people for every task — all in one simple place.</p>
+          <div className="eyebrow"><span className="eyebrow-dot"></span> {t.heroEyebrow}</div>
+          <h1>{t.heroTitle}<br/><span>{t.heroTitle2}</span></h1>
+          <p>{t.heroText}</p>
           <div className="hero-search"><Search size={20}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search any skill, service or job..."/><button onClick={()=>document.getElementById("explore")?.scrollIntoView({behavior:"smooth"})}>Search</button></div>
           <div className="popular">Popular: <button onClick={()=>{setSearch("electrician");setCategory("Electrical Work")}}>Electrician</button><button onClick={()=>{setSearch("logo");setCategory("Graphics & Design")}}>Logo design</button><button onClick={()=>{setSearch("plumber");setCategory("Plumbing")}}>Plumber</button><button onClick={()=>{setSearch("website");setCategory("Programming & Tech")}}>Website</button></div>
           <div className="hero-stats"><div><strong>Digital + Local</strong><span>all kinds of services</span></div><div><strong>One platform</strong><span>for workers and customers</span></div><div><strong>Simple to use</strong><span>for everyone</span></div></div>
@@ -532,19 +548,19 @@ function App() {
         <div className="hero-orb orb-one"></div><div className="hero-orb orb-two"></div>
       </section>
       <section className="choice-section">
-        <div className="choice-heading"><span className="eyebrow muted">GET STARTED</span><h2>What would you like to do?</h2><p>Choose how you want to use Skill Bridge.</p></div>
+        <div className="choice-heading"><span className="eyebrow muted">{t.getStarted}</span><h2>{t.whatDo}</h2><p>Choose how you want to use Skill Bridge.</p></div>
         <div className="choice-grid">
           <button className="choice-card" onClick={()=>{if(session){switchMode("seller");}else{setAuthForm(v=>({...v,role:"seller"}));setAuthMode("signup");navigate("auth");}}}>
-            <span className="choice-icon"><BriefcaseBusiness size={25}/></span><span className="choice-copy"><strong>Find Work</strong><small>Show your skills and let customers discover your services.</small></span><ArrowRight className="choice-arrow"/>
+            <span className="choice-icon"><BriefcaseBusiness size={25}/></span><span className="choice-copy"><strong>{t.findWork}</strong><small>Show your skills and let customers discover your services.</small></span><ArrowRight className="choice-arrow"/>
           </button>
           <button className="choice-card" onClick={()=>{if(session){switchMode("buyer");}else{setAuthForm(v=>({...v,role:"buyer"}));setAuthMode("signup");navigate("auth");}}}>
-            <span className="choice-icon"><UserRound size={25}/></span><span className="choice-copy"><strong>Hire Someone</strong><small>Find skilled people for digital tasks and practical work.</small></span><ArrowRight className="choice-arrow"/>
+            <span className="choice-icon"><UserRound size={25}/></span><span className="choice-copy"><strong>{t.hireSomeone}</strong><small>Find skilled people for digital tasks and practical work.</small></span><ArrowRight className="choice-arrow"/>
           </button>
         </div>
       </section>
       <section className="trust-strip"><span><ShieldCheck size={18}/> For every kind of work</span><span><CheckCircle2 size={18}/> Multiple payment options</span><span><MessageCircle size={18}/> Buyer-seller messaging</span></section>
       <main className="content" id="explore">
-        <div className="section-heading"><div><div className="eyebrow muted">DISCOVER SERVICES</div><h2>Explore all services</h2><p>Browse digital skills, skilled trades and everyday services.</p></div><button className="outline-btn" onClick={()=>{setSearch("");setCategory("All")}}><Filter size={16}/> Clear filters</button></div>
+        <div className="section-heading"><div><div className="eyebrow muted">{t.discover}</div><h2>{t.exploreAll}</h2><p>Browse digital skills, skilled trades and everyday services.</p></div><button className="outline-btn" onClick={()=>{setSearch("");setCategory("All")}}><Filter size={16}/> Clear filters</button></div>
         <div className="category-row">{categories.map(c=><button key={c} className={category===c?"category active":"category"} onClick={()=>setCategory(c)}>{c}</button>)}</div>
         <div className="gig-grid">{filteredGigs.map(g=><GigCard key={g.id} gig={g} onClick={()=>{trackGigClick(g);setPage("home");setOrderDetails("");setSelectedGig(g);}}/> )}</div>
         {!filteredGigs.length && <Empty icon={<BriefcaseBusiness/>} title="No services found yet" text={demoMode?"The marketplace is getting ready.":"Try another search or category. You can be the first to list a service."}/>}
