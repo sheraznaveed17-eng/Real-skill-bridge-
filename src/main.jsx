@@ -441,7 +441,7 @@ function App() {
   };
 
   const loadMessages = async order => {
-    setActiveOrder(order); navigate("messages");
+    setActiveOrder(order); setActiveConversation(null); setConversationOffers([]); navigate("messages");
     const { data, error } = await supabase.from("messages").select("*, profiles(full_name)").eq("order_id", order.id).order("created_at");
     if (!error) setMessages(data || []);
     await supabase.from("messages").update({read_at:new Date().toISOString()}).eq("order_id",order.id).neq("sender_id",session.user.id).is("read_at",null);
@@ -529,6 +529,15 @@ function App() {
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   },[activeConversation?.id,session?.user?.id]);
+
+  useEffect(() => {
+    if (!activeOrder?.id || !session?.user) return;
+    const channel=supabase.channel("order-"+activeOrder.id).on("postgres_changes",{event:"*",schema:"public",table:"messages",filter:"order_id=eq."+activeOrder.id},async()=>{
+      const {data,error}=await supabase.from("messages").select("*, profiles(full_name)").eq("order_id",activeOrder.id).order("created_at");
+      if(!error)setMessages(data||[]); await loadInbox();
+    }).subscribe();
+    return ()=>{supabase.removeChannel(channel);};
+  },[activeOrder?.id,session?.user?.id]);
 
   const myGigs = sellerGigs;
   const myOrders = orders.filter(o => o.buyer_id === session?.user?.id || o.seller_id === session?.user?.id);
@@ -774,9 +783,10 @@ function App() {
     {page === "messages" && <main className="content page-content inbox-page">
       <div className="eyebrow muted">YOUR INBOX</div><h2>Messages</h2><p className="subtext">Talk with buyers and sellers, discuss the work and agree on a price.</p>
       <div className="inbox-layout">
-        <aside className="inbox-list"><div className="inbox-list-head"><strong>All conversations</strong><span>{conversations.length}</span></div>
+        <aside className="inbox-list"><div className="inbox-list-head"><strong>All conversations</strong><span>{conversations.length+myOrders.length}</span></div>
           {conversations.map(c=>{const other=c.buyer_id===session?.user?.id?c.seller:c.buyer;return <button key={c.id} className={activeConversation?.id===c.id?"inbox-thread active":"inbox-thread"} onClick={()=>loadConversation(c)}><span className="avatar">{(other?.full_name||"U").slice(0,1).toUpperCase()}</span><span className="inbox-thread-copy"><strong>{other?.full_name||"Member"}</strong><small>{c.gigs?.title||"Service discussion"}</small><small>{c.last_message||"Start a conversation"}</small></span></button>;})}
-          {!conversations.length&&<div className="inbox-empty">No conversations yet. Open a gig and contact its seller.</div>}
+          {myOrders.length>0&&<><div className="inbox-list-head"><strong>Order messages</strong><span>{myOrders.length}</span></div>{myOrders.map(o=>{const other=o.buyer_id===session?.user?.id?o.seller:o.buyer;return <button key={"order-"+o.id} className={activeOrder?.id===o.id?"inbox-thread active":"inbox-thread"} onClick={()=>loadMessages(o)}><span className="avatar">{(other?.full_name||"U").slice(0,1).toUpperCase()}</span><span className="inbox-thread-copy"><strong>{other?.full_name||"Member"}</strong><small>{o.gigs?.title||"Marketplace order"}</small><small>Order · {o.status.replaceAll("_"," ")}</small></span></button>;})}</>}
+          {!conversations.length&&!myOrders.length&&<div className="inbox-empty">No conversations yet. Open a gig and contact its seller.</div>}
         </aside>
         <section className="inbox-chat">{activeConversation ? <>
           <div className="inbox-chat-head"><div><strong>{(activeConversation.buyer_id===session?.user?.id?activeConversation.seller:activeConversation.buyer)?.full_name||"Member"}</strong><small>{activeConversation.gigs?.title||"Service discussion"}</small></div><span className="seller-tag">Inbox</span></div>
@@ -785,7 +795,7 @@ function App() {
           </div>
           {activeConversation.seller_id===session?.user?.id&&<form className="custom-offer-form" onSubmit={sendCustomOffer}><strong>Send a custom offer</strong><div className="two-fields"><input required placeholder="Offer title" value={offerForm.title} onChange={e=>setOfferForm({...offerForm,title:e.target.value})}/><input required type="number" min="1" placeholder="Price (PKR)" value={offerForm.amount} onChange={e=>setOfferForm({...offerForm,amount:e.target.value})}/></div><textarea required rows="2" placeholder="Describe the work..." value={offerForm.description} onChange={e=>setOfferForm({...offerForm,description:e.target.value})}/><div className="offer-send-row"><label>Delivery days<input required type="number" min="1" max="365" value={offerForm.delivery_days} onChange={e=>setOfferForm({...offerForm,delivery_days:e.target.value})}/></label><button className="outline-btn">Send offer</button></div></form>}
           <form className="chat-compose" onSubmit={sendConversationMessage}><input value={messageText} onChange={e=>setMessageText(e.target.value)} placeholder="Write a message..." required/><button className="btn btn-dark"><Send size={17}/></button></form>
-        </> : <div className="inbox-placeholder"><MessageCircle size={34}/><h3>Select a conversation</h3><p>Your messages and custom offers will appear here.</p></div>}</section>
+        </> : activeOrder ? <><div className="inbox-chat-head"><div><strong>{(activeOrder.buyer_id===session?.user?.id?activeOrder.seller:activeOrder.buyer)?.full_name||"Member"}</strong><small>{activeOrder.gigs?.title||"Order conversation"} · {activeOrder.status.replaceAll("_"," ")}</small></div><span className="seller-tag">Order chat</span></div><div className="inbox-chat-body">{messages.map(m=><div key={m.id} className={m.sender_id===session?.user?.id?"chat-msg own":"chat-msg"}><strong>{m.profiles?.full_name||(m.sender_id===session?.user?.id?"You":"Member")}</strong><p>{m.body}</p><small>{new Date(m.created_at).toLocaleString()}</small></div>)}{!messages.length&&<div className="empty-chat">No order messages yet. Send an update to the other person.</div>}</div><form className="chat-compose" onSubmit={sendMessage}><input value={messageText} onChange={e=>setMessageText(e.target.value)} placeholder="Write an order message..." required/><button className="btn btn-dark"><Send size={17}/></button></form></> : <div className="inbox-placeholder"><MessageCircle size={34}/><h3>Select a conversation</h3><p>Your messages and custom offers will appear here.</p></div>}</section>
       </div>
     </main>}
 
