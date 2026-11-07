@@ -57,3 +57,34 @@
 .profile-edit-card h3 svg{color:#159b70}
 .profile-edit-card .stack-form{margin-top:20px}
 @media(max-width:760px){.profile-layout{grid-template-columns:1fr}.profile-card,.profile-edit-card{padding:19px}}
+
+
+/* Refined marketplace navigation and account menu */
+.topbar{padding-left:max(4vw,22px);padding-right:max(4vw,22px);gap:24px}
+.brand{flex-shrink:0}
+.desktop-nav{gap:25px;margin-left:22px}
+.top-actions{gap:20px}
+.account-menu-wrap{position:relative}
+.account-trigger{display:flex;align-items:center;gap:9px;padding:5px 9px 5px 5px;border:1px solid transparent;border-radius:28px;background:#fff;color:#263447;font-weight:700;font-size:13px;transition:.18s}
+.account-trigger:hover,.account-trigger[aria-expanded="true"]{border-color:#dfe8e3;background:#fbfdfc}
+.account-avatar{width:34px;height:34px;object-fit:cover;border:1px solid #dfe9e3}
+.account-trigger>svg{color:#748176}
+.account-dropdown{position:absolute;right:0;top:calc(100% + 12px);width:245px;padding:8px;background:#fff;border:1px solid #e6ebe8;border-radius:12px;box-shadow:0 16px 42px #17203320;z-index:60;animation:accountDrop .14s ease-out}
+@keyframes accountDrop{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
+.account-dropdown-user{display:flex;flex-direction:column;gap:4px;padding:12px 11px 13px;border-bottom:1px solid #edf0ee;margin-bottom:5px}
+.account-dropdown-user strong{font-size:13px;color:#172033;overflow:hidden;text-overflow:ellipsis}
+.account-dropdown-user small{font-size:10px;color:#7b8793;overflow:hidden;text-overflow:ellipsis}
+.account-dropdown button{width:100%;display:flex;align-items:center;gap:11px;padding:11px;border:0;border-radius:7px;background:#fff;text-align:left;color:#354254;font-size:12px;font-weight:600}
+.account-dropdown button:hover{background:#f3f8f5;color:#087d59}
+.account-dropdown button svg{color:#758579}
+.account-dropdown .dropdown-logout{border-top:1px solid #edf0ee;border-radius:0;margin-top:5px;padding-top:13px;color:#b54747}
+.account-dropdown .dropdown-logout svg{color:#b54747}
+@media(max-width:760px){
+ .topbar{padding:0 14px;gap:10px}
+ .brand{gap:7px;font-size:19px}
+ .brand-mark{width:32px;height:32px}
+ .top-actions{gap:5px}
+ .account-menu-wrap,.desktop-account-link{display:none}
+ .mobile-menu{display:flex;flex-direction:column;align-items:stretch;gap:0;top:65px;padding:8px 14px 14px;border-bottom:1px solid #e9eeeb}
+ .mobile-menu button{width:100%;text-align:left;padding:13px 10px;border-bottom:1px solid #f0f2f1;font-size:13px}
+}
