@@ -414,10 +414,9 @@ function App() {
 
   const permanentlyBanUser = async report => {
     if (!window.confirm("Have you reviewed the evidence and confirmed a serious policy violation? This permanently blocks this account from using Skill Bridge.")) return;
-    const {error}=await supabase.from("profiles").update({account_status:"banned",ban_reason:"Confirmed policy violation after investigation",banned_at:new Date().toISOString()}).eq("id",report.reported_user_id);
+    const {error}=await supabase.rpc("admin_ban_reported_user",{p_user_id:report.reported_user_id,p_reason:"Confirmed policy violation after investigation"});
     if (error) {show(error.message);return;}
-    const {error:reportError}=await supabase.from("reports").update({status:"resolved",reviewed_by:session.user.id,reviewed_at:new Date().toISOString(),admin_note:"Account permanently banned after evidence review."}).eq("reported_user_id",report.reported_user_id);
-    if (reportError) show("Account banned, but report status update failed: "+reportError.message); else show("Account permanently banned after review.");
+    show("Account permanently banned after evidence review.");
     await loadReports();
   };
 
