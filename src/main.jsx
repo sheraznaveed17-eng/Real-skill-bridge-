@@ -33,7 +33,8 @@ function App() {
   const [messageText, setMessageText] = useState("");
   const [activeOrder, setActiveOrder] = useState(null);
   const [reviewForm, setReviewForm] = useState({ rating:"5", comment:"" });
-  const [profileForm, setProfileForm] = useState({ full_name:"", bio:"" });
+  const [profileForm, setProfileForm] = useState({ full_name:"", bio:"", professional_title:"", country:"", languages:"", skills:"", experience_years:"", education:"", certifications:"", website_url:"", availability:true });
+  const [sellerReviews, setSellerReviews] = useState([]);
   const [avatarBusy, setAvatarBusy] = useState(false);
 
   const demoMode = !isConfigured;
@@ -69,22 +70,28 @@ function App() {
     if (session?.user) {
       loadGigs();
       loadOrders();
+      loadSellerReviews();
     }
   }, [session]);
 
   const loadProfile = async user => {
     const { data } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
-    if (data) { setProfile(data); setProfileForm({ full_name:data.full_name || "", bio:data.bio || "" }); }
+    if (data) { setProfile(data); setProfileForm({ full_name:data.full_name || "", bio:data.bio || "", professional_title:data.professional_title || "", country:data.country || "", languages:(data.languages || []).join(", "), skills:(data.skills || []).join(", "), experience_years:data.experience_years ?? "", education:data.education || "", certifications:data.certifications || "", website_url:data.website_url || "", availability:data.availability ?? true }); }
     else {
       const fallback = { id:user.id, full_name:user.user_metadata?.full_name || user.email?.split("@")[0], role:user.user_metadata?.role || "buyer" };
       const { data: created } = await supabase.from("profiles").upsert(fallback).select().single();
-      setProfile(created || fallback); setProfileForm({ full_name:fallback.full_name || "", bio:fallback.bio || "" });
+      setProfile(created || fallback); setProfileForm({ full_name:fallback.full_name || "", bio:fallback.bio || "", professional_title:"", country:"", languages:"", skills:"", experience_years:"", education:"", certifications:"", website_url:"", availability:true });
     }
   };
 
   const loadGigs = async () => {
     const { data, error } = await supabase.from("gigs").select("*, profiles(full_name, avatar_url)").eq("is_active", true).order("created_at", { ascending:false });
     if (!error) setGigs(data || []);
+  };
+
+  const loadSellerReviews = async () => {
+    const { data, error } = await supabase.from("reviews").select("id,seller_id,rating,comment,created_at").order("created_at", { ascending:false });
+    if (!error) setSellerReviews(data || []);
   };
 
   const loadOrders = async () => {
@@ -139,7 +146,13 @@ function App() {
     if (!session?.user) return;
     setBusy(true);
     const { data, error } = await supabase.from("profiles").update({
-      full_name:profileForm.full_name.trim(), bio:profileForm.bio.trim()
+      full_name:profileForm.full_name.trim(), bio:profileForm.bio.trim(),
+      professional_title:profileForm.professional_title.trim(), country:profileForm.country.trim(),
+      languages:profileForm.languages.split(",").map(x=>x.trim()).filter(Boolean),
+      skills:profileForm.skills.split(",").map(x=>x.trim()).filter(Boolean),
+      experience_years:profileForm.experience_years===""?null:Number(profileForm.experience_years),
+      education:profileForm.education.trim(), certifications:profileForm.certifications.trim(),
+      website_url:profileForm.website_url.trim(), availability:profileForm.availability
     }).eq("id", session.user.id).select().single();
     if (error) show(error.message);
     else { setProfile(data); show("Profile updated successfully."); }
@@ -326,7 +339,17 @@ function App() {
           <h3><Settings size={18}/> Edit profile</h3>
           <form className="stack-form" onSubmit={saveProfile}>
             <label>Full name<input required maxLength="80" value={profileForm.full_name} onChange={e=>setProfileForm({...profileForm,full_name:e.target.value})} placeholder="Your full name"/></label>
-            <label>About me<textarea rows="5" maxLength="500" value={profileForm.bio} onChange={e=>setProfileForm({...profileForm,bio:e.target.value})} placeholder="Introduce yourself, your experience and the work you do..."/></label>
+            <label>Professional title<input maxLength="100" value={profileForm.professional_title} onChange={e=>setProfileForm({...profileForm,professional_title:e.target.value})} placeholder="e.g. Graphic designer / Electrician / Web developer"/></label>
+            <label>About me<textarea rows="5" maxLength="1000" value={profileForm.bio} onChange={e=>setProfileForm({...profileForm,bio:e.target.value})} placeholder="Introduce yourself, your experience and the work you do..."/></label>
+            {profile?.role==="seller" && <>
+              <div className="two-fields"><label>Country<input value={profileForm.country} onChange={e=>setProfileForm({...profileForm,country:e.target.value})} placeholder="Pakistan"/></label><label>Experience (years)<input type="number" min="0" max="60" value={profileForm.experience_years} onChange={e=>setProfileForm({...profileForm,experience_years:e.target.value})} placeholder="e.g. 3"/></label></div>
+              <label>Skills <small>Separate each skill with a comma</small><input value={profileForm.skills} onChange={e=>setProfileForm({...profileForm,skills:e.target.value})} placeholder="Logo design, Photoshop, Branding"/></label>
+              <label>Languages <small>Separate each language with a comma</small><input value={profileForm.languages} onChange={e=>setProfileForm({...profileForm,languages:e.target.value})} placeholder="Urdu, English, Punjabi"/></label>
+              <label>Education<input value={profileForm.education} onChange={e=>setProfileForm({...profileForm,education:e.target.value})} placeholder="Qualification, institute (optional)"/></label>
+              <label>Certifications<textarea rows="2" value={profileForm.certifications} onChange={e=>setProfileForm({...profileForm,certifications:e.target.value})} placeholder="Certificates or professional training"/></label>
+              <label>Website / Portfolio link<input type="url" value={profileForm.website_url} onChange={e=>setProfileForm({...profileForm,website_url:e.target.value})} placeholder="https://..."/></label>
+              <label className="availability-toggle"><input type="checkbox" checked={profileForm.availability} onChange={e=>setProfileForm({...profileForm,availability:e.target.checked})}/> Available for new work</label>
+            </>}
             <label>Email address<input value={session?.user?.email || ""} readOnly/></label>
             <label>Account type<input value={profile?.role || "buyer"} readOnly/></label>
             <button className="btn btn-dark full" disabled={busy}><Save size={17}/>{busy?"Saving...":"Save changes"}</button>
@@ -371,6 +394,7 @@ function App() {
               <div className="dashboard-stat"><span>New order requests</span><strong>{myOrders.filter(o=>o.seller_id===session?.user?.id && o.status==="pending").length}</strong><small><PackageCheck size={14}/> Waiting for your response</small></div>
               <div className="dashboard-stat"><span>Completed orders</span><strong>{myOrders.filter(o=>o.seller_id===session?.user?.id && o.status==="completed").length}</strong><small><CheckCircle2 size={14}/> Successfully completed</small></div>
               <div className="dashboard-stat"><span>Active services</span><strong>{myGigs.length}</strong><small><BriefcaseBusiness size={14}/> Visible in marketplace</small></div>
+              <div className="dashboard-stat"><span>Average rating</span><strong>{sellerReviews.filter(r=>r.seller_id===session?.user?.id).length ? (sellerReviews.filter(r=>r.seller_id===session?.user?.id).reduce((sum,r)=>sum+Number(r.rating||0),0)/sellerReviews.filter(r=>r.seller_id===session?.user?.id).length).toFixed(1) : "—"}</strong><small><Star size={14}/> {sellerReviews.filter(r=>r.seller_id===session?.user?.id).length} order reviews</small></div>
             </div>
             <div className="dashboard-two-column">
               <section className="dashboard-panel">
