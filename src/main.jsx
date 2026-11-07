@@ -304,6 +304,7 @@ function App() {
       <nav className="desktop-nav">
         <button onClick={() => navigate("home")}>Explore</button>
         {session && <button onClick={() => navigate("orders")}>Orders</button>}
+        {session && <button onClick={() => {setActiveOrder(null);setActiveConversation(null);setPage("messages");loadInbox();}}>Messages</button>
         {session && activeMode==="seller" && <button onClick={() => navigate("my-gigs")}>My services</button>}
       </nav>
       <div className="top-actions">
