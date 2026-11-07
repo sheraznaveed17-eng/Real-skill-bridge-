@@ -206,7 +206,7 @@ function App() {
       navigate("orders");
     } else if(notification.entity_type==="conversation"){
       const thread=conversations.find(c=>c.id===notification.entity_id);
-      if(thread){await loadConversation(thread);} else {setActiveOrder(null);setActiveConversation(null);navigate("messages");await loadInbox();}
+      if(thread){navigate("messages");await loadConversation(thread);} else {setActiveOrder(null);setActiveConversation(null);navigate("messages");await loadInbox();}
     }
   };
 
