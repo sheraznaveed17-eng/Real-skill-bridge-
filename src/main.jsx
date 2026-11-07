@@ -33,6 +33,10 @@ function App() {
   const [orders, setOrders] = useState([]);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
+  const [minBudget,setMinBudget]=useState("");
+  const [maxBudget,setMaxBudget]=useState("");
+  const [deliveryFilter,setDeliveryFilter]=useState("any");
+  const [sortBy,setSortBy]=useState("newest");
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
   const [mobileMenu, setMobileMenu] = useState(false);
@@ -155,10 +159,17 @@ function App() {
     setOrders(data || []);
   };
 
-  const filteredGigs = useMemo(() => gigs.filter(g => {
-    const matchesText = `${g.title} ${g.description} ${g.category} ${g.profiles?.full_name || ""}`.toLowerCase().includes(search.toLowerCase());
-    return matchesText && (category === "All" || g.category === category);
-  }), [gigs, search, category]);
+  const filteredGigs = useMemo(() => {
+    let result=gigs.filter(g=>{
+      const matchesText=`${g.title} ${g.description} ${g.category} ${g.profiles?.full_name||""}`.toLowerCase().includes(search.toLowerCase());
+      const price=Number(g.price||0), days=Number(g.delivery_days||0);
+      return g.is_active!==false && matchesText && (category==="All"||g.category===category) && (!minBudget||price>=Number(minBudget)) && (!maxBudget||price<=Number(maxBudget)) && (deliveryFilter==="any"||(deliveryFilter==="1"&&days<=1)||(deliveryFilter==="3"&&days<=3)||(deliveryFilter==="7"&&days<=7));
+    });
+    if(sortBy==="price-low") result.sort((a,b)=>Number(a.price)-Number(b.price));
+    else if(sortBy==="price-high") result.sort((a,b)=>Number(b.price)-Number(a.price));
+    else result.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+    return result;
+  },[gigs,search,category,minBudget,maxBudget,deliveryFilter,sortBy]);
 
   const show = msg => { setNotice(msg); setTimeout(() => setNotice(""), 4200); };
   const navigate = p => {
@@ -560,8 +571,9 @@ function App() {
       </section>
       <section className="trust-strip"><span><ShieldCheck size={18}/> For every kind of work</span><span><CheckCircle2 size={18}/> Multiple payment options</span><span><MessageCircle size={18}/> Buyer-seller messaging</span></section>
       <main className="content" id="explore">
-        <div className="section-heading"><div><div className="eyebrow muted">{t.discover}</div><h2>{t.exploreAll}</h2><p>Browse digital skills, skilled trades and everyday services.</p></div><button className="outline-btn" onClick={()=>{setSearch("");setCategory("All")}}><Filter size={16}/> Clear filters</button></div>
+        <div className="section-heading"><div><div className="eyebrow muted">{t.discover}</div><h2>{t.exploreAll}</h2><p>Browse digital skills, skilled trades and everyday services.</p></div><button className="outline-btn" onClick={()=>{setSearch("");setCategory("All");setMinBudget("");setMaxBudget("");setDeliveryFilter("any");setSortBy("newest");}}><Filter size={16}/> Clear filters</button></div>
         <div className="category-row">{categories.map(c=><button key={c} className={category===c?"category active":"category"} onClick={()=>setCategory(c)}>{c}</button>)}</div>
+        <div className="marketplace-filters"><label>Min budget (PKR)<input type="number" min="0" value={minBudget} onChange={e=>setMinBudget(e.target.value)} placeholder="Any"/></label><label>Max budget (PKR)<input type="number" min="0" value={maxBudget} onChange={e=>setMaxBudget(e.target.value)} placeholder="Any"/></label><label>Delivery time<select value={deliveryFilter} onChange={e=>setDeliveryFilter(e.target.value)}><option value="any">Any time</option><option value="1">Within 1 day</option><option value="3">Within 3 days</option><option value="7">Within 7 days</option></select></label><label>Sort by<select value={sortBy} onChange={e=>setSortBy(e.target.value)}><option value="newest">Newest first</option><option value="price-low">Price: low to high</option><option value="price-high">Price: high to low</option></select></label></div>
         <div className="gig-grid">{filteredGigs.map(g=><GigCard key={g.id} gig={g} onClick={()=>{trackGigClick(g);setPage("home");setOrderDetails("");setSelectedGig(g);}}/> )}</div>
         {!filteredGigs.length && <Empty icon={<BriefcaseBusiness/>} title="No services found yet" text={demoMode?"The marketplace is getting ready.":"Try another search or category. You can be the first to list a service."}/>}
         {activeMode==="seller" && <div className="join-banner"><div><h3>Ready to offer your skills?</h3><p>Create a service listing and let buyers discover what you do best.</p></div><button className="btn btn-dark" onClick={()=>navigate("create-gig")}><Plus size={17}/> Create a gig</button></div>}
