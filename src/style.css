@@ -464,3 +464,23 @@
 .revision-request-form>div{display:flex;justify-content:flex-end;align-items:center;gap:12px;margin-top:10px}
 
 .status.revision_requested{background:#fff4df;color:#8b6415;border:1px solid #f4dfb2}
+
+
+/* Trust and safety reports */
+.report-trigger{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;border:0;background:transparent;color:#a33b35;padding:12px 10px;font-size:12px;font-weight:700;cursor:pointer}
+.report-form{display:grid;gap:12px;margin:8px 0 14px;padding:15px;border:1px solid #f0d7d5;border-radius:10px;background:#fffafa}
+.report-form label{display:grid;gap:6px;color:#344054;font-size:12px;font-weight:700}
+.report-form input,.report-form select,.report-form textarea{width:100%;border:1px solid #dfe5e2;border-radius:8px;padding:10px;font:inherit;color:#263447;background:#fff}
+.moderation-panel{margin-top:18px}
+.report-row{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;padding:16px 0;border-top:1px solid #edf0ee}
+.report-main{min-width:0;flex:1}
+.report-main>strong{display:flex;align-items:center;gap:9px;flex-wrap:wrap;color:#263447;font-size:13px}
+.report-main>small{display:block;margin-top:6px;color:#87919d;font-size:10px}
+.report-main>p{margin:9px 0 0;color:#475467;font-size:12px;line-height:1.55;overflow-wrap:anywhere}
+.investigation-flag{padding:4px 7px;border-radius:5px;background:#fff1df;color:#9b5700;font-size:9px;text-transform:uppercase;letter-spacing:.3px}
+.report-actions{display:flex;align-items:flex-end;flex-direction:column;gap:7px;flex:0 0 auto}
+.report-status{padding:5px 8px;border-radius:5px;background:#f2f4f7;color:#475467;font-size:10px;text-transform:capitalize}
+.report-status.investigating{background:#fff1df;color:#9b5700}
+.report-status.resolved{background:#e8f7ef;color:#087d59}
+.report-status.dismissed{background:#f2f4f7;color:#667085}
+@media(max-width:640px){.report-row{flex-direction:column}.report-actions{width:100%;align-items:stretch;flex-direction:row;flex-wrap:wrap}.report-actions .outline-btn{flex:1}.report-main>p{font-size:11px}}
