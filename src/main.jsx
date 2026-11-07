@@ -414,6 +414,8 @@ function App() {
     setActiveOrder(order); navigate("messages");
     const { data, error } = await supabase.from("messages").select("*, profiles(full_name)").eq("order_id", order.id).order("created_at");
     if (!error) setMessages(data || []);
+    await supabase.from("messages").update({read_at:new Date().toISOString()}).eq("order_id",order.id).neq("sender_id",session.user.id).is("read_at",null);
+    await loadInbox();
   };
 
 
