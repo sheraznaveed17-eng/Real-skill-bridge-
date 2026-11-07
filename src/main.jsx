@@ -14,6 +14,7 @@ const money = n => `Rs. ${Number(n || 0).toLocaleString("en-PK")}`;
 function App() {
   const [session, setSession] = useState(null);
   const [profile, setProfile] = useState(null);
+  const [activeMode, setActiveMode] = useState("buyer");
   const [page, setPage] = useState("home");
   const [gigs, setGigs] = useState([]);
   const [orders, setOrders] = useState([]);
@@ -76,11 +77,11 @@ function App() {
 
   const loadProfile = async user => {
     const { data } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
-    if (data) { setProfile(data); setProfileForm({ full_name:data.full_name || "", bio:data.bio || "", professional_title:data.professional_title || "", country:data.country || "", languages:(data.languages || []).join(", "), skills:(data.skills || []).join(", "), experience_years:data.experience_years ?? "", education:data.education || "", certifications:data.certifications || "", website_url:data.website_url || "", availability:data.availability ?? true }); }
+    if (data) { const preferredMode = user.user_metadata?.active_mode || data.active_mode || (data.role==="seller"?"seller":"buyer"); setActiveMode(preferredMode); if (data.active_mode !== preferredMode) supabase.from("profiles").update({active_mode:preferredMode}).eq("id",user.id); setProfile(data); setProfileForm({ full_name:data.full_name || "", bio:data.bio || "", professional_title:data.professional_title || "", country:data.country || "", languages:(data.languages || []).join(", "), skills:(data.skills || []).join(", "), experience_years:data.experience_years ?? "", education:data.education || "", certifications:data.certifications || "", website_url:data.website_url || "", availability:data.availability ?? true }); }
     else {
-      const fallback = { id:user.id, full_name:user.user_metadata?.full_name || user.email?.split("@")[0], role:user.user_metadata?.role || "buyer" };
+      const fallback = { id:user.id, full_name:user.user_metadata?.full_name || user.email?.split("@")[0], role:user.user_metadata?.role || "buyer", account_modes:["buyer","seller"], active_mode:user.user_metadata?.active_mode || "buyer" };
       const { data: created } = await supabase.from("profiles").upsert(fallback).select().single();
-      setProfile(created || fallback); setProfileForm({ full_name:fallback.full_name || "", bio:fallback.bio || "", professional_title:"", country:"", languages:"", skills:"", experience_years:"", education:"", certifications:"", website_url:"", availability:true });
+      setProfile(created || fallback); setActiveMode(fallback.active_mode); setProfileForm({ full_name:fallback.full_name || "", bio:fallback.bio || "", professional_title:"", country:"", languages:"", skills:"", experience_years:"", education:"", certifications:"", website_url:"", availability:true });
     }
   };
 
@@ -125,7 +126,7 @@ function App() {
       if (authMode === "signup") {
         const { data, error } = await supabase.auth.signUp({
           email:authForm.email, password:authForm.password,
-          options:{ data:{ full_name:authForm.name, role:authForm.role } }
+          options:{ data:{ full_name:authForm.name, role:authForm.role, active_mode:authForm.role, account_modes:["buyer","seller"] } }
         });
         if (error) throw error;
         if (data.session) show("Account ban gaya! Skill Bridge mein khush aamdeed.");
@@ -139,7 +140,16 @@ function App() {
     setBusy(false);
   };
 
-  const signOut = async () => { if (!demoMode) await supabase.auth.signOut(); navigate("home"); show("You have logged out."); };
+  const signOut = async () => { if (!demoMode) await supabase.auth.signOut(); setActiveMode("buyer"); navigate("home"); show("You have logged out."); };
+
+  const switchMode = async mode => {
+    if (!session?.user || !["buyer","seller"].includes(mode) || mode===activeMode) return;
+    setBusy(true);
+    const { data, error } = await supabase.from("profiles").update({active_mode:mode,account_modes:["buyer","seller"]}).eq("id",session.user.id).select().single();
+    if (error) show(error.message);
+    else { setProfile(data); setActiveMode(mode); setPage("dashboard"); setAccountMenu(false); show(mode==="seller" ? "Seller mode is now active." : "Buyer mode is now active."); }
+    setBusy(false);
+  };
 
   const saveProfile = async e => {
     e.preventDefault();
@@ -181,6 +191,7 @@ function App() {
   const createGig = async e => {
     e.preventDefault();
     if (!profile || demoMode) return show("Gig publish karne ke liye account aur Supabase connection zaroori hai.");
+    if (activeMode !== "seller") return show("Seller mode par switch karein to publish a service.");
     setBusy(true);
     const { error } = await supabase.from("gigs").insert({
       seller_id:session.user.id, title:gigForm.title.trim(), description:gigForm.description.trim(),
@@ -233,7 +244,7 @@ function App() {
       <nav className="desktop-nav">
         <button onClick={() => navigate("home")}>Explore</button>
         {session && <button onClick={() => navigate("orders")}>Orders</button>}
-        {session && profile?.role === "seller" && <button onClick={() => navigate("my-gigs")}>My services</button>}
+        {session && activeMode==="seller" && <button onClick={() => navigate("my-gigs")}>My services</button>}
       </nav>
       <div className="top-actions">
         <button className="icon-btn mobile-only" aria-label="Open navigation" onClick={() => setMobileMenu(!mobileMenu)}>{mobileMenu?<X/>:<Menu/>}</button>
@@ -246,10 +257,11 @@ function App() {
             </button>
             {accountMenu && <div className="account-dropdown">
               <div className="account-dropdown-user"><strong>{profile?.full_name || "Skill Bridge member"}</strong><small>{session.user.email}</small></div>
+              <div className="account-mode-actions"><button onClick={()=>switchMode("buyer")}>Buyer mode</button><button onClick={()=>switchMode("seller")}>Seller mode</button></div>
               <button onClick={()=>{navigate("profile");setAccountMenu(false)}}><UserCircle size={17}/> My profile</button>
               <button onClick={()=>{navigate("dashboard");setAccountMenu(false)}}><LayoutDashboard size={17}/> Dashboard</button>
               <button onClick={()=>{navigate("orders");setAccountMenu(false)}}><PackageCheck size={17}/> Orders</button>
-              {profile?.role==="seller" && <button onClick={()=>{navigate("my-gigs");setAccountMenu(false)}}><BriefcaseBusiness size={17}/> My services</button>}
+              {activeMode==="seller" && <button onClick={()=>{navigate("my-gigs");setAccountMenu(false)}}><BriefcaseBusiness size={17}/> My services</button>}
               <button className="dropdown-logout" onClick={()=>{setAccountMenu(false);signOut()}}><LogOut size={17}/> Log out</button>
             </div>}
           </div>
@@ -262,7 +274,7 @@ function App() {
     <nav className="marketplace-subnav" aria-label="Popular categories">
       {categories.slice(1,11).map(c=><button key={c} className={category===c?"selected":""} onClick={()=>{setCategory(c);navigate("home");document.getElementById("explore")?.scrollIntoView({behavior:"smooth"});}}>{c}</button>)}
     </nav>
-    {mobileMenu && <div className="mobile-menu"><button onClick={()=>navigate("home")}>Explore</button>{session ? <><button onClick={()=>navigate("dashboard")}>Dashboard</button><button onClick={()=>navigate("profile")}>My profile</button><button onClick={()=>navigate("orders")}>Orders</button>{profile?.role==="seller"&&<button onClick={()=>navigate("my-gigs")}>My services</button>}<button onClick={signOut}>Log out</button></> : <><button onClick={()=>{setAuthMode("login");navigate("auth")}}>Log in</button><button onClick={()=>{setAuthMode("signup");navigate("auth")}}>Join Skill Bridge</button></>}</div>}
+    {mobileMenu && <div className="mobile-menu"><button onClick={()=>navigate("home")}>Explore</button>{session ? <><button onClick={()=>navigate("dashboard")}>Dashboard</button><button onClick={()=>navigate("profile")}>My profile</button><button onClick={()=>navigate("orders")}>Orders</button>{activeMode==="seller"&&<button onClick={()=>navigate("my-gigs")}>My services</button>}<button onClick={signOut}>Log out</button></> : <><button onClick={()=>{setAuthMode("login");navigate("auth")}}>Log in</button><button onClick={()=>{setAuthMode("signup");navigate("auth")}}>Join Skill Bridge</button></>}</div>}
     {demoMode && <div className="setup-banner"><span><Sparkles size={15}/> Setup required: connect your free Supabase project to enable real multi-user features.</span><button onClick={()=>show("README.md mein Android setup ke simple steps diye gaye hain.")}>How to connect</button></div>}
     {notice && <div className="toast"><CheckCircle2 size={18}/>{notice}<button onClick={()=>setNotice("")}><X size={16}/></button></div>}
 
@@ -281,10 +293,10 @@ function App() {
       <section className="choice-section">
         <div className="choice-heading"><span className="eyebrow muted">GET STARTED</span><h2>What would you like to do?</h2><p>Choose how you want to use Skill Bridge.</p></div>
         <div className="choice-grid">
-          <button className="choice-card" onClick={()=>{setAuthForm(v=>({...v,role:"seller"}));setAuthMode("signup");navigate("auth");}}>
+          <button className="choice-card" onClick={()=>{if(session){switchMode("seller");}else{setAuthForm(v=>({...v,role:"seller"}));setAuthMode("signup");navigate("auth");}}}>
             <span className="choice-icon"><BriefcaseBusiness size={25}/></span><span className="choice-copy"><strong>Find Work</strong><small>Show your skills and let customers discover your services.</small></span><ArrowRight className="choice-arrow"/>
           </button>
-          <button className="choice-card" onClick={()=>{setAuthForm(v=>({...v,role:"buyer"}));setAuthMode("signup");navigate("auth");}}>
+          <button className="choice-card" onClick={()=>{if(session){switchMode("buyer");}else{setAuthForm(v=>({...v,role:"buyer"}));setAuthMode("signup");navigate("auth");}}}>
             <span className="choice-icon"><UserRound size={25}/></span><span className="choice-copy"><strong>Hire Someone</strong><small>Find skilled people for digital tasks and practical work.</small></span><ArrowRight className="choice-arrow"/>
           </button>
         </div>
@@ -295,13 +307,13 @@ function App() {
         <div className="category-row">{categories.map(c=><button key={c} className={category===c?"category active":"category"} onClick={()=>setCategory(c)}>{c}</button>)}</div>
         <div className="gig-grid">{filteredGigs.map(g=><GigCard key={g.id} gig={g} onClick={()=>setSelectedGig(g)}/> )}</div>
         {!filteredGigs.length && <Empty icon={<BriefcaseBusiness/>} title="No services found yet" text={demoMode?"The marketplace is getting ready.":"Try another search or category. You can be the first to list a service."}/>}
-        {profile?.role === "seller" && <div className="join-banner"><div><h3>Ready to offer your skills?</h3><p>Create a service listing and let buyers discover what you do best.</p></div><button className="btn btn-dark" onClick={()=>navigate("create-gig")}><Plus size={17}/> Create a gig</button></div>}
+        {activeMode==="seller" && <div className="join-banner"><div><h3>Ready to offer your skills?</h3><p>Create a service listing and let buyers discover what you do best.</p></div><button className="btn btn-dark" onClick={()=>navigate("create-gig")}><Plus size={17}/> Create a gig</button></div>}
       </main>
     </>}
 
     {page === "auth" && <main className="narrow-page"><div className="auth-card"><div className="auth-logo"><span className="brand-mark"><Sparkles size={20}/></span></div><div className="eyebrow muted">WELCOME TO SKILL BRIDGE</div><h2>{authMode==="signup"?"Create your account":"Welcome back"}</h2><p className="subtext">{authMode==="signup"?"Join the community of buyers and independent sellers.":"Log in to manage your projects and services."}</p>
       <form onSubmit={signUpOrIn} className="stack-form">
-        {authMode==="signup" && <><label>Full name<input required value={authForm.name} onChange={e=>setAuthForm({...authForm,name:e.target.value})} placeholder="Your name"/></label><label>I want to<select value={authForm.role} onChange={e=>setAuthForm({...authForm,role:e.target.value})}><option value="buyer">Hire freelancers (Buyer)</option><option value="seller">Offer my services (Seller)</option></select></label></>}
+        {authMode==="signup" && <><label>Full name<input required value={authForm.name} onChange={e=>setAuthForm({...authForm,name:e.target.value})} placeholder="Your name"/></label><p className="auth-mode-note">One account gives you both Buyer and Seller modes. You can switch anytime.</p></>}
         <label>Email address<input required type="email" value={authForm.email} onChange={e=>setAuthForm({...authForm,email:e.target.value})} placeholder="you@example.com"/></label>
         <label>Password<input required minLength="6" type="password" value={authForm.password} onChange={e=>setAuthForm({...authForm,password:e.target.value})} placeholder="At least 6 characters"/></label>
         <button className="btn btn-dark full" disabled={busy}>{busy?"Please wait...":authMode==="signup"?"Create account":"Log in"} <ArrowRight size={17}/></button>
@@ -331,7 +343,7 @@ function App() {
             {profile?.avatar_url ? <img className="profile-avatar-large" src={profile.avatar_url} alt="Your profile"/> : <div className="profile-avatar-placeholder"><UserCircle size={58}/></div>}
             <label className="avatar-upload-button"><Camera size={16}/>{avatarBusy?"Uploading...":"Change photo"}<input type="file" accept="image/*" onChange={uploadAvatar} disabled={avatarBusy}/></label>
           </div>
-          <h3>{profile?.full_name || "Skill Bridge member"}</h3><span className="profile-role-label">{profile?.role || "Member"}</span>
+          <h3>{profile?.full_name || "Skill Bridge member"}</h3><span className="profile-role-label">{activeMode==="seller"?"Seller account":"Buyer account"}</span>
           <p>{profile?.bio || "Add a short introduction to your profile."}</p>
           <small>JPG, PNG or WEBP · Maximum 3 MB</small>
         </section>
@@ -341,7 +353,7 @@ function App() {
             <label>Full name<input required maxLength="80" value={profileForm.full_name} onChange={e=>setProfileForm({...profileForm,full_name:e.target.value})} placeholder="Your full name"/></label>
             <label>Professional title<input maxLength="100" value={profileForm.professional_title} onChange={e=>setProfileForm({...profileForm,professional_title:e.target.value})} placeholder="e.g. Graphic designer / Electrician / Web developer"/></label>
             <label>About me<textarea rows="5" maxLength="1000" value={profileForm.bio} onChange={e=>setProfileForm({...profileForm,bio:e.target.value})} placeholder="Introduce yourself, your experience and the work you do..."/></label>
-            {profile?.role==="seller" && <>
+            {activeMode==="seller" && <>
               <div className="two-fields"><label>Country<input value={profileForm.country} onChange={e=>setProfileForm({...profileForm,country:e.target.value})} placeholder="Pakistan"/></label><label>Experience (years)<input type="number" min="0" max="60" value={profileForm.experience_years} onChange={e=>setProfileForm({...profileForm,experience_years:e.target.value})} placeholder="e.g. 3"/></label></div>
               <label>Skills <small>Separate each skill with a comma</small><input value={profileForm.skills} onChange={e=>setProfileForm({...profileForm,skills:e.target.value})} placeholder="Logo design, Photoshop, Branding"/></label>
               <label>Languages <small>Separate each language with a comma</small><input value={profileForm.languages} onChange={e=>setProfileForm({...profileForm,languages:e.target.value})} placeholder="Urdu, English, Punjabi"/></label>
@@ -351,7 +363,7 @@ function App() {
               <label className="availability-toggle"><input type="checkbox" checked={profileForm.availability} onChange={e=>setProfileForm({...profileForm,availability:e.target.checked})}/> Available for new work</label>
             </>}
             <label>Email address<input value={session?.user?.email || ""} readOnly/></label>
-            <label>Account type<input value={profile?.role || "buyer"} readOnly/></label>
+            <label>Account modes<input value="Buyer + Seller (same account)" readOnly/></label>
             <button className="btn btn-dark full" disabled={busy}><Save size={17}/>{busy?"Saving...":"Save changes"}</button>
           </form>
         </section>
@@ -361,12 +373,13 @@ function App() {
     {page === "dashboard" && <main className="content page-content dashboard-page">
       <div className="dashboard-welcome">
         <div>
-          <div className="eyebrow muted">{profile?.role==="seller"?"SELLER":"BUYER"} WORKSPACE</div>
+          <div className="eyebrow muted">{activeMode==="seller"?"SELLER":"BUYER"} WORKSPACE</div>
           <h2>{profile?.full_name || "Welcome back"}</h2>
-          <p>{profile?.role==="seller"?"Your business overview, orders and services — all in one place.":"Your projects, purchases and conversations — all in one place."}</p>
+          <p>{activeMode==="seller"?"Your business overview, orders and services — all in one place.":"Your projects, purchases and conversations — all in one place."}</p>
         </div>
         <div className="dashboard-welcome-actions">
-          {profile?.role==="seller"
+          <div className="mode-switch"><span>Switch workspace</span><button className={activeMode==="buyer"?"selected":""} onClick={()=>switchMode("buyer")} disabled={busy}>Buyer</button><button className={activeMode==="seller"?"selected":""} onClick={()=>switchMode("seller")} disabled={busy}>Seller</button></div>
+          {activeMode==="seller"
             ? <button className="btn btn-dark" onClick={()=>navigate("create-gig")}><Plus size={17}/> Create a service</button>
             : <button className="btn btn-dark" onClick={()=>navigate("home")}><Search size={17}/> Find a service</button>}
         </div>
@@ -376,18 +389,18 @@ function App() {
         <aside className="dashboard-sidebar">
           <div className="dashboard-sidebar-user">
             {profile?.avatar_url ? <img src={profile.avatar_url} alt="" /> : <span>{(profile?.full_name||"U").slice(0,1).toUpperCase()}</span>}
-            <div><strong>{profile?.full_name || "Skill Bridge member"}</strong><small>{profile?.role==="seller"?"Service provider":"Customer"}</small></div>
+            <div><strong>{profile?.full_name || "Skill Bridge member"}</strong><small>{activeMode==="seller"?"Service provider":"Customer"}</small></div>
           </div>
           <div className="dashboard-side-label">WORKSPACE</div>
           <button className="dashboard-side-link active"><LayoutDashboard size={17}/> Overview</button>
-          <button className="dashboard-side-link" onClick={()=>navigate("orders")}><PackageCheck size={17}/> {profile?.role==="seller"?"Manage orders":"My purchases"}<ChevronRight size={15}/></button>
-          {profile?.role==="seller" && <button className="dashboard-side-link" onClick={()=>navigate("my-gigs")}><BriefcaseBusiness size={17}/> My services<ChevronRight size={15}/></button>}
+          <button className="dashboard-side-link" onClick={()=>navigate("orders")}><PackageCheck size={17}/> {activeMode==="seller"?"Manage orders":"My purchases"}<ChevronRight size={15}/></button>
+          {activeMode==="seller" && <button className="dashboard-side-link" onClick={()=>navigate("my-gigs")}><BriefcaseBusiness size={17}/> My services<ChevronRight size={15}/></button>}
           <button className="dashboard-side-link" onClick={()=>navigate("profile")}><UserRound size={17}/> Profile settings<ChevronRight size={15}/></button>
           <div className="dashboard-sidebar-help"><strong>Need to update your details?</strong><p>Keep your profile clear so other members know who they are working with.</p><button onClick={()=>navigate("profile")}>Edit profile <ArrowRight size={14}/></button></div>
         </aside>
 
         <section className="dashboard-main">
-          {profile?.role==="seller" ? <>
+          {activeMode==="seller" ? <>
             <div className="dashboard-section-heading"><div><h3>Business overview</h3><p>Here’s what’s happening with your services.</p></div><button className="text-action" onClick={()=>navigate("orders")}>View all orders <ArrowRight size={15}/></button></div>
             <div className="dashboard-stats">
               <div className="dashboard-stat"><span>Active orders</span><strong>{myOrders.filter(o=>o.seller_id===session?.user?.id && !["completed","cancelled"].includes(o.status)).length}</strong><small><Clock3 size={14}/> Currently in progress</small></div>
@@ -442,7 +455,7 @@ function App() {
 
     {page === "admin" && <main className="content page-content"><div className="eyebrow muted">ADMINISTRATION</div><h2>Admin overview</h2><p className="subtext">Basic marketplace moderation view.</p><div className="dashboard-grid"><div className="metric-card"><span>Total active gigs</span><strong>{gigs.length}</strong></div><div className="metric-card"><span>Total orders</span><strong>{orders.length}</strong></div><div className="metric-card"><span>Marketplace members</span><strong>—</strong><small>Use Supabase dashboard for user management</small></div></div><h3 className="list-title">Recent gigs</h3>{gigs.slice(0,10).map(g=><div className="admin-row" key={g.id}><div><strong>{g.title}</strong><small>{g.profiles?.full_name} · {g.category}</small></div><strong>{money(g.price)}</strong><button className="outline-btn" onClick={async()=>{const {error}=await supabase.from("gigs").update({is_active:false}).eq("id",g.id);if(error)show(error.message);else{show("Gig deactivated.");loadGigs();}}}>Deactivate</button></div>)}</main>}
 
-    {selectedGig && <div className="modal-backdrop" onClick={()=>setSelectedGig(null)}><div className="gig-modal" onClick={e=>e.stopPropagation()}><button className="modal-close" onClick={()=>setSelectedGig(null)}><X/></button><div className="gig-art large-art"><Sparkles size={34}/></div><div className="eyebrow muted">{selectedGig.category}</div><h2>{selectedGig.title}</h2><div className="seller-line"><span className="avatar">{(selectedGig.profiles?.full_name||"S").slice(0,1).toUpperCase()}</span><strong>{selectedGig.profiles?.full_name || "Skill Bridge seller"}</strong><span className="seller-tag">Seller</span></div><p>{selectedGig.description}</p><div className="gig-facts"><span><Clock3 size={16}/> {selectedGig.delivery_days} day delivery</span><span><ShieldCheck size={16}/> Simulated checkout</span></div><div className="modal-bottom"><div><small>Starting at</small><strong>{money(selectedGig.price)}</strong></div>{profile?.role==="buyer"||!profile?<button className="btn btn-dark" onClick={()=>{if(!session){setSelectedGig(null);navigate("auth");show("Please log in as a buyer to continue.");}else setPage("checkout");}}>Continue <ArrowRight size={17}/></button>:<span className="subtext">Log in as a buyer to order</span>}</div>{page==="checkout"&&<div className="checkout-box"><h3>Choose a payment method</h3><label>Project requirements<textarea rows="3" value={orderDetails} onChange={e=>setOrderDetails(e.target.value)} placeholder="Tell the seller what you need..."/></label><div className="payment-options"><p className="payment-group-title">Pakistan</p>{["JazzCash","Easypaisa"].map(method=><button type="button" key={method} className={selectedPayment===method?"payment-option selected":"payment-option"} onClick={()=>setSelectedPayment(method)}><span>{method}</span><strong>{selectedPayment===method?"Selected":"Select"}</strong></button>)}<p className="payment-group-title">International</p>{["Visa / Mastercard","PayPal","International bank transfer"].map(method=><button type="button" key={method} className={selectedPayment===method?"payment-option selected":"payment-option"} onClick={()=>setSelectedPayment(method)}><span>{method}</span><strong>{selectedPayment===method?"Selected":"Select"}</strong></button>)}</div><section className="protection-policy"><h4>Skill Bridge payment protection</h4><ul><li><strong>50% after completion:</strong> paid when the work is finished.</li><li>Payments are intended to be held by Skill Bridge and released to the worker after the buyer confirms completion, subject to the approved payment provider and applicable rules.</li></ul><p><strong>Account safety:</strong> when an account receives three complaints, Skill Bridge will investigate the case. If the investigation confirms any violation of Skill Bridge rules, the account will be permanently banned. Complaints alone do not prove wrongdoing; evidence will be reviewed before action.</p><small>Planned policy only. Payment holding, release, strikes and bans are not active yet.</small></section><div className="payment-unavailable"><strong>Payment service is currently unavailable.</strong><span>Please try again later. No payment has been taken.</span></div><button className="btn btn-dark full" onClick={placeOrder}>Continue to payment · {money(selectedGig.price)}</button></div>}</div></div>}
+    {selectedGig && <div className="modal-backdrop" onClick={()=>setSelectedGig(null)}><div className="gig-modal" onClick={e=>e.stopPropagation()}><button className="modal-close" onClick={()=>setSelectedGig(null)}><X/></button><div className="gig-art large-art"><Sparkles size={34}/></div><div className="eyebrow muted">{selectedGig.category}</div><h2>{selectedGig.title}</h2><div className="seller-line"><span className="avatar">{(selectedGig.profiles?.full_name||"S").slice(0,1).toUpperCase()}</span><strong>{selectedGig.profiles?.full_name || "Skill Bridge seller"}</strong><span className="seller-tag">Seller</span></div><p>{selectedGig.description}</p><div className="gig-facts"><span><Clock3 size={16}/> {selectedGig.delivery_days} day delivery</span><span><ShieldCheck size={16}/> Simulated checkout</span></div><div className="modal-bottom"><div><small>Starting at</small><strong>{money(selectedGig.price)}</strong></div>{activeMode==="buyer"||!profile?<button className="btn btn-dark" onClick={()=>{if(!session){setSelectedGig(null);navigate("auth");show("Please log in as a buyer to continue.");}else setPage("checkout");}}>Continue <ArrowRight size={17}/></button>:<span className="subtext">Log in as a buyer to order</span>}</div>{page==="checkout"&&<div className="checkout-box"><h3>Choose a payment method</h3><label>Project requirements<textarea rows="3" value={orderDetails} onChange={e=>setOrderDetails(e.target.value)} placeholder="Tell the seller what you need..."/></label><div className="payment-options"><p className="payment-group-title">Pakistan</p>{["JazzCash","Easypaisa"].map(method=><button type="button" key={method} className={selectedPayment===method?"payment-option selected":"payment-option"} onClick={()=>setSelectedPayment(method)}><span>{method}</span><strong>{selectedPayment===method?"Selected":"Select"}</strong></button>)}<p className="payment-group-title">International</p>{["Visa / Mastercard","PayPal","International bank transfer"].map(method=><button type="button" key={method} className={selectedPayment===method?"payment-option selected":"payment-option"} onClick={()=>setSelectedPayment(method)}><span>{method}</span><strong>{selectedPayment===method?"Selected":"Select"}</strong></button>)}</div><section className="protection-policy"><h4>Skill Bridge payment protection</h4><ul><li><strong>50% after completion:</strong> paid when the work is finished.</li><li>Payments are intended to be held by Skill Bridge and released to the worker after the buyer confirms completion, subject to the approved payment provider and applicable rules.</li></ul><p><strong>Account safety:</strong> when an account receives three complaints, Skill Bridge will investigate the case. If the investigation confirms any violation of Skill Bridge rules, the account will be permanently banned. Complaints alone do not prove wrongdoing; evidence will be reviewed before action.</p><small>Planned policy only. Payment holding, release, strikes and bans are not active yet.</small></section><div className="payment-unavailable"><strong>Payment service is currently unavailable.</strong><span>Please try again later. No payment has been taken.</span></div><button className="btn btn-dark full" onClick={placeOrder}>Continue to payment · {money(selectedGig.price)}</button></div>}</div></div>}
 
     <footer className="footer"><div className="footer-brand"><span className="brand-mark"><Sparkles size={17}/></span><span className="brand-wordmark"><span>skill<span className="brand-accent">bridge</span></span><small>Made by Yousaf</small></span></div><p>A place where skills meet opportunity.</p><div className="footer-bottom"><span>© {new Date().getFullYear()} Skill Bridge · A place where skills meet opportunity</span><span>Payment options listed · Service unavailable</span></div></footer>
   </div>;
