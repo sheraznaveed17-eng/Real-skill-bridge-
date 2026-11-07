@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
   Search, BriefcaseBusiness, UserRound, Plus, LogOut, Menu, X, Star, Bookmark, Trash2, ExternalLink, Flag,
-  MessageCircle, LayoutDashboard, ShieldCheck, ArrowRight, CheckCircle2,
+  MessageCircle, LayoutDashboard, ShieldCheck, ArrowRight, CheckCircle2, Bell,
   Clock3, Wallet, Sparkles, Filter, PackageCheck, Send, ChevronRight, ChevronDown, Camera, Save, UserCircle, Settings, ShoppingBag, Eye
 } from "lucide-react";
 import { supabase, isConfigured } from "./supabase";
@@ -65,6 +65,9 @@ function App() {
   const [messages, setMessages] = useState([]);
   const [conversations, setConversations] = useState([]);
   const [unreadMessages,setUnreadMessages]=useState(0);
+  const [notifications,setNotifications]=useState([]);
+  const [unreadNotifications,setUnreadNotifications]=useState(0);
+  const [notificationsOpen,setNotificationsOpen]=useState(false);
   const [unreadByThread,setUnreadByThread]=useState({});
   const [unreadByOrder,setUnreadByOrder]=useState({});
   const [activeConversation, setActiveConversation] = useState(null);
@@ -137,6 +140,21 @@ function App() {
       loadSellerGigs();
     }
   }, [session]);
+
+  useEffect(() => {
+    if (!session?.user?.id) {
+      setNotifications([]);
+      setUnreadNotifications(0);
+      return;
+    }
+    loadNotifications();
+    const channel = supabase.channel("notifications-" + session.user.id)
+      .on("postgres_changes", {event:"INSERT", schema:"public", table:"notifications", filter:"recipient_id=eq." + session.user.id}, payload => {
+        setNotifications(prev => [payload.new, ...prev].slice(0,20));
+        setUnreadNotifications(count => count + 1);
+      }).subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [session?.user?.id]);
 
   useEffect(() => {
     if (!gigs.length) return;
@@ -467,6 +485,36 @@ function App() {
     }
   };
 
+  const loadNotifications = async () => {
+    if (!session?.user?.id) return;
+    const {data,error}=await supabase.from("notifications").select("*").eq("recipient_id",session.user.id).order("created_at",{ascending:false}).limit(20);
+    if (error) { show(error.message); return; }
+    setNotifications(data||[]);
+    setUnreadNotifications((data||[]).filter(item=>!item.read_at).length);
+  };
+
+  const markNotificationRead = async notification => {
+    if (notification.read_at) return;
+    const readAt=new Date().toISOString();
+    const {error}=await supabase.from("notifications").update({read_at:readAt}).eq("id",notification.id).eq("recipient_id",session.user.id);
+    if (error) { show(error.message); return; }
+    setNotifications(prev=>prev.map(item=>item.id===notification.id?{...item,read_at:readAt}:item));
+    setUnreadNotifications(count=>Math.max(0,count-1));
+  };
+
+  const openNotification = async notification => {
+    await markNotificationRead(notification);
+    setNotificationsOpen(false);
+    if (notification.entity_type==="conversation" && notification.entity_id) {
+      const {data}=await supabase.from("conversations").select("*, gigs(title), buyer:profiles!conversations_buyer_id_fkey(full_name,avatar_url), seller:profiles!conversations_seller_id_fkey(full_name,avatar_url)").eq("id",notification.entity_id).maybeSingle();
+      if (data) { setPage("messages"); await loadConversation(data); }
+      else navigate("messages");
+    } else if (notification.entity_type==="order") {
+      await loadOrders();
+      navigate("orders");
+    } else navigate("dashboard");
+  };
+
   const loadConversation = async conversation => {
     setActiveConversation(conversation); setActiveOrder(null);
     const [mr,offers] = await Promise.all([
@@ -603,6 +651,18 @@ function App() {
       <div className="top-actions">
         <button className="icon-btn mobile-only" aria-label="Open navigation" onClick={() => setMobileMenu(!mobileMenu)}>{mobileMenu?<X/>:<Menu/>}</button>
         {session ? <>
+          <div className="notification-wrap">
+            <button className="icon-btn notification-trigger" aria-label="Notifications" aria-expanded={notificationsOpen} onClick={()=>setNotificationsOpen(value=>!value)}>
+              <Bell size={20}/>{unreadNotifications>0&&<span className="notification-count">{unreadNotifications>9?"9+":unreadNotifications}</span>}
+            </button>
+            {notificationsOpen&&<div className="notification-dropdown">
+              <div className="notification-heading"><strong>Notifications</strong><button onClick={loadNotifications}>Refresh</button></div>
+              {notifications.map(item=><button key={item.id} className={"notification-item "+(!item.read_at?"unread":"")} onClick={()=>openNotification(item)}>
+                <span className="notification-dot"/><span className="notification-copy"><strong>{item.title}</strong><small>{item.body}</small><time>{new Date(item.created_at).toLocaleString()}</time></span>
+              </button>)}
+              {!notifications.length&&<div className="notification-empty">You’re all caught up. New messages and order updates will appear here.</div>}
+            </div>}
+          </div>
           <button className="nav-plain desktop-account-link" onClick={() => navigate("dashboard")}>{t.dashboard}</button>
           <div className="account-menu-wrap">
             <button className="account-trigger" aria-expanded={accountMenu} onClick={() => setAccountMenu(v=>!v)}>
