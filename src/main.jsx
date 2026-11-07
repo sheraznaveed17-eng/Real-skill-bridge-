@@ -31,6 +31,10 @@ function App() {
   const [orderDetails, setOrderDetails] = useState("");
   const [selectedPayment, setSelectedPayment] = useState("JazzCash");
   const [messages, setMessages] = useState([]);
+  const [conversations, setConversations] = useState([]);
+  const [activeConversation, setActiveConversation] = useState(null);
+  const [conversationOffers, setConversationOffers] = useState([]);
+  const [offerForm, setOfferForm] = useState({title:"",description:"",amount:"",delivery_days:"3"});
   const [messageText, setMessageText] = useState("");
   const [activeOrder, setActiveOrder] = useState(null);
   const [reviewForm, setReviewForm] = useState({ rating:"5", comment:"" });
