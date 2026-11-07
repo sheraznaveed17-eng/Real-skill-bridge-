@@ -530,3 +530,83 @@
 .gig-art{overflow:hidden}
 .gig-art img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .gig-art span{z-index:1;padding:5px 8px;border-radius:5px;background:#1720338c;color:#fff}
+
+
+/* Clean, consistent page hierarchy */
+:root{--page-width:1180px;--page-gutter:clamp(16px,4vw,42px)}
+.topbar{padding-left:var(--page-gutter);padding-right:var(--page-gutter);gap:clamp(12px,2vw,26px)}
+.brand{min-width:max-content}
+.desktop-nav{gap:clamp(12px,1.8vw,24px);margin-left:clamp(8px,1.5vw,20px)}
+.top-actions{gap:clamp(8px,1.2vw,16px);min-width:0}
+.header-search{width:clamp(210px,25vw,330px);flex:0 1 330px}
+.language-switcher{flex:0 0 auto}
+.marketplace-subnav{display:flex;align-items:center;gap:8px;padding:10px var(--page-gutter);border-bottom:1px solid var(--line);background:#fff;overflow-x:auto;scrollbar-width:none;white-space:nowrap}
+.marketplace-subnav button{flex:0 0 auto;border:0;background:transparent;border-radius:7px;padding:9px 11px;color:#596579;font-size:12px;font-weight:600;transition:background .15s,color .15s}
+.marketplace-subnav button:hover,.marketplace-subnav button.selected{background:#eaf8f2;color:#087d59}
+.content,.choice-section{width:min(var(--page-width),calc(100% - 2*var(--page-gutter)))}
+.content{margin-top:clamp(36px,5vw,64px);margin-bottom:clamp(44px,6vw,76px)}
+.page-content{min-height:58vh}
+.page-content>h2{margin-top:9px}
+.section-heading{margin-bottom:8px}
+.category-row{padding:18px 0}
+.marketplace-filters{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;padding:16px;margin:0 0 22px;background:#f8faf9;border:1px solid #e9efeb;border-radius:12px}
+.marketplace-filters label{display:flex;flex-direction:column;gap:7px;color:#596579;font-size:11px;font-weight:700;min-width:0}
+.marketplace-filters input,.marketplace-filters select{width:100%;min-width:0;border:1px solid #dfe7e2;border-radius:8px;padding:10px;background:#fff;color:var(--ink);font-size:12px}
+.gig-grid{gap:18px}
+.gig-card{border-radius:13px}
+.gig-info{padding:16px}
+.narrow-page{background:#f7f9f8}
+.auth-card,.form-panel{border-radius:16px;box-shadow:0 12px 36px #1720330a}
+.dashboard-page{width:min(1240px,calc(100% - 2*var(--page-gutter)))}
+.dashboard-welcome{margin-bottom:22px}
+.dashboard-layout{display:grid;grid-template-columns:238px minmax(0,1fr);gap:22px;align-items:start}
+.dashboard-sidebar{position:sticky;top:96px}
+.dashboard-main{min-width:0}
+.dashboard-panel,.profile-card,.profile-edit-card,.order-card,.inbox-list,.inbox-chat{border-color:#e6ece8;border-radius:13px;box-shadow:0 3px 14px #17203305}
+.orders-list{margin-top:22px}
+.order-card{padding:20px}
+.inbox-layout{gap:16px}
+.inbox-list{width:310px;flex:0 0 310px}
+.inbox-chat{min-width:0}
+.footer{margin-top:48px}
+.footer-bottom{max-width:var(--page-width);margin-left:auto;margin-right:auto}
+@media(max-width:1050px){
+ .topbar{gap:12px}
+ .desktop-nav{gap:10px;margin-left:0}
+ .top-actions{gap:8px}
+ .header-search{width:220px;flex-basis:220px}
+ .marketplace-filters{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .dashboard-layout{grid-template-columns:205px minmax(0,1fr);gap:15px}
+}
+@media(max-width:760px){
+ :root{--page-gutter:16px}
+ .topbar{display:flex;gap:8px;justify-content:space-between}
+ .brand{font-size:19px}
+ .top-actions{gap:7px}
+ .top-actions .header-search{display:none}
+ .language-switcher{max-width:92px;font-size:11px;padding:7px 4px}
+ .marketplace-subnav{padding:8px 12px;gap:5px}
+ .marketplace-subnav button{font-size:11px;padding:8px 10px}
+ .content,.choice-section{width:calc(100% - 32px)}
+ .content{margin-top:34px;margin-bottom:42px}
+ .marketplace-filters{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:12px}
+ .gig-grid{gap:11px}
+ .gig-info{padding:11px}
+ .dashboard-layout{grid-template-columns:1fr}
+ .dashboard-sidebar{position:static}
+ .dashboard-main{width:100%}
+ .inbox-layout{display:flex;flex-direction:column}
+ .inbox-list{width:100%;flex:0 0 auto;max-height:240px;overflow:auto}
+ .inbox-chat{width:100%;min-height:380px}
+ .orders-list{gap:12px}
+ .order-card{padding:14px}
+ .footer{margin-top:35px}
+}
+@media(max-width:420px){
+ .language-switcher{max-width:76px}
+ .marketplace-filters{grid-template-columns:1fr 1fr}
+ .section-heading{gap:10px}
+ .section-heading h2,.page-content h2{font-size:23px}
+ .order-main{align-items:flex-start}
+ .order-main>strong{white-space:nowrap}
+}
