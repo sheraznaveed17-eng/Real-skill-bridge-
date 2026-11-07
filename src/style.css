@@ -824,3 +824,10 @@ body{background:#fff;color:var(--ink);-webkit-font-smoothing:antialiased}
 .inbox-thread-copy{flex:1;}
 .inbox-thread.active .inbox-unread{background:#087d59;}
 @media(max-width:760px){.inbox-thread-copy{flex:1;}.inbox-unread{margin-left:auto;}}
+
+
+/* Chat message timestamps and read receipts */
+.page-content .chat-msg-meta{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:7px;color:#87918d;font-size:10px;}
+.page-content .chat-read-status{font-weight:700;letter-spacing:.1px;color:#87918d;}
+.page-content .chat-read-status.seen{color:#087d59;}
+.page-content .chat-msg.own .chat-msg-meta{color:#6d8e80;}
