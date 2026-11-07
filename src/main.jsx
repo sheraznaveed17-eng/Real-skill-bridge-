@@ -462,6 +462,7 @@ function App() {
         {session && <button onClick={() => navigate("orders")}>Orders</button>}
         {session && <button onClick={() => {setActiveOrder(null);setActiveConversation(null);setPage("messages");loadInbox();}}>Messages</button>}
         {session && activeMode==="seller" && <button onClick={() => navigate("my-gigs")}>My services</button>}
+        {isAdmin && <button onClick={() => navigate("admin")}>Admin</button>}
       </nav>
       <div className="top-actions">
         <button className="icon-btn mobile-only" aria-label="Open navigation" onClick={() => setMobileMenu(!mobileMenu)}>{mobileMenu?<X/>:<Menu/>}</button>
@@ -477,6 +478,7 @@ function App() {
               <div className="account-mode-actions"><button onClick={()=>switchMode("buyer")}>Buyer mode</button><button onClick={()=>switchMode("seller")}>Seller mode</button></div>
               <button onClick={()=>{navigate("profile");setAccountMenu(false)}}><UserCircle size={17}/> My profile</button>
               <button onClick={()=>{navigate("dashboard");setAccountMenu(false)}}><LayoutDashboard size={17}/> Dashboard</button>
+              {isAdmin && <button onClick={()=>{navigate("admin");setAccountMenu(false)}}><ShieldCheck size={17}/> Admin moderation</button>}
               <button onClick={()=>{navigate("saved");setAccountMenu(false)}}><Bookmark size={17}/> Saved services</button>
               {activeMode==="seller" && <button onClick={()=>{navigate("portfolio");setAccountMenu(false)}}><BriefcaseBusiness size={17}/> My portfolio</button>}
               <button onClick={()=>{navigate("orders");setAccountMenu(false)}}><PackageCheck size={17}/> Orders</button>
@@ -493,7 +495,7 @@ function App() {
     <nav className="marketplace-subnav" aria-label="Popular categories">
       {categories.slice(1,11).map(c=><button key={c} className={category===c?"selected":""} onClick={()=>{setCategory(c);navigate("home");document.getElementById("explore")?.scrollIntoView({behavior:"smooth"});}}>{c}</button>)}
     </nav>
-    {mobileMenu && <div className="mobile-menu"><button onClick={()=>navigate("home")}>Explore</button>{session ? <><button onClick={()=>navigate("dashboard")}>Dashboard</button><button onClick={()=>navigate("profile")}>My profile</button><button onClick={()=>navigate("saved")}>Saved services</button><button onClick={()=>navigate("orders")}>Orders</button>{activeMode==="seller"&&<button onClick={()=>navigate("portfolio")}>My portfolio</button>}<button onClick={()=>{setActiveOrder(null);setActiveConversation(null);setPage("messages");loadInbox();}}>Messages</button>{activeMode==="seller"&&<button onClick={()=>navigate("my-gigs")}>My services</button>}<button onClick={signOut}>Log out</button></> : <><button onClick={()=>{setAuthMode("login");navigate("auth")}}>Log in</button><button onClick={()=>{setAuthMode("signup");navigate("auth")}}>Join Skill Bridge</button></>}</div>}
+    {mobileMenu && <div className="mobile-menu"><button onClick={()=>navigate("home")}>Explore</button>{session ? <><button onClick={()=>navigate("dashboard")}>Dashboard</button><button onClick={()=>navigate("profile")}>My profile</button><button onClick={()=>navigate("saved")}>Saved services</button><button onClick={()=>navigate("orders")}>Orders</button>{activeMode==="seller"&&<button onClick={()=>navigate("portfolio")}>My portfolio</button>}<button onClick={()=>{setActiveOrder(null);setActiveConversation(null);setPage("messages");loadInbox();}}>Messages</button>{activeMode==="seller"&&<button onClick={()=>navigate("my-gigs")}>My services</button>}{isAdmin&&<button onClick={()=>navigate("admin")}>Admin moderation</button>}<button onClick={signOut}>Log out</button></> : <><button onClick={()=>{setAuthMode("login");navigate("auth")}}>Log in</button><button onClick={()=>{setAuthMode("signup");navigate("auth")}}>Join Skill Bridge</button></>}</div>}
     {demoMode && <div className="setup-banner"><span><Sparkles size={15}/> Setup required: connect your free Supabase project to enable real multi-user features.</span><button onClick={()=>show("README.md mein Android setup ke simple steps diye gaye hain.")}>How to connect</button></div>}
     {notice && <div className="toast"><CheckCircle2 size={18}/>{notice}<button onClick={()=>setNotice("")}><X size={16}/></button></div>}
 
