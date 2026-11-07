@@ -143,7 +143,8 @@ function App() {
   const signOut = async () => { if (!demoMode) await supabase.auth.signOut(); setActiveMode("buyer"); navigate("home"); show("You have logged out."); };
 
   const switchMode = async mode => {
-    if (!session?.user || !["buyer","seller"].includes(mode) || mode===activeMode) return;
+    if (!session?.user || !["buyer","seller"].includes(mode)) return;
+    if (mode===activeMode) { setPage("dashboard"); setAccountMenu(false); return; }
     setBusy(true);
     const { data, error } = await supabase.from("profiles").update({active_mode:mode,account_modes:["buyer","seller"]}).eq("id",session.user.id).select().single();
     if (error) show(error.message);
