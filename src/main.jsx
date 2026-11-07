@@ -43,6 +43,9 @@ function App() {
   const [avatarBusy, setAvatarBusy] = useState(false);
   const [favoriteGigs, setFavoriteGigs] = useState([]);
   const [portfolioItems, setPortfolioItems] = useState([]);
+  const [sellerGigs, setSellerGigs] = useState([]);
+  const [editingGigId, setEditingGigId] = useState(null);
+  const [editGigForm, setEditGigForm] = useState({title:"",description:"",category:"Graphics & Design",price:"",delivery_days:"3"});
   const [portfolioForm, setPortfolioForm] = useState({title:"",description:"",project_url:"",image_url:""});
 
   const demoMode = !isConfigured;
@@ -82,6 +85,7 @@ function App() {
       loadInbox();
       loadFavorites();
       loadPortfolio();
+      loadSellerGigs();
     }
   }, [session]);
 
@@ -213,8 +217,28 @@ function App() {
       category:gigForm.category, price:Number(gigForm.price), delivery_days:Number(gigForm.delivery_days)
     });
     if (error) show(error.message);
-    else { show("Your gig is now published!"); setGigForm({title:"",description:"",category:"Graphics & Design",price:"",delivery_days:"3"}); await loadGigs(); navigate("my-gigs"); }
+    else { show("Your gig is now published!"); setGigForm({title:"",description:"",category:"Graphics & Design",price:"",delivery_days:"3"}); await loadGigs(); await loadSellerGigs(); navigate("my-gigs"); }
     setBusy(false);
+  };
+
+  const loadSellerGigs = async () => {
+    if (!session?.user) return;
+    const {data,error}=await supabase.from("gigs").select("*, profiles(full_name,avatar_url)").eq("seller_id",session.user.id).order("created_at",{ascending:false});
+    if (!error) setSellerGigs(data||[]);
+  };
+
+  const saveGigEdit = async e => {
+    e.preventDefault();
+    if (!editingGigId) return;
+    setBusy(true);
+    const {error}=await supabase.from("gigs").update({title:editGigForm.title.trim(),description:editGigForm.description.trim(),category:editGigForm.category,price:Number(editGigForm.price),delivery_days:Number(editGigForm.delivery_days)}).eq("id",editingGigId).eq("seller_id",session.user.id);
+    if (error) show(error.message); else { setEditingGigId(null); await loadSellerGigs(); await loadGigs(); show("Service updated."); }
+    setBusy(false);
+  };
+
+  const toggleGigStatus = async gig => {
+    const {error}=await supabase.from("gigs").update({is_active:!gig.is_active}).eq("id",gig.id).eq("seller_id",session.user.id);
+    if (error) show(error.message); else { await loadSellerGigs(); await loadGigs(); show(gig.is_active?"Service paused and hidden from marketplace.":"Service is active again."); }
   };
 
   const loadFavorites = async () => {
@@ -347,7 +371,7 @@ function App() {
     return () => { supabase.removeChannel(channel); };
   },[activeConversation?.id,session?.user?.id]);
 
-  const myGigs = gigs.filter(g => g.seller_id === session?.user?.id);
+  const myGigs = sellerGigs;
   const myOrders = orders.filter(o => o.buyer_id === session?.user?.id || o.seller_id === session?.user?.id);
   const isAdmin = profile?.role === "admin";
 
@@ -446,7 +470,7 @@ function App() {
       <button className="btn btn-dark full" disabled={busy}>Publish gig <ArrowRight size={17}/></button>
     </form></div></main>}
 
-    {page === "my-gigs" && <main className="content page-content"><div className="section-heading"><div><div className="eyebrow muted">SELLER STUDIO</div><h2>My gigs</h2><p>Manage the services you have published.</p></div><button className="btn btn-dark" onClick={()=>navigate("create-gig")}><Plus size={17}/> New gig</button></div><div className="gig-grid">{myGigs.map(g=><GigCard key={g.id} gig={g} onClick={()=>setSelectedGig(g)}/>)}</div>{!myGigs.length&&<Empty icon={<BriefcaseBusiness/>} title="No gigs published" text="Create your first service listing to appear in the marketplace."/>}</main>}
+    {page === "my-gigs" && <main className="content page-content"><div className="section-heading"><div><div className="eyebrow muted">SELLER STUDIO</div><h2>My gigs</h2><p>Manage the services you have published.</p></div><button className="btn btn-dark" onClick={()=>navigate("create-gig")}><Plus size={17}/> New gig</button></div>{editingGigId && <form className="dashboard-panel gig-edit-panel" onSubmit={saveGigEdit}><div className="dashboard-panel-heading"><div><h3>Edit service</h3><p>Update the information buyers see.</p></div><button type="button" className="back-link" onClick={()=>setEditingGigId(null)}>Cancel</button></div><label>Title<input required maxLength="90" value={editGigForm.title} onChange={e=>setEditGigForm({...editGigForm,title:e.target.value})}/></label><label>Category<select value={editGigForm.category} onChange={e=>setEditGigForm({...editGigForm,category:e.target.value})}>{categories.slice(1).map(c=><option key={c}>{c}</option>)}</select></label><label>Description<textarea required rows="4" value={editGigForm.description} onChange={e=>setEditGigForm({...editGigForm,description:e.target.value})}/></label><div className="two-fields"><label>Price (PKR)<input required type="number" min="1" value={editGigForm.price} onChange={e=>setEditGigForm({...editGigForm,price:e.target.value})}/></label><label>Delivery days<input required type="number" min="1" max="60" value={editGigForm.delivery_days} onChange={e=>setEditGigForm({...editGigForm,delivery_days:e.target.value})}/></label></div><button className="btn btn-dark" disabled={busy}><Save size={16}/> Save changes</button></form>}<div className="seller-gig-manager">{myGigs.map(g=><article className="seller-gig-row" key={g.id}><div className="seller-gig-icon"><BriefcaseBusiness size={20}/></div><div className="seller-gig-copy"><strong>{g.title}</strong><small>{g.category} · {g.delivery_days} day delivery · {money(g.price)}</small></div><span className={g.is_active?"service-live":"service-paused"}><i/>{g.is_active?"Active":"Paused"}</span><div className="seller-gig-actions"><button className="outline-btn" onClick={()=>{setEditingGigId(g.id);setEditGigForm({title:g.title,description:g.description,category:g.category,price:String(g.price),delivery_days:String(g.delivery_days)});}}><Settings size={14}/> Edit</button><button className="outline-btn" onClick={()=>toggleGigStatus(g)}>{g.is_active?"Pause":"Activate"}</button></div></article>)}</div>{!myGigs.length&&<Empty icon={<BriefcaseBusiness/>} title="No services yet" text="Create your first service listing to appear in the marketplace."/>}</main>}
 
     {page === "orders" && <main className="content page-content"><div className="eyebrow muted">WORKSPACE</div><h2>Your orders</h2><p className="subtext">Track purchases and manage projects from one place.</p><div className="orders-list">{myOrders.map(o=><OrderCard key={o.id} order={o} userId={session?.user?.id} onUpdate={updateOrder} onMessage={loadMessages} onReview={submitReview} reviewForm={reviewForm} setReviewForm={setReviewForm}/>)}</div>{!myOrders.length&&<Empty icon={<PackageCheck/>} title="No orders yet" text="When you place or receive an order, it will appear here."/>}</main>}
 
