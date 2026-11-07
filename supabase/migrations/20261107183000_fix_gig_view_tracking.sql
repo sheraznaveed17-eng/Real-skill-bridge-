@@ -19,6 +19,7 @@ create policy "Public visitors can record gig events"
   with check (
     actor_id is null
     and event_type in ('impression', 'click')
+    and (event_type <> 'impression' or visitor_key is not null)
     and exists (
       select 1 from public.gigs g
       where g.id = gig_id and g.is_active = true
@@ -31,6 +32,7 @@ create policy "Signed-in users can record gig events"
   with check (
     actor_id = (select auth.uid())
     and event_type in ('impression', 'click')
+    and (event_type <> 'impression' or visitor_key is not null)
     and exists (
       select 1 from public.gigs g
       where g.id = gig_id
