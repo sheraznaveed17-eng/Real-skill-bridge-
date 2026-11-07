@@ -160,7 +160,12 @@ function App() {
 
   const loadGigs = async () => {
     const { data, error } = await supabase.from("gigs").select("*, profiles(full_name, avatar_url, country, city)").eq("is_active", true).order("created_at", { ascending:false });
-    if (!error) setGigs(data || []);
+    if (error) { show(error.message); return; }
+    const list=data||[], sellerIds=[...new Set(list.map(g=>g.seller_id))];
+    if (!sellerIds.length) { setGigs([]); return; }
+    const {data:reviews}=await supabase.from("reviews").select("seller_id,rating").in("seller_id",sellerIds);
+    const stats={}; (reviews||[]).forEach(r=>{stats[r.seller_id]??={sum:0,count:0};stats[r.seller_id].sum+=Number(r.rating||0);stats[r.seller_id].count++;});
+    setGigs(list.map(g=>({...g,sellerRating:stats[g.seller_id]?.count?(stats[g.seller_id].sum/stats[g.seller_id].count).toFixed(1):null,sellerReviewCount:stats[g.seller_id]?.count||0})));
   };
 
   const loadSellerReviews = async () => {
@@ -302,7 +307,8 @@ function App() {
       supabase.from("reviews").select("id,rating,comment,created_at,buyer:profiles!reviews_buyer_id_fkey(full_name)").eq("seller_id",sellerId).order("created_at",{ascending:false})
     ]);
     if (p.error || !p.data) { show(p.error?.message || "Seller profile not found."); return; }
-    setPublicSeller(p.data); setPublicSellerGigs(g.data||[]); setPublicSellerPortfolio(portfolio.data||[]); setPublicSellerReviews(reviews.data||[]); setSelectedGig(null); setPage("seller-profile");
+    const sellerReviewRows=reviews.data||[], avg=sellerReviewRows.length?(sellerReviewRows.reduce((n,r)=>n+Number(r.rating||0),0)/sellerReviewRows.length).toFixed(1):null;
+    setPublicSeller(p.data); setPublicSellerGigs((g.data||[]).map(item=>({...item,sellerRating:avg,sellerReviewCount:sellerReviewRows.length}))); setPublicSellerPortfolio(portfolio.data||[]); setPublicSellerReviews(sellerReviewRows); setSelectedGig(null); setPage("seller-profile");
   };
 
   const loadSellerGigs = async () => {
@@ -787,7 +793,7 @@ function App() {
 function GigCard({gig,onClick}) {
   const palettes = ["art-purple","art-blue","art-orange","art-green"];
   const index = (gig.title?.length || 0) % palettes.length;
-  return <button className="gig-card" onClick={onClick}><div className={`gig-art ${palettes[index]}`}>{gig.image_url?<img src={gig.image_url} alt={gig.title} loading="lazy"/>:<Sparkles size={28}/>}<span>{gig.category}</span></div><div className="gig-info"><div className="seller-line">{gig.profiles?.avatar_url?<img className="avatar gig-seller-avatar" src={gig.profiles.avatar_url} alt=""/>:<span className="avatar">{(gig.profiles?.full_name||"S").slice(0,1).toUpperCase()}</span>}<span>{gig.profiles?.full_name||"Skill Bridge seller"}</span><span className="seller-tag">Seller</span></div><h3>{gig.title}</h3><div className="gig-meta"><span><Clock3 size={14}/> {gig.delivery_days} days</span><span><Star size={14}/> New seller</span></div><div className="gig-price"><small>STARTING AT</small><strong>{money(gig.price)}</strong></div></div></button>;
+  return <button className="gig-card" onClick={onClick}><div className={`gig-art ${palettes[index]}`}>{gig.image_url?<img src={gig.image_url} alt={gig.title} loading="lazy"/>:<Sparkles size={28}/>}<span>{gig.category}</span></div><div className="gig-info"><div className="seller-line">{gig.profiles?.avatar_url?<img className="avatar gig-seller-avatar" src={gig.profiles.avatar_url} alt=""/>:<span className="avatar">{(gig.profiles?.full_name||"S").slice(0,1).toUpperCase()}</span>}<span>{gig.profiles?.full_name||"Skill Bridge seller"}</span><span className="seller-tag">Seller</span></div><h3>{gig.title}</h3><div className="gig-meta"><span><Clock3 size={14}/> {gig.delivery_days} days</span><span><Star size={14}/> {gig.sellerRating?`${gig.sellerRating} (${gig.sellerReviewCount})`:"New seller"}</span></div><div className="gig-price"><small>STARTING AT</small><strong>{money(gig.price)}</strong></div></div></button>;
 }
 
 function OrderCard({order,userId,onUpdate,onRevision,onMessage,onReview,reviewForm,setReviewForm}) {
