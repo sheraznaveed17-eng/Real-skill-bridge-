@@ -347,8 +347,8 @@ function App() {
   const trackGigImpression = useCallback(async gig => {
     const userId = session?.user?.id || null;
     if (userId && gig.seller_id === userId) return;
-    const visitorKey = userId ? null : getGigVisitorKey();
-    if (!userId && !visitorKey) return;
+    const visitorKey = getGigVisitorKey();
+    if (!visitorKey) return;
     const { error } = await supabase.from("gig_events").insert({
       gig_id: gig.id, actor_id: userId, visitor_key: visitorKey, event_type: "impression"
     });
