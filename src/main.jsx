@@ -248,7 +248,29 @@ function App() {
 
     {page === "orders" && <main className="content page-content"><div className="eyebrow muted">WORKSPACE</div><h2>Your orders</h2><p className="subtext">Track purchases and manage projects from one place.</p><div className="orders-list">{myOrders.map(o=><OrderCard key={o.id} order={o} userId={session?.user?.id} onUpdate={updateOrder} onMessage={loadMessages} onReview={submitReview} reviewForm={reviewForm} setReviewForm={setReviewForm}/>)}</div>{!myOrders.length&&<Empty icon={<PackageCheck/>} title="No orders yet" text="When you place or receive an order, it will appear here."/>}</main>}
 
-    {page === "dashboard" && <main className="content page-content"><div className="eyebrow muted">YOUR WORKSPACE</div><h2>Hello, {profile?.full_name || "there"} 👋</h2><p className="subtext">Here is your Skill Bridge account overview.</p><div className="dashboard-grid"><div className="metric-card"><span>My active orders</span><strong>{myOrders.filter(o=>!["completed","cancelled"].includes(o.status)).length}</strong><small><Clock3 size={14}/> Orders in progress</small></div><div className="metric-card"><span>{profile?.role==="seller"?"Published gigs":"Orders placed"}</span><strong>{profile?.role==="seller"?myGigs.length:myOrders.filter(o=>o.buyer_id===session?.user?.id).length}</strong><small><BriefcaseBusiness size={14}/> Your activity</small></div><div className="metric-card"><span>Account type</span><strong className="role-value">{profile?.role || "Member"}</strong><small><UserRound size={14}/> Skill Bridge member</small></div></div><div className="quick-actions"><button onClick={()=>navigate("orders")}><PackageCheck/> View orders <ChevronRight/></button>{profile?.role==="seller"&&<button onClick={()=>navigate("my-gigs")}><BriefcaseBusiness/> Manage gigs <ChevronRight/></button>}<button onClick={()=>navigate("home")}><Search/> Explore services <ChevronRight/></button>{isAdmin&&<button onClick={()=>navigate("admin")}><ShieldCheck/> Admin panel <ChevronRight/></button>}</div></main>}
+    {page === "dashboard" && <main className="content page-content">
+      <div className="eyebrow muted">{profile?.role==="seller"?"SELLER WORKSPACE":"BUYER WORKSPACE"}</div>
+      <h2>Hello, {profile?.full_name || "there"} 👋</h2>
+      <p className="subtext">{profile?.role==="seller"?"Manage your services, customers and active work from your seller workspace.":"Find services, keep track of your orders and manage your projects from your buyer workspace."}</p>
+      <div className="dashboard-grid">
+        <div className="metric-card"><span>Active orders</span><strong>{myOrders.filter(o=>!["completed","cancelled"].includes(o.status)).length}</strong><small><Clock3 size={14}/> Work in progress</small></div>
+        {profile?.role==="seller"
+          ? <div className="metric-card"><span>My published services</span><strong>{myGigs.length}</strong><small><BriefcaseBusiness size={14}/> Your gigs</small></div>
+          : <div className="metric-card"><span>Orders I placed</span><strong>{myOrders.filter(o=>o.buyer_id===session?.user?.id).length}</strong><small><PackageCheck size={14}/> Your purchases</small></div>}
+        <div className="metric-card"><span>Account type</span><strong className="role-value">{profile?.role || "Member"}</strong><small><UserRound size={14}/> Skill Bridge member</small></div>
+      </div>
+      <div className="quick-actions">
+        {profile?.role==="seller" ? <>
+          <button onClick={()=>navigate("create-gig")}><Plus/> Create a service <ChevronRight/></button>
+          <button onClick={()=>navigate("my-gigs")}><BriefcaseBusiness/> Manage my services <ChevronRight/></button>
+          <button onClick={()=>navigate("orders")}><PackageCheck/> Manage orders <ChevronRight/></button>
+        </> : <>
+          <button onClick={()=>navigate("home")}><Search/> Find a service <ChevronRight/></button>
+          <button onClick={()=>navigate("orders")}><PackageCheck/> View my orders <ChevronRight/></button>
+        </>}
+        {isAdmin&&<button onClick={()=>navigate("admin")}><ShieldCheck/> Admin panel <ChevronRight/></button>}
+      </div>
+    </main>}
 
     {page === "messages" && <main className="content page-content"><button className="back-link" onClick={()=>navigate("orders")}>← Back to orders</button><h2>Order conversation</h2><p className="subtext">Messages stay connected to this order.</p><div className="chat-panel"><div className="chat-head"><MessageCircle/> {activeOrder?.gigs?.title || "Project messages"}</div><div className="chat-body">{messages.map(m=><div key={m.id} className={m.sender_id===session?.user?.id?"chat-msg own":"chat-msg"}><strong>{m.profiles?.full_name || (m.sender_id===session?.user?.id?"You":"Member")}</strong><p>{m.body}</p><small>{new Date(m.created_at).toLocaleString()}</small></div>)}{!messages.length&&<div className="empty-chat">No messages yet. Start the conversation below.</div>}</div><form className="chat-compose" onSubmit={sendMessage}><input value={messageText} onChange={e=>setMessageText(e.target.value)} placeholder="Write a message..." required/><button className="btn btn-dark"><Send size={17}/></button></form></div></main>}
 
