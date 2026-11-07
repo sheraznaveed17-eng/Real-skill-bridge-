@@ -831,3 +831,14 @@ body{background:#fff;color:var(--ink);-webkit-font-smoothing:antialiased}
 .page-content .chat-read-status{font-weight:700;letter-spacing:.1px;color:#87918d;}
 .page-content .chat-read-status.seen{color:#087d59;}
 .page-content .chat-msg.own .chat-msg-meta{color:#6d8e80;}
+
+
+/* Custom offer lifecycle */
+.offer-card-top{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.offer-status{display:inline-flex;align-items:center;border-radius:999px;padding:5px 9px;font-size:10px;font-weight:800;background:#fff4df;color:#9a6700;white-space:nowrap;}
+.offer-status.accepted{background:#e7f8ee;color:#16734b;}
+.offer-status.declined{background:#f2f4f7;color:#667085;}
+.custom-offer-card.offer-accepted{border-color:#b9e4cf;}
+.custom-offer-card.offer-declined{border-color:#e5e7eb;opacity:.9;}
+.offer-disclaimer,.offer-form-hint{display:block;margin:12px 0 0;padding:10px 12px;border-radius:8px;background:#f5faf7;color:#557267;font-size:11px;line-height:1.5;}
+.offer-form-hint{margin:0;padding:0;background:transparent;color:#77837d;}
