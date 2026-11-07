@@ -484,3 +484,28 @@
 .report-status.resolved{background:#e8f7ef;color:#087d59}
 .report-status.dismissed{background:#f2f4f7;color:#667085}
 @media(max-width:640px){.report-row{flex-direction:column}.report-actions{width:100%;align-items:stretch;flex-direction:row;flex-wrap:wrap}.report-actions .outline-btn{flex:1}.report-main>p{font-size:11px}}
+
+
+/* Fiverr-style service packages */
+.package-builder{display:grid;gap:13px;padding:16px;border:1px solid #e7ece9;border-radius:12px;background:#fbfdfc}
+.package-builder>div:first-child h3{margin:0 0 5px;color:#263447;font:800 16px Manrope,sans-serif}
+.package-builder>div:first-child p{margin:0;color:#87919d;font-size:11px}
+.package-builder-card{display:grid;gap:10px;padding:13px;border:1px solid #e5ebe7;border-radius:9px;background:#fff}
+.package-builder-card>strong{font-size:13px;color:#087d59}
+.package-builder-card label{display:grid;gap:6px;font-size:11px;font-weight:700;color:#475467}
+.package-builder-card input,.package-builder-card textarea{width:100%;border:1px solid #dfe5e2;border-radius:8px;padding:9px;font:inherit}
+.gig-package-options{margin:17px 0}
+.gig-package-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-top:9px}
+.gig-package-option{display:flex;flex-direction:column;align-items:flex-start;gap:7px;text-align:left;padding:13px;border:1px solid #e1e8e4;border-radius:10px;background:#fff;color:#344054;cursor:pointer;min-width:0}
+.gig-package-option.selected{border:2px solid #07845c;background:#f2fbf7;padding:12px}
+.gig-package-option strong{font-size:12px;color:#087d59}
+.gig-package-option b{font:800 18px Manrope;color:#263447}
+.gig-package-option span,.gig-package-option small{font-size:10px;color:#788391}
+.gig-package-option p{font-size:10px;line-height:1.45;color:#667085;margin:0;overflow-wrap:anywhere}
+.gig-detail-section{padding:15px 0;border-top:1px solid #edf0ee}
+.gig-detail-section h3{font:800 14px Manrope;color:#263447;margin:0 0 10px}
+.gig-detail-section ul{margin:0;padding-left:20px;color:#667085;font-size:12px;line-height:1.8}
+.gig-faq{padding:9px 0;border-top:1px solid #f0f2f1}
+.gig-faq strong{font-size:12px;color:#344054}
+.gig-faq p{font-size:11px;color:#788391;margin:5px 0 0;line-height:1.5}
+@media(max-width:640px){.gig-package-grid{grid-template-columns:1fr}.gig-package-option{display:grid;grid-template-columns:1fr auto;align-items:center}.gig-package-option p{grid-column:1/-1}.package-builder{padding:12px}}
