@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
-  Search, BriefcaseBusiness, UserRound, Plus, LogOut, Menu, X, Star, Bookmark, Trash2, ExternalLink, Flag, Bell,
+  Search, BriefcaseBusiness, UserRound, Plus, LogOut, Menu, X, Star, Bookmark, Trash2, ExternalLink, Flag,
   MessageCircle, LayoutDashboard, ShieldCheck, ArrowRight, CheckCircle2,
   Clock3, Wallet, Sparkles, Filter, PackageCheck, Send, ChevronRight, ChevronDown, Camera, Save, UserCircle, Settings, ShoppingBag
 } from "lucide-react";
@@ -67,8 +67,6 @@ function App() {
   const [messages, setMessages] = useState([]);
   const [conversations, setConversations] = useState([]);
   const [unreadMessages,setUnreadMessages]=useState(0);
-  const [notifications,setNotifications]=useState([]);
-  const [notificationOpen,setNotificationOpen]=useState(false);
   const [activeConversation, setActiveConversation] = useState(null);
   const [conversationOffers, setConversationOffers] = useState([]);
   const [offerForm, setOfferForm] = useState({title:"",description:"",amount:"",delivery_days:"3"});
@@ -134,7 +132,6 @@ function App() {
       loadOrders();
       loadSellerReviews();
       loadInbox();
-      loadNotifications();
       loadFavorites();
       loadPortfolio();
       loadSellerGigs();
@@ -178,36 +175,8 @@ function App() {
   };
 
   const loadOrders = async () => {
-    const { data, error } = await supabase.from("orders").select("*, gigs(title, price), buyer:profiles!orders_buyer_id_fkey(full_name), seller:profiles!orders_seller_id_fkey(full_name)").order("created_at", { ascending:false });
-    if (error) { show(error.message); return; }
-    const ids=(data||[]).map(o=>o.id);
-    let reviewed=new Set();
-    if(ids.length){const {data:rows}=await supabase.from("reviews").select("order_id").in("order_id",ids);reviewed=new Set((rows||[]).map(r=>r.order_id));}
-    setOrders((data||[]).map(o=>({...o,has_review:reviewed.has(o.id)})));
-  };
-
-  const loadNotifications = async () => {
-    if (!session?.user) return;
-    const {data,error}=await supabase.from("notifications").select("id,actor_id,type,title,body,entity_type,entity_id,created_at,read_at").order("created_at",{ascending:false}).limit(20);
-    if(!error)setNotifications(data||[]);
-  };
-
-  const markNotificationRead = async notification => {
-    if(!notification.read_at){
-      const stamp=new Date().toISOString();
-      const {error}=await supabase.from("notifications").update({read_at:stamp}).eq("id",notification.id);
-      if(error){show(error.message);return;}
-      setNotifications(prev=>prev.map(n=>n.id===notification.id?{...n,read_at:stamp}:n));
-    }
-    setNotificationOpen(false);
-    if(notification.entity_type==="order"){
-      const order=myOrders.find(o=>o.id===notification.entity_id);
-      if(order){setPage("orders");return;}
-      navigate("orders");
-    } else if(notification.entity_type==="conversation"){
-      const thread=conversations.find(c=>c.id===notification.entity_id);
-      if(thread){navigate("messages");await loadConversation(thread);} else {setActiveOrder(null);setActiveConversation(null);navigate("messages");await loadInbox();}
-    }
+    const { data } = await supabase.from("orders").select("*, gigs(title, price), buyer:profiles!orders_buyer_id_fkey(full_name), seller:profiles!orders_seller_id_fkey(full_name)").order("created_at", { ascending:false });
+    setOrders(data || []);
   };
 
   const filteredGigs = useMemo(() => {
@@ -550,29 +519,12 @@ function App() {
 
   const submitReview = async (e, order) => {
     e.preventDefault();
-    if(order.has_review) return show("A review has already been submitted for this order.");
-    const comment=String(reviewForm.comment||"").trim();
-    if(!comment || comment.length>1000) return show("Please write a review between 1 and 1000 characters.");
-    setBusy(true);
     const { error } = await supabase.from("reviews").insert({
       order_id:order.id, buyer_id:session.user.id,
-      seller_id:order.seller_id, rating:Number(reviewForm.rating), comment
+      seller_id:order.seller_id, rating:Number(reviewForm.rating), comment:reviewForm.comment
     });
-    if (error) show(error.code==="23505"?"A review has already been submitted for this order.":error.message);
-    else { show("Review submitted. Thank you for your feedback."); setReviewForm({rating:"5",comment:""}); await Promise.all([loadOrders(),loadSellerReviews(),loadGigs(),loadNotifications()]); }
-    setBusy(false);
+    if (error) show(error.message); else { show("Review submitted."); setReviewForm({rating:"5",comment:""}); }
   };
-
-  useEffect(() => {
-    if (!session?.user) {setNotifications([]);return;}
-    loadNotifications();
-    const channel=supabase.channel("notifications-"+session.user.id)
-      .on("postgres_changes",{event:"INSERT",schema:"public",table:"notifications",filter:"recipient_id=eq."+session.user.id},payload=>{
-        setNotifications(prev=>[payload.new,...prev].slice(0,20));
-        show(payload.new.title||"You have a new notification.");
-      }).subscribe();
-    return ()=>{supabase.removeChannel(channel);};
-  },[session?.user?.id]);
 
   useEffect(() => {
     if (!activeConversation?.id || !session?.user) return;
@@ -611,19 +563,6 @@ function App() {
         {isAdmin && <button onClick={() => navigate("admin")}>Admin</button>}
       </nav>
       <div className="top-actions">
-        {session && <div className="notification-wrap">
-          <button className="notification-trigger" aria-label="Notifications" aria-expanded={notificationOpen} onClick={()=>setNotificationOpen(v=>!v)}>
-            <Bell size={19}/>{notifications.some(n=>!n.read_at)&&<span className="notification-dot"/>}
-          </button>
-          {notificationOpen&&<div className="notification-dropdown">
-            <div className="notification-head"><strong>Notifications</strong><span>{notifications.filter(n=>!n.read_at).length} unread</span></div>
-            <div className="notification-list">
-              {notifications.length?notifications.map(n=><button key={n.id} className={n.read_at?"notification-item":"notification-item unread"} onClick={()=>markNotificationRead(n)}>
-                <span className="notification-item-icon"><Bell size={15}/></span><span className="notification-item-copy"><strong>{n.title}</strong><small>{n.body}</small><time>{new Date(n.created_at).toLocaleString()}</time></span><i/>
-              </button>):<div className="notification-empty">You’re all caught up. New order, message and review updates will appear here.</div>}
-            </div>
-          </div>}
-        </div>}
         <button className="icon-btn mobile-only" aria-label="Open navigation" onClick={() => setMobileMenu(!mobileMenu)}>{mobileMenu?<X/>:<Menu/>}</button>
         {session ? <>
           <button className="nav-plain desktop-account-link" onClick={() => navigate("dashboard")}>{t.dashboard}</button>
@@ -717,7 +656,7 @@ function App() {
 
     {page === "my-gigs" && <main className="content page-content"><div className="section-heading"><div><div className="eyebrow muted">SELLER STUDIO</div><h2>My gigs</h2><p>Manage the services you have published.</p></div><button className="btn btn-dark" onClick={()=>navigate("create-gig")}><Plus size={17}/> New gig</button></div>{editingGigId && <form className="dashboard-panel gig-edit-panel" onSubmit={saveGigEdit}><div className="dashboard-panel-heading"><div><h3>Edit service</h3><p>Update the information buyers see.</p></div><button type="button" className="back-link" onClick={()=>setEditingGigId(null)}>Cancel</button></div><label>Title<input required maxLength="90" value={editGigForm.title} onChange={e=>setEditGigForm({...editGigForm,title:e.target.value})}/></label><label>Category<select value={editGigForm.category} onChange={e=>setEditGigForm({...editGigForm,category:e.target.value})}>{categories.slice(1).map(c=><option key={c}>{c}</option>)}</select></label><label>Description<textarea required rows="4" value={editGigForm.description} onChange={e=>setEditGigForm({...editGigForm,description:e.target.value})}/></label><label>Cover image URL<input type="url" value={editGigForm.image_url} onChange={e=>setEditGigForm({...editGigForm,image_url:e.target.value})} placeholder="https://.../image.jpg"/></label><div className="two-fields"><label>Basic price (PKR)<input required type="number" min="1" value={editGigForm.price} onChange={e=>setEditGigForm({...editGigForm,price:e.target.value})}/></label><label>Basic delivery days<input required type="number" min="1" max="60" value={editGigForm.delivery_days} onChange={e=>setEditGigForm({...editGigForm,delivery_days:e.target.value})}/></label></div><section className="package-builder"><div><h3>Standard and Premium packages</h3><p>Leave price blank to remove an optional package.</p></div>{editExtraPackages.map((p,i)=><div className="package-builder-card" key={p.name}><strong>{p.name}</strong><label>Included work<textarea rows="2" value={p.description} onChange={e=>updateEditPackage(i,"description",e.target.value)}/></label><div className="two-fields"><label>Price (PKR)<input type="number" min="1" value={p.price} onChange={e=>updateEditPackage(i,"price",e.target.value)}/></label><label>Delivery days<input type="number" min="1" max="365" value={p.delivery_days} onChange={e=>updateEditPackage(i,"delivery_days",e.target.value)}/></label></div><label>Revisions<input type="number" min="0" max="99" value={p.revisions} onChange={e=>updateEditPackage(i,"revisions",e.target.value)}/></label></div>)}</section><label>FAQs <small>One per line: Question | Answer</small><textarea rows="3" value={editFaqText} onChange={e=>setEditFaqText(e.target.value)}/></label><label>Buyer requirements <small>One per line</small><textarea rows="3" value={editRequirementsText} onChange={e=>setEditRequirementsText(e.target.value)}/></label><button className="btn btn-dark" disabled={busy}><Save size={16}/> Save changes</button></form>}<div className="seller-gig-manager">{myGigs.map(g=><article className="seller-gig-row" key={g.id}><div className="seller-gig-icon"><BriefcaseBusiness size={20}/></div><div className="seller-gig-copy"><strong>{g.title}</strong><small>{g.category} · {g.delivery_days} day delivery · {money(g.price)}</small></div><span className={g.is_active?"service-live":"service-paused"}><i/>{g.is_active?"Active":"Paused"}</span><div className="seller-gig-actions"><button className="outline-btn" onClick={()=>{setEditingGigId(g.id);setEditGigForm({title:g.title,description:g.description,category:g.category,price:String(g.price),delivery_days:String(g.delivery_days),image_url:g.image_url||""});const ps=g.packages||[];setEditExtraPackages(["Standard","Premium"].map((name,i)=>ps.find(p=>p.name===name)||{name,description:"",price:"",delivery_days:i===0?"5":"7",revisions:i===0?"2":"3"}));setEditFaqText((g.faqs||[]).map(f=>f.question+" | "+f.answer).join("\n"));setEditRequirementsText((g.requirements||[]).join("\n"));}}><Settings size={14}/> Edit</button><button className="outline-btn" onClick={()=>toggleGigStatus(g)}>{g.is_active?"Pause":"Activate"}</button><button className="outline-btn danger-outline" onClick={()=>{if(window.confirm("Permanently delete this service?"))deleteGig(g);}}><Trash2 size={14}/> Delete</button></div></article>)}</div>{!myGigs.length&&<Empty icon={<BriefcaseBusiness/>} title="No services yet" text="Create your first service listing to appear in the marketplace."/>}</main>}
 
-    {page === "orders" && <main className="content page-content"><div className="eyebrow muted">WORKSPACE</div><h2>Your orders</h2><p className="subtext">Track purchases and manage projects from one place.</p><div className="orders-list">{myOrders.map(o=><OrderCard key={o.id} order={o} userId={session?.user?.id} onUpdate={updateOrder} onRevision={requestRevision} onMessage={loadMessages} onReview={submitReview} reviewForm={reviewForm} setReviewForm={setReviewForm} busy={busy}/>)}</div>{!myOrders.length&&<Empty icon={<PackageCheck/>} title="No orders yet" text="When you place or receive an order, it will appear here."/>}</main>}
+    {page === "orders" && <main className="content page-content"><div className="eyebrow muted">WORKSPACE</div><h2>Your orders</h2><p className="subtext">Track purchases and manage projects from one place.</p><div className="orders-list">{myOrders.map(o=><OrderCard key={o.id} order={o} userId={session?.user?.id} onUpdate={updateOrder} onRevision={requestRevision} onMessage={loadMessages} onReview={submitReview} reviewForm={reviewForm} setReviewForm={setReviewForm}/>)}</div>{!myOrders.length&&<Empty icon={<PackageCheck/>} title="No orders yet" text="When you place or receive an order, it will appear here."/>}</main>}
 
 
     {page === "profile" && <main className="content page-content profile-page">
@@ -882,7 +821,7 @@ function GigCard({gig,onClick}) {
   return <button className="gig-card" onClick={onClick}><div className={`gig-art ${palettes[index]}`}>{gig.image_url?<img src={gig.image_url} alt={gig.title} loading="lazy"/>:<Sparkles size={28}/>}<span>{gig.category}</span></div><div className="gig-info"><div className="seller-line">{gig.profiles?.avatar_url?<img className="avatar gig-seller-avatar" src={gig.profiles.avatar_url} alt=""/>:<span className="avatar">{(gig.profiles?.full_name||"S").slice(0,1).toUpperCase()}</span>}<span>{gig.profiles?.full_name||"Skill Bridge seller"}</span><span className="seller-tag">Seller</span></div><h3>{gig.title}</h3><div className="gig-meta"><span><Clock3 size={14}/> {gig.delivery_days} days</span><span><Star size={14}/> {gig.sellerRating?`${gig.sellerRating} (${gig.sellerReviewCount})`:"New seller"}</span></div><div className="gig-price"><small>STARTING AT</small><strong>{money(gig.price)}</strong></div></div></button>;
 }
 
-function OrderCard({order,userId,onUpdate,onRevision,onMessage,onReview,reviewForm,setReviewForm,busy}) {
+function OrderCard({order,userId,onUpdate,onRevision,onMessage,onReview,reviewForm,setReviewForm}) {
   const buyer = order.buyer_id === userId;
   const [revisionOpen,setRevisionOpen] = useState(false);
   const [revisionNote,setRevisionNote] = useState("");
@@ -897,7 +836,7 @@ function OrderCard({order,userId,onUpdate,onRevision,onMessage,onReview,reviewFo
       {buyer&&order.status==="delivered"&&<><button className="btn btn-dark btn-small" onClick={()=>onUpdate(order.id,"completed")}>Approve & complete</button><button className="outline-btn" onClick={()=>setRevisionOpen(v=>!v)}>Request revision</button></>}
     </div>
     {revisionOpen&&buyer&&<form className="revision-request-form" onSubmit={submitRevision}><label>What needs to be changed?<textarea required rows="3" value={revisionNote} onChange={e=>setRevisionNote(e.target.value)} placeholder="Explain the changes clearly..."/></label><div><button type="button" className="back-link" onClick={()=>setRevisionOpen(false)}>Cancel</button><button className="btn btn-dark btn-small">Send revision request</button></div></form>}
-    {buyer&&order.status==="completed"&&(order.has_review?<div className="review-submitted"><CheckCircle2 size={16}/> Review submitted</div>:<form className="review-inline" onSubmit={e=>onReview(e,order)}><select value={reviewForm.rating} onChange={e=>setReviewForm({...reviewForm,rating:e.target.value})}><option value="5">5 stars</option><option value="4">4 stars</option><option value="3">3 stars</option><option value="2">2 stars</option><option value="1">1 star</option></select><input maxLength="1000" value={reviewForm.comment} onChange={e=>setReviewForm({...reviewForm,comment:e.target.value})} placeholder="Write a short review" required/><button className="outline-btn" disabled={busy}>{busy?"Submitting…":"Submit review"}</button></form>)}
+    {buyer&&order.status==="completed"&&<form className="review-inline" onSubmit={e=>onReview(e,order)}><select value={reviewForm.rating} onChange={e=>setReviewForm({...reviewForm,rating:e.target.value})}><option value="5">5 stars</option><option value="4">4 stars</option><option value="3">3 stars</option><option value="2">2 stars</option><option value="1">1 star</option></select><input value={reviewForm.comment} onChange={e=>setReviewForm({...reviewForm,comment:e.target.value})} placeholder="Write a short review" required/><button className="outline-btn">Submit review</button></form>}
   </div>;
 }
 function Empty({icon,title,text}) { return <div className="empty-state"><div className="empty-icon">{icon}</div><h3>{title}</h3><p>{text}</p></div>; }
