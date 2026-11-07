@@ -326,3 +326,21 @@
 .availability-toggle input{width:17px;height:17px;accent-color:#159b70}
 .dashboard-stats:not(.buyer-stats){grid-template-columns:repeat(5,minmax(0,1fr))}
 @media(max-width:900px){.dashboard-stats:not(.buyer-stats){grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+
+/* Single account: switch between buyer and seller workspaces */
+.mode-switch{display:flex;align-items:center;gap:6px;padding:5px;border:1px solid #e3ebe6;border-radius:9px;background:#fff}
+.mode-switch>span{font-size:10px;color:#778477;padding:0 6px}
+.mode-switch button,.account-mode-actions button{border:0;border-radius:6px;background:transparent;color:#56635c;padding:8px 12px;font-size:11px;font-weight:700;cursor:pointer}
+.mode-switch button.selected,.account-mode-actions button:hover{background:#e8f7f0;color:#087b57}
+.mode-switch button:disabled{opacity:.5;cursor:wait}
+.account-mode-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:8px 12px;border-bottom:1px solid #edf0ee}
+.account-mode-actions button{border:1px solid #e4ebe6}
+.auth-mode-note{margin:0;padding:11px 12px;border-radius:8px;background:#f0f8f4;color:#287355;font-size:11px;line-height:1.5}
+.dashboard-welcome-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+@media(max-width:650px){
+ .dashboard-welcome-actions{display:flex;flex-direction:column;align-items:stretch}
+ .mode-switch{justify-content:center;width:100%;box-sizing:border-box}
+ .mode-switch>span{flex:1}
+ .dashboard-welcome-actions>.btn{width:100%;justify-content:center}
+}
