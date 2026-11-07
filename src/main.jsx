@@ -226,6 +226,57 @@ function App() {
     if (!error) setMessages(data || []);
   };
 
+
+  const loadInbox = async () => {
+    if (!session?.user) return;
+    const {data,error} = await supabase.from("conversations").select("*, gigs(title), buyer:profiles!conversations_buyer_id_fkey(full_name,avatar_url), seller:profiles!conversations_seller_id_fkey(full_name,avatar_url)").or("buyer_id.eq."+session.user.id+",seller_id.eq."+session.user.id).order("updated_at",{ascending:false});
+    if (!error) setConversations(data || []);
+  };
+
+  const loadConversation = async conversation => {
+    setActiveConversation(conversation); setActiveOrder(null);
+    const [mr,offers] = await Promise.all([
+      supabase.from("messages").select("*, profiles(full_name)").eq("conversation_id",conversation.id).order("created_at"),
+      supabase.from("custom_offers").select("*").eq("conversation_id",conversation.id).order("created_at",{ascending:false})
+    ]);
+    if (!mr.error) setMessages(mr.data || []);
+    if (!offers.error) setConversationOffers(offers.data || []);
+    await supabase.from("messages").update({read_at:new Date().toISOString()}).eq("conversation_id",conversation.id).neq("sender_id",session.user.id).is("read_at",null);
+  };
+
+  const startConversation = async gig => {
+    if (!session?.user) { setAuthMode("login"); setPage("auth"); show("Log in to contact this seller."); return; }
+    if (gig.seller_id===session.user.id) { show("You cannot message yourself."); return; }
+    setBusy(true);
+    let result=await supabase.from("conversations").select("*, gigs(title), buyer:profiles!conversations_buyer_id_fkey(full_name,avatar_url), seller:profiles!conversations_seller_id_fkey(full_name,avatar_url)").eq("buyer_id",session.user.id).eq("seller_id",gig.seller_id).eq("gig_id",gig.id).maybeSingle();
+    if (!result.data && !result.error) result=await supabase.from("conversations").insert({buyer_id:session.user.id,seller_id:gig.seller_id,gig_id:gig.id,last_message:"Conversation started"}).select("*, gigs(title), buyer:profiles!conversations_buyer_id_fkey(full_name,avatar_url), seller:profiles!conversations_seller_id_fkey(full_name,avatar_url)").single();
+    if (result.error) show(result.error.message);
+    else { setSelectedGig(null); setPage("messages"); await loadConversation(result.data); await loadInbox(); }
+    setBusy(false);
+  };
+
+  const sendConversationMessage = async e => {
+    e.preventDefault();
+    if (!messageText.trim() || !activeConversation) return;
+    const body=messageText.trim();
+    const {error}=await supabase.from("messages").insert({conversation_id:activeConversation.id,sender_id:session.user.id,body});
+    if (error) show(error.message);
+    else { setMessageText(""); await supabase.from("conversations").update({last_message:body,updated_at:new Date().toISOString()}).eq("id",activeConversation.id); await loadConversation(activeConversation); await loadInbox(); }
+  };
+
+  const sendCustomOffer = async e => {
+    e.preventDefault();
+    if (!activeConversation || activeConversation.seller_id!==session.user.id) return;
+    const {error}=await supabase.from("custom_offers").insert({conversation_id:activeConversation.id,seller_id:session.user.id,buyer_id:activeConversation.buyer_id,title:offerForm.title.trim(),description:offerForm.description.trim(),amount:Number(offerForm.amount),delivery_days:Number(offerForm.delivery_days)});
+    if (error) show(error.message);
+    else { setOfferForm({title:"",description:"",amount:"",delivery_days:"3"}); show("Custom offer sent."); await loadConversation(activeConversation); await supabase.from("conversations").update({last_message:"Custom offer sent",updated_at:new Date().toISOString()}).eq("id",activeConversation.id); await loadInbox(); }
+  };
+
+  const respondToOffer = async (offer,status) => {
+    const {error}=await supabase.from("custom_offers").update({status}).eq("id",offer.id).eq("buyer_id",session.user.id);
+    if (error) show(error.message); else { show(status==="accepted"?"Offer accepted.":"Offer declined."); await loadConversation(activeConversation); }
+  };
+
   const sendMessage = async e => {
     e.preventDefault();
     if (!messageText.trim() || !activeOrder) return;
