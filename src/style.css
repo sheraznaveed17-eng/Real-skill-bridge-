@@ -817,3 +817,10 @@ body{background:#fff;color:var(--ink);-webkit-font-smoothing:antialiased}
  .footer{margin-top:40px}
 }
 @media(max-width:390px){.gig-grid{grid-template-columns:1fr}.gig-art{height:155px}.page-content .dashboard-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.topbar{gap:5px}.language-switcher-left{max-width:82px;min-width:72px}}
+
+
+/* Inbox unread indicators */
+.inbox-unread{display:inline-flex;align-items:center;justify-content:center;align-self:flex-start;min-width:19px;height:19px;padding:0 6px;border-radius:999px;background:#159b70;color:#fff;font-size:10px;font-weight:800;line-height:1;margin-top:3px;}
+.inbox-thread-copy{flex:1;}
+.inbox-thread.active .inbox-unread{background:#087d59;}
+@media(max-width:760px){.inbox-thread-copy{flex:1;}.inbox-unread{margin-left:auto;}}
