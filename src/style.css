@@ -856,3 +856,23 @@ body{background:#fff;color:var(--ink);-webkit-font-smoothing:antialiased}
 .order-status-explainer strong{font-size:13px;color:#303640}
 .order-status-explainer span{font-size:12px;line-height:1.5;color:#737d89}
 @media(max-width:560px){.order-progress{gap:3px;padding:12px 6px}.order-progress-step small{font-size:10px}.order-progress-step:not(:last-child):after{left:calc(50% + 14px);right:calc(-50% + 14px)}}
+
+/* Dashboard improvements: profile completion and unified recent activity */
+.page-content .dashboard-profile-progress{margin:14px 0 10px;padding:13px;border:1px solid #e8eee9;border-radius:10px;background:#fbfdfb}
+.page-content .dashboard-profile-progress>div:first-child{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.page-content .dashboard-profile-progress strong{font-size:12px;color:#344054}
+.page-content .dashboard-profile-progress b{font-size:12px;color:#087d59}
+.page-content .dashboard-progress-track{height:7px;margin:9px 0 8px;border-radius:99px;background:#e8eeea;overflow:hidden}
+.page-content .dashboard-progress-track span{display:block;height:100%;border-radius:99px;background:#159b70;transition:width .2s ease}
+.page-content .dashboard-profile-progress>small{display:block;color:#78857e;font-size:10px;line-height:1.5}
+.page-content .dashboard-recent-activity{margin-top:18px}
+.page-content .dashboard-activity-list{display:flex;flex-direction:column}
+.page-content .dashboard-activity-row{width:100%;display:flex;align-items:center;gap:12px;padding:13px 2px;border:0;border-top:1px solid #edf1ee;background:transparent;text-align:left;color:inherit;cursor:pointer}
+.page-content .dashboard-activity-row:hover{background:#fbfdfb}
+.page-content .dashboard-activity-icon{width:34px;height:34px;flex:0 0 34px;display:grid;place-items:center;border-radius:10px;background:#f0f7f3;color:#16845f}
+.page-content .dashboard-activity-copy{display:flex;flex:1;min-width:0;flex-direction:column;gap:4px}
+.page-content .dashboard-activity-copy strong{font-size:12px;line-height:1.4;overflow-wrap:anywhere}
+.page-content .dashboard-activity-copy small{font-size:10px;color:#77837d;overflow-wrap:anywhere}
+.page-content .dashboard-activity-row time{font-size:10px;color:#89938d;white-space:nowrap}
+.page-content .dashboard-activity-row>svg{color:#98a29c;flex:0 0 auto}
+@media(max-width:760px){.page-content .dashboard-activity-row{gap:8px}.page-content .dashboard-activity-row time{font-size:9px}.page-content .dashboard-activity-copy strong{font-size:11px}}
