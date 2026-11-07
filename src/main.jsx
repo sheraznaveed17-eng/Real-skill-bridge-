@@ -86,7 +86,18 @@ function App() {
   }), [gigs, search, category]);
 
   const show = msg => { setNotice(msg); setTimeout(() => setNotice(""), 4200); };
-  const navigate = p => { setPage(p); setMobileMenu(false); setSelectedGig(null); };
+  const navigate = p => {
+    const privatePages = ["dashboard", "orders", "my-gigs", "create-gig", "messages", "admin"];
+    if (privatePages.includes(p) && !session) {
+      setAuthMode("login");
+      setPage("auth");
+      setMobileMenu(false);
+      setSelectedGig(null);
+      show("Please log in to access your dashboard and orders.");
+      return;
+    }
+    setPage(p); setMobileMenu(false); setSelectedGig(null);
+  };
 
   const signUpOrIn = async e => {
     e.preventDefault(); setBusy(true);
@@ -165,8 +176,8 @@ function App() {
       <button className="brand" onClick={() => navigate("home")}><span className="brand-mark"><Sparkles size={20}/></span><span className="brand-wordmark"><span>skill<span className="brand-accent">bridge</span></span><small>Made by Yousaf</small></span></button>
       <div className="desktop-nav">
         <button onClick={() => navigate("home")}>Explore</button>
-        <button onClick={() => navigate("orders")}>Orders</button>
-        {profile?.role === "seller" && <button onClick={() => navigate("my-gigs")}>My Gigs</button>}
+        {session && <button onClick={() => navigate("orders")}>Orders</button>}
+        {session && profile?.role === "seller" && <button onClick={() => navigate("my-gigs")}>My Gigs</button>}
       </div>
       <div className="top-actions">
         <button className="icon-btn mobile-only" onClick={() => setMobileMenu(!mobileMenu)}>{mobileMenu?<X/>:<Menu/>}</button>
@@ -177,7 +188,7 @@ function App() {
         </> : <><button className="nav-plain" onClick={() => {setAuthMode("login");navigate("auth");}}>Log in</button><button className="btn btn-dark btn-small" onClick={() => {setAuthMode("signup");navigate("auth");}}>Join Skill Bridge</button></>}
       </div>
     </header>
-    {mobileMenu && <div className="mobile-menu"><button onClick={()=>navigate("home")}>Explore</button><button onClick={()=>navigate("orders")}>Orders</button><button onClick={()=>navigate("dashboard")}>Dashboard</button></div>}
+    {mobileMenu && <div className="mobile-menu"><button onClick={()=>navigate("home")}>Explore</button>{session && <><button onClick={()=>navigate("orders")}>Orders</button><button onClick={()=>navigate("dashboard")}>Dashboard</button></>}</div>}
     {demoMode && <div className="setup-banner"><span><Sparkles size={15}/> Setup required: connect your free Supabase project to enable real multi-user features.</span><button onClick={()=>show("README.md mein Android setup ke simple steps diye gaye hain.")}>How to connect</button></div>}
     {notice && <div className="toast"><CheckCircle2 size={18}/>{notice}<button onClick={()=>setNotice("")}><X size={16}/></button></div>}
 
