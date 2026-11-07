@@ -591,9 +591,9 @@ function App() {
         </form>
       </div>
     </header>
-    <nav className="marketplace-subnav" aria-label="Popular categories">
+    {page === "home" && <nav className="marketplace-subnav" aria-label="Popular categories">
       {categories.slice(1,11).map(c=><button key={c} className={category===c?"selected":""} onClick={()=>{setCategory(c);navigate("home");document.getElementById("explore")?.scrollIntoView({behavior:"smooth"});}}>{c}</button>)}
-    </nav>
+    </nav>}
     {mobileMenu && <div className="mobile-menu"><button onClick={()=>navigate("home")}>{t.explore}</button>{session ? <><button onClick={()=>navigate("dashboard")}>{t.dashboard}</button><button onClick={()=>navigate("profile")}>{t.profile}</button><button onClick={()=>navigate("saved")}>{t.saved}</button><button onClick={()=>navigate("orders")}>{t.orders}</button>{activeMode==="seller"&&<button onClick={()=>navigate("portfolio")}>{t.portfolio}</button>}<button onClick={()=>{setActiveOrder(null);setActiveConversation(null);setPage("messages");loadInbox();}}>{t.messages} {unreadMessages>0&&"("+unreadMessages+")"}</button>{activeMode==="seller"&&<button onClick={()=>navigate("my-gigs")}>{t.myServices}</button>}{isAdmin&&<button onClick={()=>navigate("admin")}>Admin moderation</button>}<button onClick={signOut}>{t.logout}</button></> : <><button onClick={()=>{setAuthMode("login");navigate("auth")}}>{t.login}</button><button onClick={()=>{setAuthMode("signup");navigate("auth")}}>{t.join}</button></>}</div>}
     {demoMode && <div className="setup-banner"><span><Sparkles size={15}/> Setup required: connect your free Supabase project to enable real multi-user features.</span><button onClick={()=>show("README.md mein Android setup ke simple steps diye gaye hain.")}>How to connect</button></div>}
     {notice && <div className="toast"><CheckCircle2 size={18}/>{notice}<button onClick={()=>setNotice("")}><X size={16}/></button></div>}
