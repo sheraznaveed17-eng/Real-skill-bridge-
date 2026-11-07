@@ -439,3 +439,16 @@
 .public-review small{font-size:10px;color:#98a2b3}
 .public-seller-section .portfolio-card-actions a,.public-seller-section .portfolio-card a{display:inline-flex;align-items:center;gap:5px;color:#087d59;font-size:11px;font-weight:750;text-decoration:none}
 @media(max-width:620px){.public-seller-hero{align-items:flex-start;flex-wrap:wrap;padding:17px;gap:13px}.public-seller-avatar{width:65px;height:65px;font-size:25px}.public-seller-info{flex-basis:calc(100% - 82px)}.public-seller-hero>.btn{width:100%}.public-seller-info h2{font-size:22px}}
+
+
+/* Seller gig analytics */
+.dashboard-gig-analytics{margin-bottom:15px}
+.gig-analytics-list{display:flex;flex-direction:column}
+.gig-analytics-row{display:grid;grid-template-columns:minmax(0,1fr) repeat(3,minmax(65px,90px));align-items:center;gap:14px;padding:13px 0;border-top:1px solid #edf0ee}
+.gig-analytics-row>div{display:flex;flex-direction:column;gap:4px;min-width:0}
+.gig-analytics-row>div strong{font-size:12px;color:#263447;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gig-analytics-row>div small,.gig-analytics-row>span small{font-size:10px;color:#87919d}
+.gig-analytics-row>span{display:flex;flex-direction:column;gap:3px;text-align:right}
+.gig-analytics-row>span b{font:800 16px Manrope;color:#263447}
+.danger-outline{color:#b42318!important;border-color:#f0c8c5!important}
+@media(max-width:640px){.gig-analytics-row{grid-template-columns:minmax(0,1fr) repeat(3,55px);gap:7px}.gig-analytics-row>div strong{font-size:10px}.gig-analytics-row>span b{font-size:13px}.gig-analytics-row>span small{font-size:8px}}
