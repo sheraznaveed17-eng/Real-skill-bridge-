@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import {
   Search, BriefcaseBusiness, UserRound, Plus, LogOut, Menu, X, Star,
   MessageCircle, LayoutDashboard, ShieldCheck, ArrowRight, CheckCircle2,
-  Clock3, Wallet, Sparkles, Filter, PackageCheck, Send, ChevronRight, Camera, Save, UserCircle, Settings
+  Clock3, Wallet, Sparkles, Filter, PackageCheck, Send, ChevronRight, ChevronDown, Camera, Save, UserCircle, Settings
 } from "lucide-react";
 import { supabase, isConfigured } from "./supabase";
 import "./style.css";
@@ -22,6 +22,7 @@ function App() {
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
   const [mobileMenu, setMobileMenu] = useState(false);
+  const [accountMenu, setAccountMenu] = useState(false);
   const [selectedGig, setSelectedGig] = useState(null);
   const [authMode, setAuthMode] = useState("login");
   const [authForm, setAuthForm] = useState({ email:"", password:"", name:"", role:"buyer" });
@@ -216,21 +217,33 @@ function App() {
   return <div className="app-shell">
     <header className="topbar">
       <button className="brand" onClick={() => navigate("home")}><span className="brand-mark"><Sparkles size={20}/></span><span className="brand-wordmark"><span>skill<span className="brand-accent">bridge</span></span><small>Made by Yousaf</small></span></button>
-      <div className="desktop-nav">
+      <nav className="desktop-nav">
         <button onClick={() => navigate("home")}>Explore</button>
         {session && <button onClick={() => navigate("orders")}>Orders</button>}
-        {session && profile?.role === "seller" && <button onClick={() => navigate("my-gigs")}>My Gigs</button>}
-      </div>
+        {session && profile?.role === "seller" && <button onClick={() => navigate("my-gigs")}>My services</button>}
+      </nav>
       <div className="top-actions">
-        <button className="icon-btn mobile-only" onClick={() => setMobileMenu(!mobileMenu)}>{mobileMenu?<X/>:<Menu/>}</button>
+        <button className="icon-btn mobile-only" aria-label="Open navigation" onClick={() => setMobileMenu(!mobileMenu)}>{mobileMenu?<X/>:<Menu/>}</button>
         {session ? <>
-          <button className="nav-plain" onClick={() => navigate("dashboard")}><LayoutDashboard size={17}/> Dashboard</button><button className="nav-plain" onClick={() => navigate("profile")}><UserCircle size={17}/> Profile</button>
-          <button className="profile-pill" onClick={() => navigate("dashboard")}><span className="avatar">{(profile?.full_name || "U").slice(0,1).toUpperCase()}</span><span>{profile?.full_name || "My account"}</span></button>
-          <button className="icon-btn" title="Logout" onClick={signOut}><LogOut size={18}/></button>
+          <button className="nav-plain desktop-account-link" onClick={() => navigate("dashboard")}>Dashboard</button>
+          <div className="account-menu-wrap">
+            <button className="account-trigger" aria-expanded={accountMenu} onClick={() => setAccountMenu(v=>!v)}>
+              {profile?.avatar_url ? <img className="avatar account-avatar" src={profile.avatar_url} alt=""/> : <span className="avatar account-avatar">{(profile?.full_name || "U").slice(0,1).toUpperCase()}</span>}
+              <span className="account-trigger-name">{profile?.full_name || "My account"}</span><ChevronDown size={16}/>
+            </button>
+            {accountMenu && <div className="account-dropdown">
+              <div className="account-dropdown-user"><strong>{profile?.full_name || "Skill Bridge member"}</strong><small>{session.user.email}</small></div>
+              <button onClick={()=>{navigate("profile");setAccountMenu(false)}}><UserCircle size={17}/> My profile</button>
+              <button onClick={()=>{navigate("dashboard");setAccountMenu(false)}}><LayoutDashboard size={17}/> Dashboard</button>
+              <button onClick={()=>{navigate("orders");setAccountMenu(false)}}><PackageCheck size={17}/> Orders</button>
+              {profile?.role==="seller" && <button onClick={()=>{navigate("my-gigs");setAccountMenu(false)}}><BriefcaseBusiness size={17}/> My services</button>}
+              <button className="dropdown-logout" onClick={()=>{setAccountMenu(false);signOut()}}><LogOut size={17}/> Log out</button>
+            </div>}
+          </div>
         </> : <><button className="nav-plain" onClick={() => {setAuthMode("login");navigate("auth");}}>Log in</button><button className="btn btn-dark btn-small" onClick={() => {setAuthMode("signup");navigate("auth");}}>Join Skill Bridge</button></>}
       </div>
     </header>
-    {mobileMenu && <div className="mobile-menu"><button onClick={()=>navigate("home")}>Explore</button>{session && <><button onClick={()=>navigate("orders")}>Orders</button><button onClick={()=>navigate("dashboard")}>Dashboard</button><button onClick={()=>navigate("profile")}>Profile</button></>}</div>}
+    {mobileMenu && <div className="mobile-menu"><button onClick={()=>navigate("home")}>Explore</button>{session ? <><button onClick={()=>navigate("dashboard")}>Dashboard</button><button onClick={()=>navigate("profile")}>My profile</button><button onClick={()=>navigate("orders")}>Orders</button>{profile?.role==="seller"&&<button onClick={()=>navigate("my-gigs")}>My services</button>}<button onClick={signOut}>Log out</button></> : <><button onClick={()=>{setAuthMode("login");navigate("auth")}}>Log in</button><button onClick={()=>{setAuthMode("signup");navigate("auth")}}>Join Skill Bridge</button></>}</div>}
     {demoMode && <div className="setup-banner"><span><Sparkles size={15}/> Setup required: connect your free Supabase project to enable real multi-user features.</span><button onClick={()=>show("README.md mein Android setup ke simple steps diye gaye hain.")}>How to connect</button></div>}
     {notice && <div className="toast"><CheckCircle2 size={18}/>{notice}<button onClick={()=>setNotice("")}><X size={16}/></button></div>}
 
