@@ -1,63 +1,57 @@
-# Skill Bridge — Full-stack freelance marketplace
+# Skill Bridge — Work and Services Marketplace
 
-A mobile-friendly Fiverr-style college project built with React + Vite + Supabase.
-The database, authentication, gigs, orders, messages and reviews are shared online
-between users after the free Supabase project is connected.
+Skill Bridge connects people who need work done with people who have the skills to do it. The platform is designed for both digital services and practical, local work, with a simple mobile-friendly experience.
 
-## Important: free project, real backend
+Built with React, Vite and Supabase.
 
-- Frontend: free/open-source React + Vite.
-- Backend/database/auth: Supabase Free plan.
-- Hosting: deploy the `dist` folder to a free static host (for example, Vercel or Netlify).
-- Checkout: **simulated only**. No real payments, bank details or card information are collected.
-- Free services have quotas/limits and can change. This is suitable for a college project, not a high-traffic commercial launch.
+## Platform setup
 
-## Android-only setup
+- Frontend: React + Vite.
+- Backend, database and authentication: Supabase.
+- Hosting: Vercel (or another compatible static host).
+- Checkout: simulated only. No real payments, bank details or card information are processed.
+- Supabase and hosting plans have usage limits that may change. Review the provider terms and limits before scaling the service.
 
-You can do the setup from your Android browser. A GitHub repository alone does not run the backend.
+## Configure Supabase
 
-### 1. Create a free Supabase project
-1. Open https://supabase.com and create/sign in to an account.
-2. Create a new project. Save the database password somewhere private.
+1. Open https://supabase.com and create or sign in to an account.
+2. Create a Supabase project and keep its database password private.
 3. Open **SQL Editor** → **New query**.
-4. Open `supabase/schema.sql` from this project, copy all its contents, paste into SQL Editor, then press **Run**.
-5. In Supabase go to **Project Settings → API** (sometimes labelled API Keys).
-6. Copy the **Project URL** and the **anon/public key**. Never copy or expose the `service_role` key.
+4. Open `supabase/schema.sql`, copy its contents into the SQL Editor, and run the query.
+5. In **Project Settings → API** (or API Keys), copy the Project URL and anon/public key. Never expose the `service_role` key.
 
-### 2. Add the two public settings
-When deploying with Vercel or Netlify, add these environment variables:
+## Configure environment variables
+
+Add these variables in the hosting provider's project settings:
 
 - `VITE_SUPABASE_URL` = your Supabase Project URL
 - `VITE_SUPABASE_ANON_KEY` = your Supabase anon/public key
 
-For local development, copy `.env.example` to `.env` and fill the same two values. Do not upload `.env` to GitHub.
+For local development, copy `.env.example` to `.env` and enter the same values. Do not upload `.env` to GitHub.
 
-### 3. Deploy for free
-1. Sign in to Vercel or Netlify using GitHub.
-2. Import the `skill-bridge` repository.
-3. Build command: `npm run build`
-4. Output directory: `dist`
-5. Add the two environment variables above before deploying.
-6. Deploy. The host will give you a public website link.
+## Deploy
 
-If the repository currently contains an older starter, upload/replace it with the contents of this project folder (the files inside the ZIP, not the ZIP file itself).
+1. Import this GitHub repository into Vercel or another Vite-compatible host.
+2. Build command: `npm run build`
+3. Output directory: `dist`
+4. Add the two environment variables above.
+5. Deploy and use the public URL provided by the hosting provider.
 
-## Features included
+## Current platform features
 
-- Email/password signup and login with buyer/seller account type.
-- Public active gig marketplace and category/search filtering.
-- Seller gig publishing.
+- Email/password signup and login with buyer/seller account types.
+- Public service marketplace with category and search filtering.
+- Seller service publishing.
 - Buyer simulated checkout and order creation.
 - Buyer/seller order dashboard and status workflow.
 - Order-linked messaging.
 - Buyer reviews after an order is completed.
-- Basic admin view and gig deactivation.
+- Basic admin overview and service deactivation.
 - Row Level Security policies in `supabase/schema.sql`.
 
 ## Admin account
 
-After you create your own account, find your user UUID in Supabase **Authentication → Users**.
-Then run this in SQL Editor, replacing the placeholder with your UUID:
+After creating your account, find your user UUID in Supabase **Authentication → Users**. Then run this in SQL Editor, replacing the placeholder with your UUID:
 
 ```sql
 update public.profiles
@@ -65,13 +59,12 @@ set role = 'admin'
 where id = 'YOUR_AUTH_USER_UUID';
 ```
 
-Admin role must only be assigned by the project owner. Do not add an admin signup option.
+Only the platform owner should assign the admin role. Do not add an admin signup option.
 
-## Notes / limitations
+## Important operational notes
 
-- This is a working full-stack foundation, but it is not yet a commercial Fiverr clone.
-- No real payment gateway is connected. The checkout is deliberately a demo/test flow.
-- Email confirmation settings depend on your Supabase Auth configuration. For a classroom test, you can adjust email confirmation in Supabase Auth settings as appropriate.
-- Admin user management is done from Supabase Dashboard; the in-app admin page provides a basic moderation overview.
-- The initial UI uses a simple decorative service illustration rather than user-uploaded gig images.
-- Before public production use, add stronger order-state validation, abuse reporting, moderation tools, backups and privacy/legal review.
+- Checkout is currently a test flow. No real payment gateway is connected and no payment details are collected.
+- Email confirmation behavior depends on the Supabase Auth configuration.
+- Admin user management is handled through the Supabase dashboard; the in-app admin page provides a basic moderation overview.
+- Service listings currently use a decorative illustration rather than user-uploaded images.
+- Before accepting real customers at scale, complete security testing, order-state validation, abuse reporting, moderation, backups, privacy and legal review, and payment-provider integration if real payments are required.
