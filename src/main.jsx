@@ -8,7 +8,7 @@ import {
 import { supabase, isConfigured } from "./supabase";
 import "./style.css";
 
-const categories = ["All", "Graphics & Design", "Writing & Translation", "Programming & Tech", "Video & Animation", "Digital Marketing", "Business"];
+const categories = ["All", "Graphics & Design", "Writing & Translation", "Programming & Tech", "Video & Animation", "Digital Marketing", "Business", "Construction", "Masonry & Labour", "Plumbing", "Electrical Work", "Painting", "Carpentry", "AC & Appliance Repair", "Vehicle Repair", "Cleaning & Home Services", "Gardening", "Transport", "Education & Tutoring", "Events & Catering"];
 const money = n => `Rs. ${Number(n || 0).toLocaleString("en-PK")}`;
 
 function App() {
@@ -192,21 +192,32 @@ function App() {
     {page === "home" && <>
       <section className="hero">
         <div className="hero-inner">
-          <div className="eyebrow"><span className="eyebrow-dot"></span> THE FREELANCE MARKETPLACE</div>
-          <h1>Find the right talent.<br/><span>Make great work happen.</span></h1>
-          <p>Discover skilled freelancers, share what you do best, and turn ideas into real results — all in one place.</p>
-          <div className="hero-search"><Search size={20}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Try “logo design”, “website”, “video editing”..."/><button onClick={()=>document.getElementById("explore")?.scrollIntoView({behavior:"smooth"})}>Search</button></div>
-          <div className="popular">Popular: <button onClick={()=>{setSearch("logo");setCategory("Graphics & Design")}}>Logo design</button><button onClick={()=>{setSearch("website");setCategory("Programming & Tech")}}>Website</button><button onClick={()=>{setSearch("video");setCategory("Video & Animation")}}>Video editing</button></div>
-          <div className="hero-stats"><div><strong>One place</strong><span>for skills & projects</span></div><div><strong>Simple</strong><span>order management</span></div><div><strong>Free to explore</strong><span>college project platform</span></div></div>
+          <div className="eyebrow"><span className="eyebrow-dot"></span> THE MARKETPLACE FOR EVERY KIND OF WORK</div>
+          <h1>Find work. Hire talent.<br/><span>Get things done.</span></h1>
+          <p>From digital services to hands-on local jobs, connect with skilled people for every task — all in one simple place.</p>
+          <div className="hero-search"><Search size={20}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search any skill, service or job..."/><button onClick={()=>document.getElementById("explore")?.scrollIntoView({behavior:"smooth"})}>Search</button></div>
+          <div className="popular">Popular: <button onClick={()=>{setSearch("electrician");setCategory("Electrical Work")}}>Electrician</button><button onClick={()=>{setSearch("logo");setCategory("Graphics & Design")}}>Logo design</button><button onClick={()=>{setSearch("plumber");setCategory("Plumbing")}}>Plumber</button><button onClick={()=>{setSearch("website");setCategory("Programming & Tech")}}>Website</button></div>
+          <div className="hero-stats"><div><strong>Digital + Local</strong><span>all kinds of services</span></div><div><strong>One platform</strong><span>for workers and customers</span></div><div><strong>Simple to use</strong><span>for everyone</span></div></div>
         </div>
         <div className="hero-orb orb-one"></div><div className="hero-orb orb-two"></div>
       </section>
+      <section className="choice-section">
+        <div className="choice-heading"><span className="eyebrow muted">GET STARTED</span><h2>What would you like to do?</h2><p>Choose how you want to use Skill Bridge.</p></div>
+        <div className="choice-grid">
+          <button className="choice-card" onClick={()=>{setAuthForm(v=>({...v,role:"seller"}));setAuthMode("signup");navigate("auth");}}>
+            <span className="choice-icon"><BriefcaseBusiness size={25}/></span><span className="choice-copy"><strong>Find Work</strong><small>Show your skills and let customers discover your services.</small></span><ArrowRight className="choice-arrow"/>
+          </button>
+          <button className="choice-card" onClick={()=>{setAuthForm(v=>({...v,role:"buyer"}));setAuthMode("signup");navigate("auth");}}>
+            <span className="choice-icon"><UserRound size={25}/></span><span className="choice-copy"><strong>Hire Someone</strong><small>Find skilled people for digital tasks and practical work.</small></span><ArrowRight className="choice-arrow"/>
+          </button>
+        </div>
+      </section>
       <section className="trust-strip"><span><ShieldCheck size={18}/> Student project marketplace</span><span><CheckCircle2 size={18}/> Simulated checkout</span><span><MessageCircle size={18}/> Buyer-seller messaging</span></section>
       <main className="content" id="explore">
-        <div className="section-heading"><div><div className="eyebrow muted">DISCOVER SERVICES</div><h2>Explore the marketplace</h2><p>Find a service that moves your project forward.</p></div><button className="outline-btn" onClick={()=>{setSearch("");setCategory("All")}}><Filter size={16}/> Clear filters</button></div>
+        <div className="section-heading"><div><div className="eyebrow muted">DISCOVER SERVICES</div><h2>Explore all services</h2><p>Browse digital skills, skilled trades and everyday services.</p></div><button className="outline-btn" onClick={()=>{setSearch("");setCategory("All")}}><Filter size={16}/> Clear filters</button></div>
         <div className="category-row">{categories.map(c=><button key={c} className={category===c?"category active":"category"} onClick={()=>setCategory(c)}>{c}</button>)}</div>
         <div className="gig-grid">{filteredGigs.map(g=><GigCard key={g.id} gig={g} onClick={()=>setSelectedGig(g)}/> )}</div>
-        {!filteredGigs.length && <Empty icon={<BriefcaseBusiness/>} title="No services found yet" text={demoMode?"Connect Supabase, then sellers can publish gigs here.":"Try another search, or be the first seller to publish a service."}/>}
+        {!filteredGigs.length && <Empty icon={<BriefcaseBusiness/>} title="No services found yet" text={demoMode?"The marketplace is getting ready.":"Try another search or category. You can be the first to list a service."}/>}
         {profile?.role === "seller" && <div className="join-banner"><div><h3>Ready to offer your skills?</h3><p>Create a service listing and let buyers discover what you do best.</p></div><button className="btn btn-dark" onClick={()=>navigate("create-gig")}><Plus size={17}/> Create a gig</button></div>}
       </main>
     </>}
