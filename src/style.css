@@ -525,3 +525,8 @@
 
 
 .unread-count{display:inline-grid;place-items:center;min-width:17px;height:17px;margin-left:5px;padding:0 4px;border-radius:20px;background:#d94b43;color:#fff;font-size:9px;font-weight:800;line-height:1}
+
+
+.gig-art{overflow:hidden}
+.gig-art img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.gig-art span{z-index:1;padding:5px 8px;border-radius:5px;background:#1720338c;color:#fff}
