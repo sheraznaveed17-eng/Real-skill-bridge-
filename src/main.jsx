@@ -627,7 +627,7 @@ function App() {
           </button>
         </div>
       </section>
-      <section className="trust-strip"><span><ShieldCheck size={18}/> For every kind of work</span><span><CheckCircle2 size={18}/> Multiple payment options</span><span><MessageCircle size={18}/> Buyer-seller messaging</span></section>
+      <section className="trust-strip"><span><ShieldCheck size={18}/> For every kind of work</span><span><CheckCircle2 size={18}/> Payment methods coming soon</span><span><MessageCircle size={18}/> Buyer-seller messaging</span></section>
       <main className="content" id="explore">
         <div className="section-heading"><div><div className="eyebrow muted">{t.discover}</div><h2>{t.exploreAll}</h2><p>Browse digital skills, skilled trades and everyday services.</p></div><button className="outline-btn" onClick={()=>{setSearch("");setCategory("All");setLocationFilter("");setMinBudget("");setMaxBudget("");setDeliveryFilter("any");setSortBy("newest");}}><Filter size={16}/> Clear filters</button></div>
         <div className="category-row">{categories.map(c=><button key={c} className={category===c?"category active":"category"} onClick={()=>setCategory(c)}>{c}</button>)}</div>
