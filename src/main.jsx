@@ -294,6 +294,15 @@ function App() {
     if (error) show(error.message); else { show("Review submitted."); setReviewForm({rating:"5",comment:""}); }
   };
 
+  useEffect(() => {
+    if (!activeConversation?.id || !session?.user) return;
+    const channel=supabase.channel('conversation-'+activeConversation.id)
+      .on('postgres_changes',{event:'*',schema:'public',table:'messages',filter:'conversation_id=eq.'+activeConversation.id},()=>{loadConversation(activeConversation);loadInbox();})
+      .on('postgres_changes',{event:'*',schema:'public',table:'custom_offers',filter:'conversation_id=eq.'+activeConversation.id},()=>loadConversation(activeConversation))
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  },[activeConversation?.id,session?.user?.id]);
+
   const myGigs = gigs.filter(g => g.seller_id === session?.user?.id);
   const myOrders = orders.filter(o => o.buyer_id === session?.user?.id || o.seller_id === session?.user?.id);
   const isAdmin = profile?.role === "admin";
