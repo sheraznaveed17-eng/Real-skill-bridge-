@@ -429,7 +429,7 @@ function App() {
       p_order_id:id, p_next_status:status, p_revision_note:null
     });
     if (error) { show(error.message); return; }
-    show(status==="completed"?"Order completed successfully.":status==="delivered"?"Delivery submitted to the buyer.":"Order accepted and moved to In Progress.");
+    show(status==="completed"?"Order completed successfully.":status==="delivered"?"Delivery submitted to the buyer.":status==="cancelled"?"Order declined.":"Order accepted and moved to In Progress.");
     await loadOrders();
   };
 
@@ -830,7 +830,7 @@ function OrderCard({order,userId,onUpdate,onRevision,onMessage,onReview,reviewFo
     <div className="order-main"><div className="order-icon"><PackageCheck/></div><div className="order-info"><h3>{order.gigs?.title || "Marketplace service"}</h3><p>{buyer?`Seller: ${order.seller?.full_name || "Member"}`:`Buyer: ${order.buyer?.full_name || "Member"}`}</p><div className="order-tags"><span className={`status ${order.status}`}>{order.status==="revision_requested"?"Revision requested":order.status}</span><span className="status simulated">Payment pending</span></div></div><strong>{money(order.amount)}</strong></div>
     {order.revision_note&&<div className="revision-note"><strong>Latest revision note</strong><p>{order.revision_note}</p></div>}
     <div className="order-actions"><button className="outline-btn" onClick={()=>onMessage(order)}><MessageCircle size={15}/> Message</button>
-      {!buyer&&order.status==="pending"&&<button className="btn btn-dark btn-small" onClick={()=>onUpdate(order.id,"in_progress")}>Accept order</button>}
+      {!buyer&&order.status==="pending"&&<><button className="btn btn-dark btn-small" onClick={()=>onUpdate(order.id,"in_progress")}>Accept order</button><button className="outline-btn danger-outline" onClick={()=>{if(window.confirm("Decline this order? The buyer will see it as cancelled."))onUpdate(order.id,"cancelled");}}>Decline</button></>}
       {!buyer&&order.status==="in_progress"&&<button className="btn btn-dark btn-small" onClick={()=>onUpdate(order.id,"delivered")}>Mark delivered</button>}
       {!buyer&&order.status==="revision_requested"&&<button className="btn btn-dark btn-small" onClick={()=>onUpdate(order.id,"delivered")}>Resubmit delivery</button>}
       {buyer&&order.status==="delivered"&&<><button className="btn btn-dark btn-small" onClick={()=>onUpdate(order.id,"completed")}>Approve & complete</button><button className="outline-btn" onClick={()=>setRevisionOpen(v=>!v)}>Request revision</button></>}
