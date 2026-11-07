@@ -67,6 +67,8 @@ function App() {
   const [messages, setMessages] = useState([]);
   const [conversations, setConversations] = useState([]);
   const [unreadMessages,setUnreadMessages]=useState(0);
+  const [unreadByThread,setUnreadByThread]=useState({});
+  const [unreadByOrder,setUnreadByOrder]=useState({});
   const [activeConversation, setActiveConversation] = useState(null);
   const [conversationOffers, setConversationOffers] = useState([]);
   const [offerForm, setOfferForm] = useState({title:"",description:"",amount:"",delivery_days:"3"});
@@ -458,10 +460,17 @@ function App() {
     if (!session?.user) return;
     const [threads,unread]=await Promise.all([
       supabase.from("conversations").select("*, gigs(title), buyer:profiles!conversations_buyer_id_fkey(full_name,avatar_url), seller:profiles!conversations_seller_id_fkey(full_name,avatar_url)").or("buyer_id.eq."+session.user.id+",seller_id.eq."+session.user.id).order("updated_at",{ascending:false}),
-      supabase.from("messages").select("id",{count:"exact",head:true}).neq("sender_id",session.user.id).is("read_at",null)
+      supabase.from("messages").select("id,conversation_id,order_id").neq("sender_id",session.user.id).is("read_at",null)
     ]);
     if (!threads.error) setConversations(threads.data || []);
-    if (!unread.error) setUnreadMessages(unread.count||0);
+    if (!unread.error) {
+      const threadCounts={},orderCounts={};
+      (unread.data||[]).forEach(message=>{
+        if(message.conversation_id) threadCounts[message.conversation_id]=(threadCounts[message.conversation_id]||0)+1;
+        if(message.order_id) orderCounts[message.order_id]=(orderCounts[message.order_id]||0)+1;
+      });
+      setUnreadByThread(threadCounts); setUnreadByOrder(orderCounts); setUnreadMessages((unread.data||[]).length);
+    }
   };
 
   const loadConversation = async conversation => {
@@ -795,8 +804,8 @@ function App() {
       <div className="eyebrow muted">YOUR INBOX</div><h2>Messages</h2><p className="subtext">Talk with buyers and sellers, discuss the work and agree on a price.</p>
       <div className="inbox-layout">
         <aside className="inbox-list"><div className="inbox-list-head"><strong>All conversations</strong><span>{conversations.length+myOrders.length}</span></div>
-          {conversations.map(c=>{const other=c.buyer_id===session?.user?.id?c.seller:c.buyer;return <button key={c.id} className={activeConversation?.id===c.id?"inbox-thread active":"inbox-thread"} onClick={()=>loadConversation(c)}><span className="avatar">{(other?.full_name||"U").slice(0,1).toUpperCase()}</span><span className="inbox-thread-copy"><strong>{other?.full_name||"Member"}</strong><small>{c.gigs?.title||"Service discussion"}</small><small>{c.last_message||"Start a conversation"}</small></span></button>;})}
-          {myOrders.length>0&&<><div className="inbox-list-head"><strong>Order messages</strong><span>{myOrders.length}</span></div>{myOrders.map(o=>{const other=o.buyer_id===session?.user?.id?o.seller:o.buyer;return <button key={"order-"+o.id} className={activeOrder?.id===o.id?"inbox-thread active":"inbox-thread"} onClick={()=>loadMessages(o)}><span className="avatar">{(other?.full_name||"U").slice(0,1).toUpperCase()}</span><span className="inbox-thread-copy"><strong>{other?.full_name||"Member"}</strong><small>{o.gigs?.title||"Marketplace order"}</small><small>Order · {o.status.replaceAll("_"," ")}</small></span></button>;})}</>}
+          {conversations.map(c=>{const other=c.buyer_id===session?.user?.id?c.seller:c.buyer;return <button key={c.id} className={activeConversation?.id===c.id?"inbox-thread active":"inbox-thread"} onClick={()=>loadConversation(c)}><span className="avatar">{(other?.full_name||"U").slice(0,1).toUpperCase()}</span><span className="inbox-thread-copy"><strong>{other?.full_name||"Member"}</strong><small>{c.gigs?.title||"Service discussion"}</small><small>{c.last_message||"Start a conversation"}</small>{unreadByThread[c.id]>0&&<span className="inbox-unread">{unreadByThread[c.id]>9?"9+":unreadByThread[c.id]}</span>}</span></button>;})}
+          {myOrders.length>0&&<><div className="inbox-list-head"><strong>Order messages</strong><span>{myOrders.length}</span></div>{myOrders.map(o=>{const other=o.buyer_id===session?.user?.id?o.seller:o.buyer;return <button key={"order-"+o.id} className={activeOrder?.id===o.id?"inbox-thread active":"inbox-thread"} onClick={()=>loadMessages(o)}><span className="avatar">{(other?.full_name||"U").slice(0,1).toUpperCase()}</span><span className="inbox-thread-copy"><strong>{other?.full_name||"Member"}</strong><small>{o.gigs?.title||"Marketplace order"}</small><small>Order · {o.status.replaceAll("_"," ")}</small>{unreadByOrder[o.id]>0&&<span className="inbox-unread">{unreadByOrder[o.id]>9?"9+":unreadByOrder[o.id]}</span>}</span></button>;})}</>}
           {!conversations.length&&!myOrders.length&&<div className="inbox-empty">No conversations yet. Open a gig and contact its seller.</div>}
         </aside>
         <section className="inbox-chat">{activeConversation ? <>
