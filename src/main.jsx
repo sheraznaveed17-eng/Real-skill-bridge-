@@ -22,6 +22,18 @@ const uiTranslations = {
   tr:{explore:"Keşfet",orders:"Siparişler",messages:"Mesajlar",myServices:"Hizmetlerim",dashboard:"Kontrol Paneli",login:"Giriş Yap",join:"Skill Bridge'e Katıl",heroEyebrow:"HER TÜRLÜ İŞ İÇİN PAZARYERİ",heroTitle:"İş bul. Yetenek kirala.",heroTitle2:"İşlerini hallet.",heroText:"Dijital hizmetlerden yerel işlere kadar her görev için uzmanlarla bağlantı kur.",getStarted:"BAŞLA",whatDo:"Ne yapmak istersiniz?",findWork:"İş Bul",hireSomeone:"Birini İşe Al",discover:"HİZMETLERİ KEŞFET",exploreAll:"Tüm hizmetleri keşfet",search:"Ara"},
   de:{explore:"Entdecken",orders:"Bestellungen",messages:"Nachrichten",myServices:"Meine Dienste",dashboard:"Dashboard",login:"Anmelden",join:"Skill Bridge beitreten",heroEyebrow:"DER MARKTPLATZ FÜR JEDE ART VON ARBEIT",heroTitle:"Finde Arbeit. Engagiere Talente.",heroTitle2:"Erledige Aufgaben.",heroText:"Von digitalen Dienstleistungen bis zu lokalen Arbeiten – finde passende Fachkräfte.",getStarted:"LOSLEGEN",whatDo:"Was möchtest du tun?",findWork:"Arbeit finden",hireSomeone:"Jemanden beauftragen",discover:"DIENSTE ENTDECKEN",exploreAll:"Alle Dienste entdecken",search:"Suchen"}
 };
+const uiExtraTranslations = {
+  en:{profile:"My profile",saved:"Saved services",portfolio:"Portfolio",logout:"Log out",buyerMode:"Buyer mode",sellerMode:"Seller mode",switchWorkspace:"Switch workspace",manageOrders:"Manage orders",myPurchases:"My purchases",createService:"Create a service"},
+  ur:{profile:"میرا پروفائل",saved:"محفوظ خدمات",portfolio:"پورٹ فولیو",logout:"لاگ آؤٹ",buyerMode:"خریدار موڈ",sellerMode:"سیلر موڈ",switchWorkspace:"ورک اسپیس تبدیل کریں",manageOrders:"آرڈرز سنبھالیں",myPurchases:"میری خریداری",createService:"سروس بنائیں"},
+  pa:{profile:"میری پروفائل",saved:"محفوظ خدمتاں",portfolio:"پورٹ فولیو",logout:"لاگ آؤٹ",buyerMode:"خریدار موڈ",sellerMode:"سیلر موڈ",switchWorkspace:"ورک اسپیس بدلو",manageOrders:"آرڈر سنبھالو",myPurchases:"میری خریداری",createService:"سروس بناؤ"},
+  hi:{profile:"मेरी प्रोफ़ाइल",saved:"सेव की गई सेवाएँ",portfolio:"पोर्टफोलियो",logout:"लॉग आउट",buyerMode:"खरीदार मोड",sellerMode:"विक्रेता मोड",switchWorkspace:"वर्कस्पेस बदलें",manageOrders:"ऑर्डर प्रबंधित करें",myPurchases:"मेरी खरीदारी",createService:"सेवा बनाएँ"},
+  ar:{profile:"ملفي الشخصي",saved:"الخدمات المحفوظة",portfolio:"معرض الأعمال",logout:"تسجيل الخروج",buyerMode:"وضع المشتري",sellerMode:"وضع البائع",switchWorkspace:"تبديل مساحة العمل",manageOrders:"إدارة الطلبات",myPurchases:"مشترياتي",createService:"إنشاء خدمة"},
+  es:{profile:"Mi perfil",saved:"Servicios guardados",portfolio:"Portafolio",logout:"Cerrar sesión",buyerMode:"Modo comprador",sellerMode:"Modo vendedor",switchWorkspace:"Cambiar espacio",manageOrders:"Gestionar pedidos",myPurchases:"Mis compras",createService:"Crear un servicio"},
+  fr:{profile:"Mon profil",saved:"Services enregistrés",portfolio:"Portfolio",logout:"Déconnexion",buyerMode:"Mode acheteur",sellerMode:"Mode vendeur",switchWorkspace:"Changer d’espace",manageOrders:"Gérer les commandes",myPurchases:"Mes achats",createService:"Créer un service"},
+  zh:{profile:"我的资料",saved:"已收藏服务",portfolio:"作品集",logout:"退出登录",buyerMode:"买家模式",sellerMode:"卖家模式",switchWorkspace:"切换工作区",manageOrders:"管理订单",myPurchases:"我的购买",createService:"创建服务"},
+  tr:{profile:"Profilim",saved:"Kaydedilen hizmetler",portfolio:"Portföy",logout:"Çıkış Yap",buyerMode:"Alıcı modu",sellerMode:"Satıcı modu",switchWorkspace:"Çalışma alanını değiştir",manageOrders:"Siparişleri yönet",myPurchases:"Satın aldıklarım",createService:"Hizmet oluştur"},
+  de:{profile:"Mein Profil",saved:"Gespeicherte Dienste",portfolio:"Portfolio",logout:"Abmelden",buyerMode:"Käufermodus",sellerMode:"Verkäufermodus",switchWorkspace:"Arbeitsbereich wechseln",manageOrders:"Bestellungen verwalten",myPurchases:"Meine Käufe",createService:"Dienst erstellen"}
+};
 
 function App() {
   const [session, setSession] = useState(null);
@@ -84,7 +96,7 @@ function App() {
   const [reportForm, setReportForm] = useState({reason:"fake_service",details:""});
 
   const demoMode = !isConfigured;
-  const t=uiTranslations[language]||uiTranslations.en;
+  const t={...uiTranslations.en,...(uiTranslations[language]||{}),...(uiExtraTranslations[language]||{})};
   useEffect(()=>{try{localStorage.setItem("skillbridge-language",language);}catch{}},[language]);
 
   useEffect(() => {
@@ -531,15 +543,15 @@ function App() {
             </button>
             {accountMenu && <div className="account-dropdown">
               <div className="account-dropdown-user"><strong>{profile?.full_name || "Skill Bridge member"}</strong><small>{session.user.email}</small></div>
-              <div className="account-mode-actions"><button onClick={()=>switchMode("buyer")}>Buyer mode</button><button onClick={()=>switchMode("seller")}>Seller mode</button></div>
-              <button onClick={()=>{navigate("profile");setAccountMenu(false)}}><UserCircle size={17}/> My profile</button>
+              <div className="account-mode-actions"><button onClick={()=>switchMode("buyer")}>{t.buyerMode}</button><button onClick={()=>switchMode("seller")}>{t.sellerMode}</button></div>
+              <button onClick={()=>{navigate("profile");setAccountMenu(false)}}><UserCircle size={17}/> {t.profile}</button>
               <button onClick={()=>{navigate("dashboard");setAccountMenu(false)}}><LayoutDashboard size={17}/> Dashboard</button>
               {isAdmin && <button onClick={()=>{navigate("admin");setAccountMenu(false)}}><ShieldCheck size={17}/> Admin moderation</button>}
-              <button onClick={()=>{navigate("saved");setAccountMenu(false)}}><Bookmark size={17}/> Saved services</button>
-              {activeMode==="seller" && <button onClick={()=>{navigate("portfolio");setAccountMenu(false)}}><BriefcaseBusiness size={17}/> My portfolio</button>}
-              <button onClick={()=>{navigate("orders");setAccountMenu(false)}}><PackageCheck size={17}/> Orders</button>
-              {activeMode==="seller" && <button onClick={()=>{navigate("my-gigs");setAccountMenu(false)}}><BriefcaseBusiness size={17}/> My services</button>}
-              <button className="dropdown-logout" onClick={()=>{setAccountMenu(false);signOut()}}><LogOut size={17}/> Log out</button>
+              <button onClick={()=>{navigate("saved");setAccountMenu(false)}}><Bookmark size={17}/> {t.saved}</button>
+              {activeMode==="seller" && <button onClick={()=>{navigate("portfolio");setAccountMenu(false)}}><BriefcaseBusiness size={17}/> {t.portfolio}</button>}
+              <button onClick={()=>{navigate("orders");setAccountMenu(false)}}><PackageCheck size={17}/> {t.orders}</button>
+              {activeMode==="seller" && <button onClick={()=>{navigate("my-gigs");setAccountMenu(false)}}><BriefcaseBusiness size={17}/> {t.myServices}</button>}
+              <button className="dropdown-logout" onClick={()=>{setAccountMenu(false);signOut()}}><LogOut size={17}/> {t.logout}</button>
             </div>}
           </div>
         </> : <><button className="nav-plain" onClick={() => {setAuthMode("login");navigate("auth");}}>{t.login}</button><button className="btn btn-dark btn-small" onClick={() => {setAuthMode("signup");navigate("auth");}}>{t.join}</button></>}
@@ -666,7 +678,7 @@ function App() {
           <p>{activeMode==="seller"?"Your business overview, orders and services — all in one place.":"Your projects, purchases and conversations — all in one place."}</p>
         </div>
         <div className="dashboard-welcome-actions">
-          <div className="mode-switch"><span>Switch workspace</span><button className={activeMode==="buyer"?"selected":""} onClick={()=>switchMode("buyer")} disabled={busy}>Buyer</button><button className={activeMode==="seller"?"selected":""} onClick={()=>switchMode("seller")} disabled={busy}>Seller</button></div>
+          <div className="mode-switch"><span>{t.switchWorkspace}</span><button className={activeMode==="buyer"?"selected":""} onClick={()=>switchMode("buyer")} disabled={busy}>{t.buyerMode}</button><button className={activeMode==="seller"?"selected":""} onClick={()=>switchMode("seller")} disabled={busy}>{t.sellerMode}</button></div>
           {activeMode==="seller"
             ? <button className="btn btn-dark" onClick={()=>navigate("create-gig")}><Plus size={17}/> Create a service</button>
             : <button className="btn btn-dark" onClick={()=>navigate("home")}><Search size={17}/> Find a service</button>}
