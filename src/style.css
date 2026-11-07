@@ -376,3 +376,23 @@
 .custom-offer-meta strong{font-size:20px}
 .offer-actions{display:flex;gap:8px;margin-top:14px}
 @media(max-width:760px){.inbox-layout{grid-template-columns:1fr;min-height:0}.inbox-list{max-height:250px;overflow:auto}.inbox-chat{min-height:560px}.inbox-chat-body{max-height:420px;padding:14px}.custom-offer-form .two-fields{grid-template-columns:1fr}.inbox-thread{padding:11px}}
+
+
+/* Saved services and seller portfolio */
+.portfolio-create{max-width:760px;margin:18px 0 22px}
+.portfolio-create>h3{font:800 16px Manrope,sans-serif;margin:0 0 14px;color:#263447}
+.portfolio-create .stack-form{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.portfolio-create .stack-form label:nth-child(2){grid-column:1/-1}
+.portfolio-create .stack-form label:nth-child(3),.portfolio-create .stack-form label:nth-child(4){min-width:0}
+.portfolio-create .stack-form button{justify-self:start}
+.portfolio-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin:18px 0}
+.portfolio-card{overflow:hidden;border:1px solid #e7ece9;border-radius:12px;background:#fff;box-shadow:0 2px 8px #17203305}
+.portfolio-card>img{display:block;width:100%;height:175px;object-fit:cover;background:#f2f5f3}
+.portfolio-card>div{padding:15px}
+.portfolio-card h3{font:800 15px Manrope,sans-serif;color:#263447;margin:0 0 7px}
+.portfolio-card p{font-size:12px;line-height:1.6;color:#758091;min-height:38px;margin:0 0 13px}
+.portfolio-card-actions{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.portfolio-card-actions a{display:inline-flex;align-items:center;gap:5px;color:#087d59;font-size:11px;font-weight:750;text-decoration:none}
+.portfolio-card-actions .outline-btn{font-size:10px;padding:7px 9px}
+@media(max-width:850px){.portfolio-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.portfolio-grid{grid-template-columns:1fr}.portfolio-card>img{height:190px}.portfolio-create .stack-form{grid-template-columns:1fr}.portfolio-create .stack-form label:nth-child(2){grid-column:auto}.portfolio-card-actions{flex-wrap:wrap}}
