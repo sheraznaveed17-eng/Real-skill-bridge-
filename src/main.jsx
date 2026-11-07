@@ -148,7 +148,11 @@ function App() {
     setBusy(true);
     const { data, error } = await supabase.from("profiles").update({active_mode:mode,account_modes:["buyer","seller"]}).eq("id",session.user.id).select().single();
     if (error) show(error.message);
-    else { setProfile(data); setActiveMode(mode); setPage("dashboard"); setAccountMenu(false); show(mode==="seller" ? "Seller mode is now active." : "Buyer mode is now active."); }
+    else {
+      const { error:metadataError } = await supabase.auth.updateUser({data:{active_mode:mode}});
+      setProfile(data); setActiveMode(mode); setPage("dashboard"); setAccountMenu(false);
+      show(metadataError ? "Mode changed. Your account preference may refresh on next login." : (mode==="seller" ? "Seller mode is now active." : "Buyer mode is now active."));
+    }
     setBusy(false);
   };
 
