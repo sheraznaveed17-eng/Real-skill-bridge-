@@ -851,7 +851,7 @@ function App() {
           {activeMode==="seller" && <button className="dashboard-side-link" onClick={()=>navigate("portfolio")}><BriefcaseBusiness size={17}/> Portfolio<ChevronRight size={15}/></button>}
           {activeMode==="seller" && <button className="dashboard-side-link" onClick={()=>navigate("my-gigs")}><BriefcaseBusiness size={17}/> My services<ChevronRight size={15}/></button>}
           {activeMode==="seller" && <button className="dashboard-side-link" onClick={()=>navigate("performance")}><Eye size={17}/> Performance<ChevronRight size={15}/></button>}
-          {activeMode==="seller" && <button className="dashboard-side-link" onClick={()=>navigate("create-gig")}><Plus size={17}/> Create service<ChevronRight size={15}/></button>
+          {activeMode==="seller" && <button className="dashboard-side-link" onClick={()=>navigate("create-gig")}><Plus size={17}/> Create service<ChevronRight size={15}/></button>}
           <button className="dashboard-side-link" onClick={()=>navigate("profile")}><UserRound size={17}/> Profile settings<ChevronRight size={15}/></button>
           <div className="dashboard-sidebar-help"><strong>Need to update your details?</strong><p>Keep your profile clear so other members know who they are working with.</p><button onClick={()=>navigate("profile")}>Edit profile <ArrowRight size={14}/></button></div>
         </aside>
