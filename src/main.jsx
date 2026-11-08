@@ -65,6 +65,8 @@ function App() {
   const [mobileMenu, setMobileMenu] = useState(false);
   const [accountMenu, setAccountMenu] = useState(false);
   const [selectedGig, setSelectedGig] = useState(null);
+  const [recentViewedIds, setRecentViewedIds] = useState(() => { try { return JSON.parse(localStorage.getItem("skillbridge-recently-viewed") || "[]").slice(0,8); } catch { return []; } });
+  const [inboxSearch, setInboxSearch] = useState("");
   const [authMode, setAuthMode] = useState("login");
   const [signupConfirmationPending, setSignupConfirmationPending] = useState(false);
   const [authForm, setAuthForm] = useState({ email:"", password:"", name:"", role:"buyer" });
@@ -675,8 +677,12 @@ function App() {
     ...conversations.map(c => ({id:"conversation-"+c.id,kind:"message",title:c.gigs?.title || "Service discussion",detail:c.last_message || "Conversation started",date:c.updated_at,conversation:c}))
   ].filter(x=>x.date).sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,5);
   const isAdmin = profile?.role === "admin";
+  const recentViewedGigs = recentViewedIds.map(id => gigs.find(g => g.id === id)).filter(Boolean).filter(g => g.is_active !== false);
+  const inboxNeedle = inboxSearch.trim().toLowerCase();
+  const filteredInboxConversations = conversations.filter(c => { const other=c.buyer_id===session?.user?.id?c.seller:c.buyer; return `${other?.full_name||""} ${c.gigs?.title||""} ${c.last_message||""}`.toLowerCase().includes(inboxNeedle); });
+  const filteredInboxOrders = myOrders.filter(o => { const other=o.buyer_id===session?.user?.id?o.seller:o.buyer; return `${other?.full_name||""} ${o.gigs?.title||""} ${o.status||""}`.toLowerCase().includes(inboxNeedle); });
   useEffect(() => { if (isAdmin) loadReports(); }, [isAdmin]);
-  useEffect(() => { if (selectedGig?.id) setSelectedPackage(selectedGig.packages?.[0]?.name || "Basic"); }, [selectedGig?.id]);
+  useEffect(() => { if (selectedGig?.id) { setSelectedPackage(selectedGig.packages?.[0]?.name || "Basic"); setRecentViewedIds(prev => { const next=[selectedGig.id,...prev.filter(id=>id!==selectedGig.id)].slice(0,8); try { localStorage.setItem("skillbridge-recently-viewed",JSON.stringify(next)); } catch {} return next; }); } }, [selectedGig?.id]);
   const packageOptions = selectedGig?.packages?.length ? selectedGig.packages : selectedGig ? [{name:"Basic",description:selectedGig.description,price:selectedGig.price,delivery_days:selectedGig.delivery_days,revisions:0}] : [];
   const activePackage = packageOptions.find(p=>p.name===selectedPackage) || packageOptions[0];
 
@@ -957,10 +963,10 @@ function App() {
     {page === "messages" && <main className="content page-content inbox-page">
       <div className="eyebrow muted">YOUR INBOX</div><h2>Messages</h2><p className="subtext">Talk with buyers and sellers, discuss the work and agree on a price.</p>
       <div className="inbox-layout">
-        <aside className="inbox-list"><div className="inbox-list-head"><strong>All conversations</strong><span>{conversations.length+myOrders.length}</span></div>
-          {conversations.map(c=>{const other=c.buyer_id===session?.user?.id?c.seller:c.buyer;return <button key={c.id} className={activeConversation?.id===c.id?"inbox-thread active":"inbox-thread"} onClick={()=>loadConversation(c)}><span className="avatar">{(other?.full_name||"U").slice(0,1).toUpperCase()}</span><span className="inbox-thread-copy"><strong>{other?.full_name||"Member"}</strong><small>{c.gigs?.title||"Service discussion"}</small><small>{c.last_message||"Start a conversation"}</small>{unreadByThread[c.id]>0&&<span className="inbox-unread">{unreadByThread[c.id]>9?"9+":unreadByThread[c.id]}</span>}</span></button>;})}
-          {myOrders.length>0&&<><div className="inbox-list-head"><strong>Order messages</strong><span>{myOrders.length}</span></div>{myOrders.map(o=>{const other=o.buyer_id===session?.user?.id?o.seller:o.buyer;return <button key={"order-"+o.id} className={activeOrder?.id===o.id?"inbox-thread active":"inbox-thread"} onClick={()=>loadMessages(o)}><span className="avatar">{(other?.full_name||"U").slice(0,1).toUpperCase()}</span><span className="inbox-thread-copy"><strong>{other?.full_name||"Member"}</strong><small>{o.gigs?.title||"Marketplace order"}</small><small>Order · {o.status.replaceAll("_"," ")}</small>{unreadByOrder[o.id]>0&&<span className="inbox-unread">{unreadByOrder[o.id]>9?"9+":unreadByOrder[o.id]}</span>}</span></button>;})}</>}
-          {!conversations.length&&!myOrders.length&&<div className="inbox-empty">No conversations yet. Open a gig and contact its seller.</div>}
+        <aside className="inbox-list"><div className="inbox-list-head"><strong>Inbox</strong><span>{filteredInboxConversations.length+filteredInboxOrders.length}</span></div><input className="inbox-search" aria-label="Search inbox" placeholder="Search people, services or messages..." value={inboxSearch} onChange={e=>setInboxSearch(e.target.value)}/>
+          {filteredInboxConversations.map(c=>{const other=c.buyer_id===session?.user?.id?c.seller:c.buyer;return <button key={c.id} className={activeConversation?.id===c.id?"inbox-thread active":"inbox-thread"} onClick={()=>loadConversation(c)}><span className="avatar">{(other?.full_name||"U").slice(0,1).toUpperCase()}</span><span className="inbox-thread-copy"><strong>{other?.full_name||"Member"}</strong><small>{c.gigs?.title||"Service discussion"}</small><small>{c.last_message||"Start a conversation"}</small>{unreadByThread[c.id]>0&&<span className="inbox-unread">{unreadByThread[c.id]>9?"9+":unreadByThread[c.id]}</span>}</span></button>;})}
+          {filteredInboxOrders.length>0&&<><div className="inbox-list-head"><strong>Order messages</strong><span>{filteredInboxOrders.length}</span></div>{filteredInboxOrders.map(o=>{const other=o.buyer_id===session?.user?.id?o.seller:o.buyer;return <button key={"order-"+o.id} className={activeOrder?.id===o.id?"inbox-thread active":"inbox-thread"} onClick={()=>loadMessages(o)}><span className="avatar">{(other?.full_name||"U").slice(0,1).toUpperCase()}</span><span className="inbox-thread-copy"><strong>{other?.full_name||"Member"}</strong><small>{o.gigs?.title||"Marketplace order"}</small><small>Order · {o.status.replaceAll("_"," ")}</small>{unreadByOrder[o.id]>0&&<span className="inbox-unread">{unreadByOrder[o.id]>9?"9+":unreadByOrder[o.id]}</span>}</span></button>;})}</>}
+          {!filteredInboxConversations.length&&!filteredInboxOrders.length&&<div className="inbox-empty">{inboxNeedle?"No matching conversations. Try another search.":"No conversations yet. Open a gig and contact its seller."}</div>}
         </aside>
         <section className="inbox-chat">{activeConversation ? <>
           <div className="inbox-chat-head"><div><strong>{(activeConversation.buyer_id===session?.user?.id?activeConversation.seller:activeConversation.buyer)?.full_name||"Member"}</strong><small>{activeConversation.gigs?.title||"Service discussion"}</small></div><span className="seller-tag">Inbox</span></div>
