@@ -1,70 +1,95 @@
-# Skill Bridge — Work and Services Marketplace
+# Skill Bridge — Work & Services Marketplace
 
-Skill Bridge connects people who need work done with people who have the skills to do it. The platform is designed for both digital services and practical, local work, with a simple mobile-friendly experience.
+Skill Bridge is a two-sided marketplace for digital services and practical local work. Buyers can discover services, contact sellers, discuss requirements and price, receive a custom offer, and track the agreed work. Members can switch between Buyer and Seller workspaces.
 
-Built with React, Vite and Supabase.
+## Production stack
 
-## Platform setup
+- Frontend: React 18 + Vite
+- Authentication and database: Supabase Auth + PostgreSQL
+- Hosting: Vercel
+- Styling: responsive custom CSS
+- Currency display: Pakistani rupees (Rs.)
 
-- Frontend: React + Vite.
-- Backend, database and authentication: Supabase.
-- Hosting: Vercel (or another compatible static host).
-- Checkout: simulated only. No real payments, bank details or card information are processed.
-- Supabase and hosting plans have usage limits that may change. Review the provider terms and limits before scaling the service.
+## Included product features
 
-## Configure Supabase
+### Public marketplace
+- Responsive landing page and service discovery
+- Search, category, location, budget, delivery-time and sort filters
+- Service detail pages with packages, FAQs and buyer requirements
+- Seller public profiles, portfolio and reviews
+- Saved/favourite services
+- Impression and click analytics with duplicate-view controls
 
-1. Open https://supabase.com and create or sign in to an account.
-2. Create a Supabase project and keep its database password private.
-3. Open **SQL Editor** → **New query**.
-4. Open `supabase/schema.sql`, copy its contents into the SQL Editor, and run the query.
-5. In **Project Settings → API** (or API Keys), copy the Project URL and anon/public key. Never expose the `service_role` key.
+### Accounts and profiles
+- Real Supabase email/password registration and login
+- Email-confirmation flow
+- Buyer and Seller workspace modes on the same account
+- Profile details, avatar, professional title, skills, languages, experience, education and availability
+- Account settings for password and email-change requests
+- Language selection saved in the current browser
 
-## Configure environment variables
+### Seller workspace
+- Create, edit, pause, activate and delete services
+- Package options, FAQs and requirements
+- Orders and delivery workflow
+- Performance dashboard
+- Portfolio management
+- Custom offers to buyers
 
-Add these variables in the hosting provider's project settings:
+### Buyer workspace
+- Discover and save services
+- Contact sellers and discuss price before agreeing
+- Accept or decline custom offers
+- Track orders, message the seller, request revisions and approve completed work
+- Submit a review after completion
 
-- `VITE_SUPABASE_URL` = your Supabase Project URL
-- `VITE_SUPABASE_ANON_KEY` = your Supabase anon/public key
+### Communication and trust
+- Buyer/seller conversations and order-linked messages
+- Realtime notifications and unread indicators
+- Service/account reporting
+- Admin moderation view and restricted account actions
+- Row Level Security (RLS) on all application tables
+- Server-side database functions for protected order transitions and offer acceptance
 
-For local development, copy `.env.example` to `.env` and enter the same values. Do not upload `.env` to GitHub.
+## Payments are intentionally not included
+
+Skill Bridge currently does **not** collect money, process payments, store card/bank details, or provide a wallet or checkout. The buyer and seller agree on the work and price through the conversation/custom-offer flow. Any future payment feature would require a separate, explicitly approved design and secure payment-provider integration.
+
+## Supabase configuration
+
+The Vercel Production environment must contain:
+
+- `VITE_SUPABASE_URL` — the Supabase project URL
+- `VITE_SUPABASE_ANON_KEY` — the Supabase anon/public key
+
+Never put a Supabase `service_role` key in frontend code or any `VITE_*` variable. Keep private credentials out of GitHub.
+
+Database migrations are maintained in `supabase/migrations`. The production database has application tables for profiles, services, orders, conversations, messages, custom offers, notifications, favourites, portfolio items, analytics, reports and reviews. RLS is enabled on these public tables.
 
 ## Deploy
 
-1. Import this GitHub repository into Vercel or another Vite-compatible host.
-2. Build command: `npm run build`
-3. Output directory: `dist`
-4. Add the two environment variables above.
-5. Deploy and use the public URL provided by the hosting provider.
+Vercel is connected to the GitHub repository. The Vite build uses:
 
-## Current platform features
+- Build command: `npm run build`
+- Output directory: `dist`
 
-- Email/password signup and login with buyer/seller account types.
-- Public service marketplace with category and search filtering.
-- Seller service publishing.
-- Buyer simulated checkout and order creation.
-- Buyer/seller order dashboard and status workflow.
-- Order-linked messaging.
-- Buyer reviews after an order is completed.
-- Basic admin overview and service deactivation.
-- Row Level Security policies in `supabase/schema.sql`.
+Push changes to the production branch to trigger a new deployment. Confirm the deployment reaches **Ready** before treating the change as live.
 
-## Admin account
+## Final verification checklist
 
-After creating your account, find your user UUID in Supabase **Authentication → Users**. Then run this in SQL Editor, replacing the placeholder with your UUID:
+A successful Vercel build confirms that the application compiles; it does not replace end-to-end testing with real accounts. Before inviting public users, test these flows using separate buyer and seller accounts:
 
-```sql
-update public.profiles
-set role = 'admin'
-where id = 'YOUR_AUTH_USER_UUID';
-```
+1. Register, confirm email and log in on the same device/browser.
+2. Complete each profile and switch between Buyer and Seller modes.
+3. Publish a service, edit it, pause it and reactivate it.
+4. Search/filter services and open a seller profile.
+5. Save and unsave a service.
+6. Start a conversation, exchange messages and confirm unread/read states.
+7. Send a custom offer, decline one, and accept another to create an order.
+8. Move an order through accepted, in-progress, delivered, revision and completed states.
+9. Submit a review after completion.
+10. Check notifications, seller analytics, portfolio and settings.
+11. Verify that one account cannot read or change another account's private records.
+12. Test the main pages on a small Android screen and check for broken navigation or blank screens.
 
-Only the platform owner should assign the admin role. Do not add an admin signup option.
-
-## Important operational notes
-
-- Checkout is currently a test flow. No real payment gateway is connected and no payment details are collected.
-- Email confirmation behavior depends on the Supabase Auth configuration.
-- Admin user management is handled through the Supabase dashboard; the in-app admin page provides a basic moderation overview.
-- Service listings currently use a decorative illustration rather than user-uploaded images.
-- Before accepting real customers at scale, complete security testing, order-state validation, abuse reporting, moderation, backups, privacy and legal review, and payment-provider integration if real payments are required.
+Email delivery, account confirmation, and moderation should also be checked in the Supabase dashboard before a public launch.
