@@ -853,7 +853,7 @@ function App() {
           {activeMode==="seller" && <button className="dashboard-side-link" onClick={()=>navigate("performance")}><Eye size={17}/> Performance<ChevronRight size={15}/></button>}
           {activeMode==="seller" && <button className="dashboard-side-link" onClick={()=>navigate("create-gig")}><Plus size={17}/> Create service<ChevronRight size={15}/></button>}
           <button className="dashboard-side-link" onClick={()=>navigate("profile")}><UserRound size={17}/> Profile settings<ChevronRight size={15}/></button>
-          <div className="dashboard-sidebar-help"><strong>Need to update your details?</strong><p>Keep your profile clear so other members know who they are working with.</p><button onClick={()=>navigate("profile")}>Edit profile <ArrowRight size={14}/></button></div>
+          
         </aside>
 
         <section className="dashboard-main">
@@ -865,14 +865,7 @@ function App() {
               <div className="dashboard-stat"><span>Unread messages</span><strong>{unreadMessages}</strong><small><MessageCircle size={14}/> Conversations</small></div>
               <div className="dashboard-stat"><span>Average rating</span><strong>{sellerReviews.filter(r=>r.seller_id===session?.user?.id).length ? (sellerReviews.filter(r=>r.seller_id===session?.user?.id).reduce((sum,r)=>sum+Number(r.rating||0),0)/sellerReviews.filter(r=>r.seller_id===session?.user?.id).length).toFixed(1) : "—"}</strong><small><Star size={14}/> Based on order reviews</small></div>
             </div>
-            <div className="buyer-action-grid dashboard-shortcuts">
-              <button onClick={()=>navigate("orders")}><PackageCheck size={20}/><strong>Manage orders</strong><span>Review requests and track work</span></button>
-              <button onClick={()=>{setActiveOrder(null);setActiveConversation(null);navigate("messages");loadInbox();}}><MessageCircle size={20}/><strong>Messages</strong><span>Chat and send custom offers</span></button>
-              <button onClick={()=>navigate("my-gigs")}><BriefcaseBusiness size={20}/><strong>My services</strong><span>Edit, pause or remove listings</span></button>
-              <button onClick={()=>navigate("performance")}><Eye size={20}/><strong>Performance</strong><span>Check views and service clicks</span></button>
-              <button onClick={()=>navigate("portfolio")}><UserRound size={20}/><strong>Portfolio</strong><span>Manage examples of your work</span></button>
-              <button onClick={()=>navigate("profile")}><Settings size={20}/><strong>Profile settings</strong><span>Update your professional details</span></button>
-            </div>
+
           </> : <>
             <div className="dashboard-stats buyer-stats">
               <div className="dashboard-stat"><span>Active projects</span><strong>{buyerOrders.filter(o=>!["completed","cancelled"].includes(o.status)).length}</strong><small><Clock3 size={14}/> Work in progress</small></div>
@@ -880,19 +873,9 @@ function App() {
               <div className="dashboard-stat"><span>Saved services</span><strong>{favoriteGigs.length}</strong><small><Bookmark size={14}/> Your shortlist</small></div>
               <div className="dashboard-stat"><span>Unread messages</span><strong>{unreadMessages}</strong><small><MessageCircle size={14}/> Replies waiting</small></div>
             </div>
-            <div className="buyer-action-grid dashboard-shortcuts">
-              <button onClick={()=>navigate("home")}><Search size={20}/><strong>Find a service</strong><span>Browse digital and local services</span></button>
-              <button onClick={()=>navigate("orders")}><PackageCheck size={20}/><strong>My orders</strong><span>Track progress and delivery</span></button>
-              <button onClick={()=>{setActiveOrder(null);setActiveConversation(null);navigate("messages");loadInbox();}}><MessageCircle size={20}/><strong>Messages</strong><span>Talk with service providers</span></button>
-              <button onClick={()=>navigate("saved")}><Bookmark size={20}/><strong>Saved services</strong><span>Open your shortlist</span></button>
-              <button onClick={()=>navigate("profile")}><Settings size={20}/><strong>Profile settings</strong><span>Manage your account details</span></button>
-            </div>
+
           </>}
-          <section className="dashboard-panel dashboard-profile-progress">
-            <div className="dashboard-panel-heading"><div><h3>Profile completion</h3><p>A complete profile helps other members know who they are working with.</p></div><strong>{profileProgress}%</strong></div>
-            <div className="dashboard-progress-track"><span style={{width:profileProgress+"%"}}/></div>
-            <button className="dashboard-panel-footer" onClick={()=>navigate("profile")}>Complete your profile <ArrowRight size={15}/></button>
-          </section>
+
         </section>
       </div>
     </main>}
