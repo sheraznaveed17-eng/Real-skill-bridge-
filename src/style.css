@@ -1336,3 +1336,6 @@ html,body,.app-shell{background:#f7f6f2;color:#20243a}
 .footer .brand-mark{background:#e9c27c;color:#292747}.footer .brand-accent{color:#edc77f}
 .settings-panel{background:#fffefa}.toast{background:#292747;color:#fff;border-color:#47436f}
 @media(max-width:760px){.hero{background:radial-gradient(ellipse at 88% 12%,#786acb55 0%,transparent 34%),linear-gradient(145deg,#1d1d39,#39365e)}.gig-grid{gap:12px}}
+
+/* Inbox search and recently viewed polish */
+.inbox-search{width:calc(100% - 24px);margin:10px 12px 12px;padding:11px 12px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink);font-size:13px;outline:none}.inbox-search:focus{border-color:#8f80cf;box-shadow:0 0 0 3px #8f80cf22}.recent-viewed-section{margin-top:54px;padding-top:28px;border-top:1px solid var(--line)}.recent-viewed-section .section-heading{margin-bottom:18px}
