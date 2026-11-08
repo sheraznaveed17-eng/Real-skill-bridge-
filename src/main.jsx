@@ -94,6 +94,9 @@ function App() {
   const [portfolioItems, setPortfolioItems] = useState([]);
   const [sellerGigs, setSellerGigs] = useState([]);
   const [gigAnalytics, setGigAnalytics] = useState({});
+  const [settingsPassword,setSettingsPassword]=useState("");
+  const [settingsPasswordConfirm,setSettingsPasswordConfirm]=useState("");
+  const [settingsEmail,setSettingsEmail]=useState("");
 
   const [editingGigId, setEditingGigId] = useState(null);
   const [editGigForm, setEditGigForm] = useState({title:"",description:"",category:"Graphics & Design",price:"",delivery_days:"3",image_url:""});
@@ -265,6 +268,28 @@ function App() {
       setProfile(data); setActiveMode(mode); setPage("dashboard"); setAccountMenu(false);
       show(metadataError ? "Mode changed. Your account preference may refresh on next login." : (mode==="seller" ? "Seller mode is now active." : "Buyer mode is now active."));
     }
+    setBusy(false);
+  };
+
+  const updateAccountPassword = async e => {
+    e.preventDefault();
+    if(settingsPassword.length<6) return show("Password must be at least 6 characters.");
+    if(settingsPassword!==settingsPasswordConfirm) return show("The passwords do not match.");
+    setBusy(true);
+    const {error}=await supabase.auth.updateUser({password:settingsPassword});
+    if(error) show(error.message);
+    else {setSettingsPassword("");setSettingsPasswordConfirm("");show("Password updated successfully.");}
+    setBusy(false);
+  };
+
+  const requestEmailChange = async e => {
+    e.preventDefault();
+    const nextEmail=settingsEmail.trim();
+    if(!nextEmail || nextEmail.toLowerCase()===session?.user?.email?.toLowerCase()) return show("Enter a different email address.");
+    setBusy(true);
+    const {error}=await supabase.auth.updateUser({email:nextEmail});
+    if(error) show(error.message);
+    else {setSettingsEmail("");show("Email change requested. Check the new email inbox for its confirmation link.");}
     setBusy(false);
   };
 
@@ -691,6 +716,7 @@ function App() {
               <div className="account-dropdown-user"><strong>{profile?.full_name || "Skill Bridge member"}</strong><small>{session.user.email}</small></div>
               <div className="account-mode-actions"><button onClick={()=>switchMode("buyer")}>{t.buyerMode}</button><button onClick={()=>switchMode("seller")}>{t.sellerMode}</button></div>
               <button onClick={()=>{navigate("profile");setAccountMenu(false)}}><UserCircle size={17}/> {t.profile}</button>
+              <button onClick={()=>{navigate("settings");setAccountMenu(false)}}><Settings size={17}/> Settings</button>
               <button onClick={()=>{navigate("dashboard");setAccountMenu(false)}}><LayoutDashboard size={17}/> Dashboard</button>
               {isAdmin && <button onClick={()=>{navigate("admin");setAccountMenu(false)}}><ShieldCheck size={17}/> Admin moderation</button>}
               <button onClick={()=>{navigate("saved");setAccountMenu(false)}}><Bookmark size={17}/> {t.saved}</button>
@@ -715,7 +741,7 @@ function App() {
     {page === "home" && <nav className="marketplace-subnav" aria-label="Popular categories">
       {categories.slice(1,11).map(c=><button key={c} className={category===c?"selected":""} onClick={()=>{setCategory(c);navigate("home");document.getElementById("explore")?.scrollIntoView({behavior:"smooth"});}}>{c}</button>)}
     </nav>}
-    {mobileMenu && <div className="mobile-menu"><button onClick={()=>navigate("home")}>{t.explore}</button>{session ? <><button onClick={()=>navigate("dashboard")}>{t.dashboard}</button><button onClick={()=>navigate("profile")}>{t.profile}</button><button onClick={()=>navigate("saved")}>{t.saved}</button><button onClick={()=>navigate("orders")}>{t.orders}</button>{activeMode==="seller"&&<button onClick={()=>navigate("portfolio")}>{t.portfolio}</button>}<button onClick={()=>{setActiveOrder(null);setActiveConversation(null);setPage("messages");loadInbox();}}>{t.messages} {unreadMessages>0&&"("+unreadMessages+")"}</button>{activeMode==="seller"&&<button onClick={()=>navigate("my-gigs")}>{t.myServices}</button>}{isAdmin&&<button onClick={()=>navigate("admin")}>Admin moderation</button>}<button onClick={signOut}>{t.logout}</button></> : <><button onClick={()=>{setAuthMode("login");navigate("auth")}}>{t.login}</button><button onClick={()=>{setAuthMode("signup");navigate("auth")}}>{t.join}</button></>}</div>}
+    {mobileMenu && <div className="mobile-menu"><button onClick={()=>navigate("home")}>{t.explore}</button>{session ? <><button onClick={()=>navigate("dashboard")}>{t.dashboard}</button><button onClick={()=>navigate("profile")}>{t.profile}</button><button onClick={()=>navigate("settings")}>Settings</button><button onClick={()=>navigate("saved")}>{t.saved}</button><button onClick={()=>navigate("orders")}>{t.orders}</button>{activeMode==="seller"&&<button onClick={()=>navigate("portfolio")}>{t.portfolio}</button>}<button onClick={()=>{setActiveOrder(null);setActiveConversation(null);setPage("messages");loadInbox();}}>{t.messages} {unreadMessages>0&&"("+unreadMessages+")"}</button>{activeMode==="seller"&&<button onClick={()=>navigate("my-gigs")}>{t.myServices}</button>}{isAdmin&&<button onClick={()=>navigate("admin")}>Admin moderation</button>}<button onClick={signOut}>{t.logout}</button></> : <><button onClick={()=>{setAuthMode("login");navigate("auth")}}>{t.login}</button><button onClick={()=>{setAuthMode("signup");navigate("auth")}}>{t.join}</button></>}</div>}
     {demoMode && <div className="setup-banner"><span><Sparkles size={15}/> Setup required: connect your free Supabase project to enable real multi-user features.</span><button onClick={()=>show("README.md mein Android setup ke simple steps diye gaye hain.")}>How to connect</button></div>}
     {notice && <div className="toast"><CheckCircle2 size={18}/>{notice}<button onClick={()=>setNotice("")}><X size={16}/></button></div>}
 
@@ -816,6 +842,43 @@ function App() {
       </div>
     </main>}
 
+    {page === "settings" && <main className="content page-content settings-page">
+      <div className="eyebrow muted">YOUR ACCOUNT</div><h2>Settings</h2><p className="subtext">Manage your account preferences and sign-in details. Profile information stays in the separate Profile section.</p>
+      <div className="settings-grid">
+        <section className="dashboard-panel settings-panel">
+          <div className="dashboard-panel-heading"><div><h3><Settings size={18}/> Preferences</h3><p>Choose the language used across Skill Bridge.</p></div></div>
+          <label>Display language<select value={language} onChange={e=>setLanguage(e.target.value)}><option value="en">English</option><option value="ur">اردو</option><option value="pa">پنجابی</option><option value="hi">हिन्दी</option><option value="ar">العربية</option><option value="es">Español</option><option value="fr">Français</option><option value="zh">中文</option><option value="tr">Türkçe</option><option value="de">Deutsch</option></select></label>
+          <p className="settings-help">Your language choice is saved on this device.</p>
+        </section>
+        <section className="dashboard-panel settings-panel">
+          <div className="dashboard-panel-heading"><div><h3><ShieldCheck size={18}/> Account security</h3><p>Update the email address or password used to sign in.</p></div></div>
+          <form className="stack-form" onSubmit={requestEmailChange}>
+            <label>Current email<input value={session?.user?.email||""} readOnly/></label>
+            <label>New email address<input type="email" required value={settingsEmail} onChange={e=>setSettingsEmail(e.target.value)} placeholder="new-email@example.com"/></label>
+            <button className="outline-btn" disabled={busy}>Request email change</button>
+          </form>
+          <div className="settings-divider"></div>
+          <form className="stack-form" onSubmit={updateAccountPassword}>
+            <label>New password<input type="password" minLength="6" required value={settingsPassword} onChange={e=>setSettingsPassword(e.target.value)} placeholder="At least 6 characters"/></label>
+            <label>Confirm new password<input type="password" minLength="6" required value={settingsPasswordConfirm} onChange={e=>setSettingsPasswordConfirm(e.target.value)} placeholder="Enter it again"/></label>
+            <button className="btn btn-dark" disabled={busy}>Update password</button>
+          </form>
+          <p className="settings-help">Email changes may require confirmation from your new email inbox. Password updates require an active signed-in session.</p>
+        </section>
+        <section className="dashboard-panel settings-panel">
+          <div className="dashboard-panel-heading"><div><h3><UserRound size={18}/> Account information</h3><p>These details are managed in their own sections.</p></div></div>
+          <div className="settings-link-row"><div><strong>Public profile</strong><small>Name, photo, bio, skills and availability</small></div><button className="outline-btn" onClick={()=>navigate("profile")}>Open profile <ChevronRight size={15}/></button></div>
+          <div className="settings-link-row"><div><strong>Workspace mode</strong><small>Switch between Buyer and Seller workspaces</small></div><div className="mode-switch"><button className={activeMode==="buyer"?"selected":""} onClick={()=>switchMode("buyer")} disabled={busy}>Buyer</button><button className={activeMode==="seller"?"selected":""} onClick={()=>switchMode("seller")} disabled={busy}>Seller</button></div></div>
+          <div className="settings-link-row"><div><strong>Saved services</strong><small>Your bookmarked services</small></div><button className="outline-btn" onClick={()=>navigate("saved")}>Open saved <ChevronRight size={15}/></button></div>
+          <div className="settings-link-row"><div><strong>Notifications</strong><small>Review messages and order updates from the bell in the top bar</small></div><button className="outline-btn" onClick={()=>{setNotificationsOpen(true);navigate("dashboard");}}>View notifications <ChevronRight size={15}/></button></div>
+        </section>
+        <section className="dashboard-panel settings-panel settings-danger-zone">
+          <div className="dashboard-panel-heading"><div><h3><LogOut size={18}/> Sign out</h3><p>End this session on the current device.</p></div></div>
+          <button className="outline-btn danger-outline" onClick={signOut}>Log out of Skill Bridge</button>
+        </section>
+      </div>
+    </main>}
+
     {page === "seller-profile" && publicSeller && <main className="content page-content public-seller-page"><button className="back-link" onClick={()=>navigate("home")}>← Back to services</button><section className="public-seller-hero"><div className="public-seller-avatar">{publicSeller.avatar_url?<img src={publicSeller.avatar_url} alt=""/>:(publicSeller.full_name||"S").slice(0,1).toUpperCase()}</div><div className="public-seller-info"><div className="eyebrow muted">SKILL BRIDGE SELLER</div><h2>{publicSeller.full_name||"Seller"}</h2><strong>{publicSeller.professional_title||"Independent service provider"}</strong><p>{publicSeller.bio||"This seller has not added an introduction yet."}</p><div className="public-seller-meta"><span>{[publicSeller.city,publicSeller.country].filter(Boolean).join(", ")||"Location not added"}</span><span>{publicSeller.experience_years?publicSeller.experience_years+" years experience":"Experience not listed"}</span><span><Star size={15}/> {publicSellerReviews.length?(publicSellerReviews.reduce((n,r)=>n+Number(r.rating),0)/publicSellerReviews.length).toFixed(1)+" ("+publicSellerReviews.length+" reviews)":"No reviews yet"}</span></div></div>{session?.user?.id!==publicSeller.id&&<button className="btn btn-dark" onClick={()=>{const first=publicSellerGigs[0];if(first)startConversation(first);else show("This seller has no active service to start a conversation from.");}}><MessageCircle size={16}/> Contact seller</button>}</section><section className="public-seller-section"><div className="section-heading"><div><h2>Services</h2><p>Active services offered by this seller.</p></div></div><div className="gig-grid">{publicSellerGigs.map(g=><GigCard key={g.id} gig={g} onImpression={trackGigImpression} onClick={()=>{trackGigClick(g);setSelectedGig(g);setPage("home");}}/> )}</div>{!publicSellerGigs.length&&<Empty icon={<BriefcaseBusiness/>} title="No active services" text="This seller has not published an active service yet."/>}</section><section className="public-seller-section"><div className="section-heading"><div><h2>Portfolio</h2><p>Examples of previous work.</p></div></div><div className="portfolio-grid">{publicSellerPortfolio.map(item=><article className="portfolio-card" key={item.id}><img src={item.image_url} alt={item.title} loading="lazy"/><div><h3>{item.title}</h3><p>{item.description}</p><a href={item.project_url} target="_blank" rel="noreferrer"><ExternalLink size={14}/> View project</a></div></article>)}</div>{!publicSellerPortfolio.length&&<p className="subtext">No portfolio projects have been added yet.</p>}</section><section className="public-seller-section"><div className="section-heading"><div><h2>Client reviews</h2><p>Feedback from completed orders.</p></div></div>{publicSellerReviews.map(r=><article className="public-review" key={r.id}><div><strong>{r.buyer?.full_name||"Buyer"}</strong><span><Star size={14}/> {r.rating}/5</span></div><p>{r.comment||"No written comment."}</p><small>{new Date(r.created_at).toLocaleDateString()}</small></article>)}{!publicSellerReviews.length&&<p className="subtext">No reviews yet.</p>}</section></main>}
 
     {page === "saved" && <main className="content page-content"><div className="section-heading"><div><div className="eyebrow muted">YOUR COLLECTION</div><h2>Saved services</h2><p>Services you bookmarked for later.</p></div><button className="outline-btn" onClick={()=>navigate("home")}>Explore services <ArrowRight size={15}/></button></div><div className="gig-grid">{favoriteGigs.map(g=><GigCard key={g.id} gig={g} onImpression={trackGigImpression} onClick={()=>{setSelectedGig(g);setPage("home");}}/> )}</div>{!favoriteGigs.length&&<Empty icon={<Bookmark/>} title="No saved services yet" text="Open a service and tap Save service to keep it here."/>}</main>}
@@ -852,7 +915,8 @@ function App() {
           {activeMode==="seller" && <button className="dashboard-side-link" onClick={()=>navigate("my-gigs")}><BriefcaseBusiness size={17}/> My services<ChevronRight size={15}/></button>}
           {activeMode==="seller" && <button className="dashboard-side-link" onClick={()=>navigate("performance")}><Eye size={17}/> Performance<ChevronRight size={15}/></button>}
           {activeMode==="seller" && <button className="dashboard-side-link" onClick={()=>navigate("create-gig")}><Plus size={17}/> Create service<ChevronRight size={15}/></button>}
-          <button className="dashboard-side-link" onClick={()=>navigate("profile")}><UserRound size={17}/> Profile settings<ChevronRight size={15}/></button>
+          <button className="dashboard-side-link" onClick={()=>navigate("profile")}><UserRound size={17}/> Profile<ChevronRight size={15}/></button>
+          <button className="dashboard-side-link" onClick={()=>navigate("settings")}><Settings size={17}/> Account settings<ChevronRight size={15}/></button>
           
         </aside>
 
