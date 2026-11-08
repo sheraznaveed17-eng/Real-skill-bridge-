@@ -1286,3 +1286,53 @@ html,body,.app-shell{background:var(--canvas);color:var(--ink)}
  .choice-section{margin-top:38px}
  .page-content .dashboard-sidebar{box-shadow:0 5px 18px #17213b08}
 }
+
+
+/* Skill Bridge — refined Royal Indigo + Champagne palette */
+:root{--canvas:#f7f6f2;--ink:#20243a;--muted:#77798a;--line:#e9e6df;--brand-deep:#20213f;--brand-mid:#302f59;--brand-accent:#e6bd72;--green:#6d63c7;--surface:#fff;--surface-soft:#f1effa}
+html,body,.app-shell{background:#f7f6f2;color:#20243a}
+.topbar{background:#fffefa;border-bottom-color:#ebe7df}
+.brand-mark{background:#252443;color:#f0c981;box-shadow:0 6px 16px #25244325}
+.brand-accent{color:#6c60bd}.brand-wordmark small{color:#9691a0}
+.desktop-nav button:hover,.nav-plain:hover{color:#6b5fc1}
+.header-search button{background:#292747}
+.hero{background:radial-gradient(ellipse at 83% 23%,#786acb55 0%,transparent 31%),radial-gradient(ellipse at 67% 100%,#d2a85b35 0%,transparent 36%),linear-gradient(116deg,#1d1d39 0%,#292849 58%,#39365e 100%)}
+.hero:before{opacity:.14;background-image:linear-gradient(#ffffff10 1px,transparent 1px),linear-gradient(90deg,#ffffff10 1px,transparent 1px)}
+.eyebrow{color:#f0d9ad}.eyebrow-dot{background:#e9c27c;box-shadow:0 0 0 6px #e9c27c24}
+.hero h1 span{color:#f0c77e;text-shadow:0 5px 25px #e6bd7240}.hero p{color:#d4d1e2}
+.hero-search{border-color:#ffffff55;box-shadow:0 18px 48px #10102766}
+.hero-search button{background:#e9c27c;color:#27223d}.hero-search button:hover{background:#f3d79f}
+.popular button{border-color:#ffffff45;background:#ffffff0d}.hero-stats{border-color:#ffffff2c}
+.orb-one{background:radial-gradient(circle at 40% 40%,#9c8ce944,transparent 67%);border-color:#e9c27c25}
+.orb-two{background:#d9b36c33;filter:blur(60px)}
+.trust-strip{background:#fffefa;color:#777487;border-bottom-color:#ebe7df}.trust-strip svg{color:#8a78c8}
+.choice-card{border-color:#e9e5dc;box-shadow:0 7px 22px #25213b09}
+.choice-card:hover{border-color:#d7c49e;box-shadow:0 16px 36px #25213b14}
+.choice-icon{background:#f1eefb;color:#7567bf}.choice-arrow{color:#7567bf}
+.category{border-color:#e7e3da;color:#777487}.category.active{background:#f0edfa;border-color:#d8d0f1;color:#6658b4}
+.marketplace-filters{border-color:#e9e5dc}
+.gig-card{border-color:#e9e5dc;box-shadow:0 7px 22px #25213b0b}
+.gig-card:hover{border-color:#d8c69f;box-shadow:0 18px 40px #25213b17}
+.art-purple{background:linear-gradient(135deg,#6e61b9,#b9afe5)}.art-blue{background:linear-gradient(135deg,#426b91,#a6c7d5)}
+.art-orange{background:linear-gradient(135deg,#b87c54,#ebc99d)}.art-green{background:linear-gradient(135deg,#557f77,#b2d0bf)}
+.seller-tag{background:#f2effa;color:#6d5db7}
+.join-banner{border-color:#e8dfcb;background:linear-gradient(110deg,#f1eefb,#fbf3e5)}
+.join-banner .btn{background:#292747;color:#fff}
+.btn-dark{background:#292747;border-color:#292747}.btn-dark:hover{background:#403d70;border-color:#403d70}
+.outline-btn:hover{border-color:#c9b98f;background:#fbf7ee;color:#65552f}
+.page-content .dashboard-sidebar,.page-content .dashboard-panel,.page-content .profile-card,.page-content .profile-edit-card,.page-content .order-card,.page-content .inbox-list,.page-content .inbox-chat,.page-content .portfolio-card{border-color:#e9e5dc;box-shadow:0 8px 24px #25213b0a}
+.page-content .dashboard-side-link.active,.page-content .dashboard-side-link:hover{background:#f0edfa;color:#6658b4}
+.page-content .dashboard-stat{background:linear-gradient(145deg,#fff,#faf8f2);border-color:#ebe7df}
+.page-content .dashboard-stat>strong{color:#252442}
+.page-content .mode-switch button.selected{background:#f0edfa;border-color:#d8d0f1;color:#6658b4}
+.page-content .order-icon,.page-content .profile-avatar-large,.page-content .profile-avatar-placeholder{background:#f4efe3;color:#96713c;border-color:#e9dfca}
+.page-content .inbox-thread.active{background:#f0edfa;box-shadow:inset 3px 0 #8979ca}
+.page-content .chat-msg.own{background:#f0edfa}
+.narrow-page{background:radial-gradient(ellipse at 12% 8%,#eeebfa,transparent 38%),radial-gradient(ellipse at 94% 88%,#f6eddd,transparent 34%),#f7f6f2}
+.auth-card,.form-panel{border-color:#e9e5dc;box-shadow:0 20px 58px #25213b10}
+.auth-card .auth-logo .brand-mark{background:#292747;color:#edc77f}
+.empty-icon{background:#f0edfa;color:#7567bf}
+.footer{background:linear-gradient(110deg,#1d1d39,#302e52);border-top:1px solid #39375d}
+.footer .brand-mark{background:#e9c27c;color:#292747}.footer .brand-accent{color:#edc77f}
+.settings-panel{background:#fffefa}.toast{background:#292747;color:#fff;border-color:#47436f}
+@media(max-width:760px){.hero{background:radial-gradient(ellipse at 88% 12%,#786acb55 0%,transparent 34%),linear-gradient(145deg,#1d1d39,#39365e)}.gig-grid{gap:12px}}
