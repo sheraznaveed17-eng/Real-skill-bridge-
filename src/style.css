@@ -1198,3 +1198,91 @@ h1,h2,h3,h4,.brand-wordmark{letter-spacing:-.035em}
 .settings-link-row .mode-switch{display:flex;gap:5px;flex-wrap:wrap}
 .settings-danger-zone{grid-column:1/-1}
 @media(max-width:760px){.settings-grid{grid-template-columns:1fr}.settings-panel{padding:18px}.settings-danger-zone{grid-column:auto}.settings-link-row{align-items:flex-start;flex-direction:column}.settings-link-row .outline-btn{width:100%;justify-content:center}}
+
+
+/* Skill Bridge — high-contrast premium visual refresh */
+:root{
+ --canvas:#f5f7fb;--ink:#17213b;--muted:#68738a;--line:#e3e8f2;
+ --brand-deep:#111a35;--brand-mid:#202d55;--brand-accent:#38e0c1;--green:#38e0c1;
+ --surface:#fff;--surface-soft:#f0f3fa;
+}
+html,body,.app-shell{background:var(--canvas);color:var(--ink)}
+.topbar{background:rgba(255,255,255,.96);border-bottom:1px solid #e6eaf2;box-shadow:0 4px 20px #17213b08;backdrop-filter:blur(14px)}
+.brand-mark{background:linear-gradient(135deg,#111a35,#34477c);color:#48f0ce;box-shadow:0 7px 18px #17213b2b}
+.brand-accent{color:#6555dc}
+.brand-wordmark small{color:#7d879b}
+.desktop-nav button:hover,.nav-plain:hover{color:#6555dc}
+.header-search{border-color:#dfe5f0;box-shadow:0 3px 12px #17213b08}
+.header-search button{background:#6555dc}
+.account-trigger,.icon-btn,.notification-trigger,.guest-account-trigger{border-color:#e1e6f0;box-shadow:0 3px 10px #17213b08}
+.hero{min-height:580px;background:radial-gradient(ellipse at 82% 28%,#6355d866 0%,transparent 30%),radial-gradient(ellipse at 68% 95%,#16bfa544 0%,transparent 36%),linear-gradient(118deg,#101832 0%,#19274c 55%,#25376a 100%)}
+.hero:before{opacity:.22;background-size:38px 38px;mask-image:linear-gradient(90deg,#000,transparent 95%)}
+.hero-inner{padding-block:82px 72px}
+.hero h1{max-width:820px;font-size:clamp(46px,6.6vw,79px);line-height:1.02;letter-spacing:-4.4px}
+.hero h1 span{color:#51f0ce;text-shadow:0 5px 28px #38e0c144}
+.hero p{color:#d0d8ec;font-size:16px}
+.eyebrow{color:#c5f8eb}
+.eyebrow-dot{background:#50f0ce;box-shadow:0 0 0 6px #50f0ce24}
+.hero-search{border:1px solid #ffffff65;border-radius:16px;box-shadow:0 20px 55px #050b1e66}
+.hero-search button{background:linear-gradient(135deg,#39e2c2,#76f1d9);color:#102238;border-radius:11px}
+.hero-search button:hover{background:#8af8e3}
+.popular button{border-color:#ffffff50;background:#ffffff12}
+.hero-stats{border-color:#ffffff30}
+.orb-one{width:430px;height:430px;right:5%;top:8%;background:radial-gradient(circle at 45% 40%,#6c5cff44,transparent 65%);border:1px solid #ffffff24}
+.orb-two{background:#32e2c044;filter:blur(65px)}
+.trust-strip{background:#fff;border-bottom:1px solid #e6eaf2;color:#66728a}
+.trust-strip svg{color:#6657df}
+.choice-section{margin-top:58px}
+.choice-heading h2,.section-heading h2,.page-content h2{color:#17213b}
+.choice-card{border:1px solid #e4e8f1;border-radius:19px;box-shadow:0 8px 24px #1b2a4a0a}
+.choice-card:hover{border-color:#b8b2ff;box-shadow:0 18px 42px #34416c1c}
+.choice-icon{background:linear-gradient(135deg,#eceaff,#e1fbf5);color:#5f50d6}
+.choice-arrow{color:#6555dc}
+.category{border-color:#e1e6f0;background:#fff;color:#65718a}
+.category.active{background:#ecebff;border-color:#c8c2ff;color:#5d4dd0}
+.marketplace-filters{border-color:#e3e8f2;box-shadow:0 8px 25px #17213b08}
+.gig-grid{gap:23px}
+.gig-card{border:1px solid #e4e8f1;border-radius:18px;box-shadow:0 8px 25px #1b2a4a0c}
+.gig-card:hover{border-color:#c5c0ff;box-shadow:0 20px 45px #1b2a4a1c;transform:translateY(-6px)}
+.gig-art{height:185px}
+.art-purple{background:linear-gradient(135deg,#6658df,#b5aaff)}
+.art-blue{background:linear-gradient(135deg,#187baf,#68d9e8)}
+.art-orange{background:linear-gradient(135deg,#d76c56,#ffc58c)}
+.art-green{background:linear-gradient(135deg,#118f81,#7ae6c7)}
+.gig-info h3{color:#202b47}
+.gig-price strong{color:#17213b}
+.seller-tag{background:#e7fbf5;color:#078d79}
+.join-banner{border:1px solid #d9dff0;background:linear-gradient(115deg,#eeedff,#e5fbf6);box-shadow:0 10px 30px #17213b08}
+.join-banner .btn{background:#6555dc;color:white}
+.btn-dark{background:#182344;border-color:#182344}
+.btn-dark:hover{background:#2b3c70}
+.outline-btn{border-color:#dfe5f0;color:#45516c}
+.outline-btn:hover{border-color:#aaa2ff;background:#f5f3ff;color:#5c4bd1}
+.page-content .dashboard-sidebar,.page-content .dashboard-panel,.page-content .profile-card,.page-content .profile-edit-card,.page-content .order-card,.page-content .inbox-list,.page-content .inbox-chat,.page-content .portfolio-card{border-color:#e2e7f1;border-radius:18px;box-shadow:0 9px 28px #17213b0a}
+.page-content .dashboard-sidebar{background:linear-gradient(180deg,#fff,#fbfcff)}
+.page-content .dashboard-side-link.active,.page-content .dashboard-side-link:hover{background:#eeedff;color:#5d4ed0}
+.page-content .dashboard-stat{background:linear-gradient(145deg,#fff,#f5f6ff);border-color:#e4e7f3}
+.page-content .dashboard-stat>strong{color:#17213b}
+.page-content .dashboard-stat small svg{color:#6555dc}
+.page-content .mode-switch button.selected{background:#eeedff;border-color:#c7c1ff;color:#5b4bce}
+.page-content .order-icon,.page-content .profile-avatar-large,.page-content .profile-avatar-placeholder{background:#e8fbf6;color:#078f7b;border-color:#d6f6ed}
+.page-content .inbox-thread.active{background:#f0efff;box-shadow:inset 3px 0 #7162ed}
+.page-content .chat-msg.own{background:#e5faf4}
+.narrow-page{background:radial-gradient(ellipse at 10% 5%,#e8e7ff,transparent 38%),radial-gradient(ellipse at 95% 90%,#dffaf2,transparent 35%),#f5f7fb}
+.auth-card,.form-panel{border-color:#e2e7f1;box-shadow:0 22px 65px #17213b12}
+.auth-card .auth-logo .brand-mark{background:#182344;color:#50e9cb}
+.empty-icon{background:#eeedff;color:#6555dc}
+.footer{background:linear-gradient(115deg,#101832,#1d2b52);border-top:1px solid #29375d}
+.footer .brand-mark{background:#42e5c6;color:#14213b}
+.footer .brand-accent{color:#50e9cb}
+.settings-panel{background:#fff}
+.toast{background:#172344;color:#fff;border:1px solid #344675}
+@media(max-width:760px){
+ .hero{min-height:0}
+ .hero-inner{padding:58px 0 48px}
+ .hero h1{font-size:clamp(39px,10vw,55px);letter-spacing:-2.6px}
+ .gig-grid{gap:12px}
+ .gig-art{height:125px}
+ .choice-section{margin-top:38px}
+ .page-content .dashboard-sidebar{box-shadow:0 5px 18px #17213b08}
+}
