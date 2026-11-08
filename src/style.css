@@ -1181,3 +1181,20 @@ h1,h2,h3,h4,.brand-wordmark{letter-spacing:-.035em}
  .hero-stats strong{font-size:10px}
  .marketplace-filters{grid-template-columns:1fr}
 }
+
+
+/* Account settings workspace */
+.settings-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-top:26px;align-items:start}
+.settings-panel{padding:24px;min-width:0}
+.settings-panel h3{display:flex;align-items:center;gap:9px}
+.settings-panel label{display:grid;gap:8px;font-size:13px;font-weight:650;color:var(--ink,#17251f);margin:14px 0}
+.settings-panel input,.settings-panel select{width:100%;min-height:44px;border:1px solid var(--line,#dce3dc);border-radius:10px;padding:10px 12px;background:#fff;color:inherit;font:inherit}
+.settings-help{font-size:12px;color:var(--muted,#758078);line-height:1.6;margin:12px 0 0}
+.settings-divider{height:1px;background:var(--line,#e1e7e1);margin:22px 0}
+.settings-link-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 0;border-bottom:1px solid var(--line,#e1e7e1)}
+.settings-link-row:last-child{border-bottom:0}
+.settings-link-row>div:first-child{display:grid;gap:4px}
+.settings-link-row small{font-size:12px;color:var(--muted,#758078);line-height:1.4}
+.settings-link-row .mode-switch{display:flex;gap:5px;flex-wrap:wrap}
+.settings-danger-zone{grid-column:1/-1}
+@media(max-width:760px){.settings-grid{grid-template-columns:1fr}.settings-panel{padding:18px}.settings-danger-zone{grid-column:auto}.settings-link-row{align-items:flex-start;flex-direction:column}.settings-link-row .outline-btn{width:100%;justify-content:center}}
