@@ -321,8 +321,6 @@ function App() {
       if (!term) return speakAssistant("Kis type ki gig search karni hai? Misal ke taur par logo design ya electrician boliye.");
       setSearch(term); setCategory("All"); setPage("home");
       setTimeout(()=>document.getElementById("explore")?.scrollIntoView({behavior:"smooth"}),120);
-      return speakAssistant(term + " ke mutaliq available services search kar raha hoon. Results screen par hain.");
-    }
       setTimeout(()=>document.getElementById("explore")?.scrollIntoView({behavior:"smooth"}),120);
       return speakAssistant(term + " ke mutaliq available services search kar raha hoon. Results screen par hain.");
     }
