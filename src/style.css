@@ -1351,3 +1351,9 @@ html,body,.app-shell{background:#f7f6f2;color:#20243a}
 .voice-assistant-controls{display:flex;gap:8px;margin-top:12px}.voice-assistant-controls select{min-width:92px;border:1px solid #e7e1d6;border-radius:10px;background:white;padding:0 9px;color:#403b58;font:inherit;font-size:12px}.voice-assistant-controls button{display:flex;align-items:center;justify-content:center;gap:8px;flex:1;min-height:44px;border:0;border-radius:11px;background:#292747;color:#f4d28e;font-weight:750;cursor:pointer}.voice-assistant-controls button.listening{background:#8b4b54;color:white}.voice-assistant-controls button:disabled{opacity:.8}
 .voice-assistant-hints{margin-top:11px;color:#898395;font-size:10px;line-height:1.5}
 @media(max-width:760px){.assistant-launcher{height:39px;min-width:39px;padding:0 9px}.voice-assistant-panel{top:72px;right:12px}.top-actions{gap:6px}}
+
+/* Real AI assistant chat input */
+.voice-assistant-text{display:flex;gap:7px;margin-top:10px}
+.voice-assistant-text input{flex:1;min-width:0;border:1px solid #e7e1d6;border-radius:10px;padding:11px 12px;background:#fff;color:#292747;font-size:12px}
+.voice-assistant-text button{width:42px;flex:none;border:0;border-radius:10px;background:#e9c27c;color:#292747;display:grid;place-items:center}
+.voice-assistant-text button:disabled{opacity:.45;cursor:not-allowed}
