@@ -1,4 +1,4 @@
-const MODEL = "Qwen/Qwen2.5-1.5B-Instruct";
+const MODEL = "Qwen/Qwen2.5-1.5B-Instruct:cheapest";
 const ALLOWED_PAGES = new Set(["home","dashboard","orders","messages","my-gigs","profile","saved","portfolio","settings","create-gig"]);
 const ALLOWED_CATEGORIES = ["Graphics & Design","Writing & Translation","Programming & Tech","Video & Animation","Digital Marketing","Business","Construction","Masonry & Labour","Plumbing","Electrical Work","Painting","Carpentry","AC & Appliance Repair","Vehicle Repair","Cleaning & Home Services","Gardening","Transport","Education & Tutoring","Events & Catering"];
 
