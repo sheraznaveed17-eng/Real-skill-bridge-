@@ -102,6 +102,9 @@ function App() {
   const [assistantOpen,setAssistantOpen]=useState(false);
   const [assistantListening,setAssistantListening]=useState(false);
   const [assistantTranscript,setAssistantTranscript]=useState("");
+  const [assistantText,setAssistantText]=useState("");
+  const [assistantBusy,setAssistantBusy]=useState(false);
+  const [assistantHistory,setAssistantHistory]=useState([]);
   const [assistantReply,setAssistantReply]=useState("Assalam-o-Alaikum! Main Skill Bridge assistant hoon. Aap bol kar website chala sakte hain.");
   const [assistantLanguage,setAssistantLanguage]=useState("ur-PK");
   const [voiceFlow,setVoiceFlow]=useState("");
@@ -267,72 +270,55 @@ function App() {
     }
   };
 
-  const handleVoiceCommand = raw => {
+  const handleVoiceCommand = async raw => {
     const command = (raw || "").trim();
-    const q = command.toLowerCase();
-    if (!q) return speakAssistant("Mujhe awaaz samajh nahi aayi. Dobara boliye.");
-
-    if (voiceFlow) {
-      if (voiceFlow === "title") {
-        setGigForm(prev=>({...prev,title:command}));
-        setVoiceFlow("category");
-        return speakAssistant("Theek hai. Ab service ki category batayein, jaise graphic design, writing, electrician ya plumbing.");
-      }
-      if (voiceFlow === "category") {
-        const found = categories.slice(1).find(item => q.includes(item.toLowerCase()) || item.toLowerCase().split(/[ &]/).some(word=>word.length>3 && q.includes(word)));
-        if (!found) return speakAssistant("Category samajh nahi aayi. Misal ke taur par Graphics and Design, Writing, Programming, Electrical Work ya Plumbing boliye.");
-        setGigForm(prev=>({...prev,category:found}));
-        setVoiceFlow("description");
-        return speakAssistant("Ab apni service ki description batayein. Aap customer ke liye kya kaam karenge?");
-      }
-      if (voiceFlow === "description") {
-        setGigForm(prev=>({...prev,description:command}));
-        setVoiceFlow("price");
-        return speakAssistant("Is service ki basic price Pakistani rupees mein kitni hogi? Sirf number boliye.");
-      }
-      if (voiceFlow === "price") {
-        const amount = Number((q.match(/[0-9]+(?:\.[0-9]+)?/)||[])[0]);
-        if (!amount || amount < 1) return speakAssistant("Price number mein batayein, misal ke taur par 1500.");
-        setGigForm(prev=>({...prev,price:String(amount)}));
-        setVoiceFlow("delivery");
-        return speakAssistant("Kaam deliver karne mein kitne din lagenge?");
-      }
-      if (voiceFlow === "delivery") {
-        const days = Number((q.match(/[0-9]+/)||[])[0]);
-        if (!days || days > 60) return speakAssistant("Delivery days 1 se 60 ke darmiyan number mein batayein.");
-        setGigForm(prev=>({...prev,delivery_days:String(days)}));
-        setVoiceFlow("");
+    if (!command || assistantBusy) return;
+    const history = [...assistantHistory, {role:"user",content:command}].slice(-10);
+    setAssistantHistory(history);
+    setAssistantBusy(true);
+    try {
+      const response = await fetch("/api/assistant", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({messages:history,context:{loggedIn:Boolean(session),activeMode:session?activeMode:"guest"}})
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.reply || result.error || "AI service unavailable");
+      const reply = result.reply || "Main aapki madad kar sakta hoon. Batayein kya karna hai?";
+      setAssistantHistory([...history,{role:"assistant",content:reply}].slice(-10));
+      if (result.action?.type === "navigate") {
+        navigate(result.action.page);
+      } else if (result.action?.type === "search_gigs") {
+        setSearch(result.action.query);
+        setCategory("All");
+        setPage("home");
+        setTimeout(()=>document.getElementById("explore")?.scrollIntoView({behavior:"smooth"}),180);
+      } else if (result.action?.type === "draft_gig") {
+        if (!session) {
+          setAuthMode("login");
+          navigate("auth");
+          speakAssistant("Gig ka draft banane se pehle Skill Bridge mein login karein.");
+          setAssistantBusy(false);
+          return;
+        }
+        if (activeMode !== "seller") {
+          speakAssistant("Gig draft banane ke liye account menu se Seller Mode select karein, phir dobara keh dein.");
+          setAssistantBusy(false);
+          return;
+        }
+        const d=result.action.data;
+        setGigForm({title:d.title,description:d.description,category:d.category,price:String(d.price),delivery_days:String(d.delivery_days),image_url:""});
         navigate("create-gig");
-        return speakAssistant("Aapki gig ka draft form mein bhar diya hai. Details check karein aur Publish Service button dabayein. Aapki ijazat ke baghair main publish nahi karungi.");
+        speakAssistant("Aapki gig ka draft tayyar hai. Form mein details check karein. Publish karne se pehle aap khud review aur confirmation dein.");
+        setAssistantBusy(false);
+        return;
       }
+      speakAssistant(reply);
+    } catch (error) {
+      speakAssistant(error.message || "AI se connection nahi ho saka. Dobara try karein.");
+    } finally {
+      setAssistantBusy(false);
     }
-
-    if (/create|make|banao|banaye|gig bna|gig bana|service bna|service bana/.test(q)) {
-      if (!session) { navigate("auth"); return speakAssistant("Pehle account mein login karein. Uske baad main aapki gig banwa dungi."); }
-      if (activeMode !== "seller") return speakAssistant("Pehle account menu se Seller Mode select karein, phir mujhe dobara gig banane ko kahein.");
-      setGigForm({title:"",description:"",category:"Graphics & Design",price:"",delivery_days:"3",image_url:""});
-      setPage("create-gig");
-      setVoiceFlow("title");
-      return speakAssistant("Chaliye aapki gig banate hain. Sab se pehle batayein, aapki gig ka title kya ho?");
-    }
-    const searchIntent = /search|find|dhundo|dhoondo|talash|talaash|khojo/.test(q);
-    if (searchIntent) {
-      const term = command.replace(/\b(search|find|dhundo|dhoondo|talash|talaash|khojo|gigs?|services?|for|please|karo|kar do|mujhe|mere liye)\b/gi," ").replace(/\s+/g," ").trim();
-      if (!term) return speakAssistant("Kis type ki gig search karni hai? Misal ke taur par logo design ya electrician boliye.");
-      setSearch(term); setCategory("All"); setPage("home");
-      setTimeout(()=>document.getElementById("explore")?.scrollIntoView({behavior:"smooth"}),120);
-      setTimeout(()=>document.getElementById("explore")?.scrollIntoView({behavior:"smooth"}),120);
-      return speakAssistant(term + " ke mutaliq available services search kar raha hoon. Results screen par hain.");
-    }
-    if (/^(explore|home|marketplace)|ghar|home kholo/.test(q)) { navigate("home"); return speakAssistant("Marketplace khol diya hai."); }
-    if (/dashboard|ڈیش بورڈ/.test(q)) { navigate("dashboard"); return speakAssistant("Dashboard khol diya hai."); }
-    if (/order|آرڈر/.test(q)) { navigate("orders"); return speakAssistant("Aapke orders khol diye hain."); }
-    if (/message|chat|inbox|پیغام/.test(q)) { if (!session) {navigate("auth");return speakAssistant("Messages dekhne ke liye login karein.");} setActiveOrder(null);setActiveConversation(null);setPage("messages");loadInbox();return speakAssistant("Messages inbox khol diya hai."); }
-    if (/profile|پروفائل/.test(q)) { if (!session) {navigate("auth");return speakAssistant("Profile ke liye login karein.");} navigate("profile");return speakAssistant("Aapka profile khol diya hai."); }
-    if (/my gig|meri gig|my service|meri service/.test(q)) { if (!session) {navigate("auth");return speakAssistant("Apni gigs dekhne ke liye login karein.");} navigate("my-gigs");return speakAssistant("Aapki published gigs khol di hain."); }
-    if (/saved|bookmark|محفوظ/.test(q)) { navigate("saved");return speakAssistant("Saved services khol di hain."); }
-    if (/stop|band karo|chup|خاموش/.test(q)) { window.speechSynthesis?.cancel();return speakAssistant("Theek hai, main ruk gayi. Jab zaroorat ho mic dabaa dein."); }
-    speakAssistant("Main gig banana, services search karna, dashboard, orders, messages, profile aur saved services khol sakti hoon. Aap kya karwana chahte hain?");
   };
 
   const navigate = p => {
@@ -864,11 +850,15 @@ function App() {
       </div>
     </header>
     {assistantOpen && <section className="voice-assistant-panel" aria-label="Skill Bridge voice assistant">
-      <div className="voice-assistant-head"><span className="voice-assistant-avatar"><Bot size={21}/></span><div><strong>Skill Bridge Assistant</strong><small>{assistantListening?"Listening…":"Voice control · Free demo mode"}</small></div><button aria-label="Close assistant" onClick={()=>{setAssistantOpen(false);recognitionRef.current?.abort();window.speechSynthesis?.cancel();}}><X size={18}/></button></div>
+      <div className="voice-assistant-head"><span className="voice-assistant-avatar"><Bot size={21}/></span><div><strong>Skill Bridge Assistant</strong><small>{assistantListening?"Listening…":assistantBusy?"AI soch raha hai…":"AI voice assistant · Hugging Face"}</small></div><button aria-label="Close assistant" onClick={()=>{setAssistantOpen(false);recognitionRef.current?.abort();window.speechSynthesis?.cancel();}}><X size={18}/></button></div>
       <div className="voice-assistant-message"><Volume2 size={16}/><p>{assistantReply}</p></div>
       {assistantTranscript&&<div className="voice-assistant-transcript"><small>You said</small><span>{assistantTranscript}</span></div>}
-      <div className="voice-assistant-controls"><select aria-label="Assistant voice language" value={assistantLanguage} onChange={e=>setAssistantLanguage(e.target.value)}><option value="ur-PK">Urdu</option><option value="hi-IN">Hindi</option><option value="en-US">English</option></select><button className={assistantListening?"listening":""} onClick={beginVoiceCapture} disabled={assistantListening}>{assistantListening?<MicOff size={18}/>:<Mic size={18}/>} {assistantListening?"Listening…":"Tap to speak"}</button></div>
-      <div className="voice-assistant-hints">Try: “Gig banao” · “Logo design gigs search karo” · “Messages kholo”</div>
+      <div className="voice-assistant-controls"><select aria-label="Assistant voice language" value={assistantLanguage} onChange={e=>setAssistantLanguage(e.target.value)}><option value="ur-PK">Urdu</option><option value="hi-IN">Hindi</option><option value="en-US">English</option></select><button className={assistantListening?"listening":""} onClick={beginVoiceCapture} disabled={assistantListening||assistantBusy}>{assistantBusy?<Sparkles size={18}/>:assistantListening?<MicOff size={18}/>:<Mic size={18}/>} {assistantBusy?"Thinking…":assistantListening?"Listening…":"Tap to speak"}</button></div>
+      <form className="voice-assistant-text" onSubmit={e=>{e.preventDefault();const value=assistantText.trim();if(value&&!assistantBusy){setAssistantTranscript(value);setAssistantText("");handleVoiceCommand(value);}}}>
+        <input aria-label="Type to assistant" value={assistantText} onChange={e=>setAssistantText(e.target.value)} placeholder="Mic na chale to yahan likhein…"/>
+        <button type="submit" disabled={!assistantText.trim()||assistantBusy}><Send size={16}/></button>
+      </form>
+      <div className="voice-assistant-hints">AI model natural Urdu, Roman Urdu, Punjabi, Hindi aur English samajhne ki koshish karega. Password ya private information share na karein.</div>
     </section>}
     {page === "home" && <nav className="marketplace-subnav" aria-label="Popular categories">
       {categories.slice(1,11).map(c=><button key={c} className={category===c?"selected":""} onClick={()=>{setCategory(c);navigate("home");document.getElementById("explore")?.scrollIntoView({behavior:"smooth"});}}>{c}</button>)}
