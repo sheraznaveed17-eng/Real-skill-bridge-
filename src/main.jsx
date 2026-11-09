@@ -315,10 +315,14 @@ function App() {
       setVoiceFlow("title");
       return speakAssistant("Chaliye aapki gig banate hain. Sab se pehle batayein, aapki gig ka title kya ho?");
     }
-    const searchMatch = q.match(/(?:search|find|dhundo|dhoondo|talash|talaash|gig|service)\s+(?:for|karo|dhundo|dhoondo)?\s*(.+)/i);
-    if (searchMatch && searchMatch[1].trim().length > 1) {
-      const term = searchMatch[1].trim().replace(/^(gig|service)\s+/i,"");
+    const searchIntent = /search|find|dhundo|dhoondo|talash|talaash|khojo/.test(q);
+    if (searchIntent) {
+      const term = command.replace(/\b(search|find|dhundo|dhoondo|talash|talaash|khojo|gigs?|services?|for|please|karo|kar do|mujhe|mere liye)\b/gi," ").replace(/\s+/g," ").trim();
+      if (!term) return speakAssistant("Kis type ki gig search karni hai? Misal ke taur par logo design ya electrician boliye.");
       setSearch(term); setCategory("All"); setPage("home");
+      setTimeout(()=>document.getElementById("explore")?.scrollIntoView({behavior:"smooth"}),120);
+      return speakAssistant(term + " ke mutaliq available services search kar raha hoon. Results screen par hain.");
+    }
       setTimeout(()=>document.getElementById("explore")?.scrollIntoView({behavior:"smooth"}),120);
       return speakAssistant(term + " ke mutaliq available services search kar raha hoon. Results screen par hain.");
     }
