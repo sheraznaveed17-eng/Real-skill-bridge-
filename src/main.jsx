@@ -551,7 +551,7 @@ function App() {
       category:gigForm.category, work_type:workType, price:Number(gigForm.price), delivery_days:Number(gigForm.delivery_days), image_url:gigForm.image_url.trim()||null, packages, faqs, requirements
     });
     if (error) show(error.message);
-    else { show("Your service with packages is now published!"); setGigForm({title:"",description:"",category:"Graphics & Design",price:"",delivery_days:"3",image_url:""}); setExtraPackages([{name:"Standard",description:"",price:"",delivery_days:"5",revisions:"2"},{name:"Premium",description:"",price:"",delivery_days:"7",revisions:"3"}]);setFaqText("");setRequirementsText(""); await loadGigs(); await loadSellerGigs(); navigate("my-gigs"); }
+    else { show("Your service with packages is now published!"); setGigForm({title:"",description:"",category:categories[1]||"Graphics & Design",price:"",delivery_days:"3",image_url:""}); setExtraPackages([{name:"Standard",description:"",price:"",delivery_days:"5",revisions:"2"},{name:"Premium",description:"",price:"",delivery_days:"7",revisions:"3"}]);setFaqText("");setRequirementsText(""); await loadGigs(); await loadSellerGigs(); navigate("my-gigs"); }
     setBusy(false);
   };
 
@@ -723,10 +723,10 @@ function App() {
   const loadInbox = async () => {
     if (!session?.user) return;
     const [threads,unread]=await Promise.all([
-      supabase.from("conversations").select("*, gigs(title), buyer:profiles!conversations_buyer_id_fkey(full_name,avatar_url), seller:profiles!conversations_seller_id_fkey(full_name,avatar_url)").or("buyer_id.eq."+session.user.id+",seller_id.eq."+session.user.id).order("updated_at",{ascending:false}),
+      supabase.from("conversations").select("*, gigs(title,work_type), buyer:profiles!conversations_buyer_id_fkey(full_name,avatar_url), seller:profiles!conversations_seller_id_fkey(full_name,avatar_url)").or("buyer_id.eq."+session.user.id+",seller_id.eq."+session.user.id).order("updated_at",{ascending:false}),
       supabase.from("messages").select("id,conversation_id,order_id").neq("sender_id",session.user.id).is("read_at",null)
     ]);
-    if (!threads.error) setConversations(threads.data || []);
+    if (!threads.error) setConversations((threads.data || []).filter(thread=>thread.gigs?.work_type===workType));
     if (!unread.error) {
       const threadCounts={},orderCounts={};
       (unread.data||[]).forEach(message=>{
