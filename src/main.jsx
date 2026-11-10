@@ -3,13 +3,22 @@ import { createRoot } from "react-dom/client";
 import {
   Search, BriefcaseBusiness, UserRound, Plus, LogOut, Menu, X, Star, Bookmark, Trash2, ExternalLink, Flag, Compass, FolderOpen,
   MessageCircle, LayoutDashboard, ShieldCheck, ArrowRight, CheckCircle2, Bell, Mic, MicOff, Bot, Volume2,
-  Clock3, Wallet, Sparkles, Filter, PackageCheck, Send, ChevronRight, ChevronDown, Camera, Save, UserCircle, Settings, ShoppingBag, Eye
+  Clock3, Wallet, Sparkles, Filter, PackageCheck, Send, ChevronRight, ChevronDown, Camera, Save, UserCircle, Settings, ShoppingBag, Eye, Palette, PenLine, Code2, Video, Megaphone, Building2, Hammer, Wrench, Zap, Paintbrush, Sofa, Snowflake, Car, Sprout, Truck, GraduationCap, CalendarDays
 } from "lucide-react";
 import { supabase, isConfigured } from "./supabase";
 import "./style.css";
 
 const categories = ["All", "Graphics & Design", "Writing & Translation", "Programming & Tech", "Video & Animation", "Digital Marketing", "Business", "Construction", "Masonry & Labour", "Plumbing", "Electrical Work", "Painting", "Carpentry", "AC & Appliance Repair", "Vehicle Repair", "Cleaning & Home Services", "Gardening", "Transport", "Education & Tutoring", "Events & Catering"];
 const money = n => `Rs. ${Number(n || 0).toLocaleString("en-PK")}`;
+const categoryIcons = {
+  "All": Compass, "Graphics & Design": Palette, "Writing & Translation": PenLine,
+  "Programming & Tech": Code2, "Video & Animation": Video, "Digital Marketing": Megaphone,
+  "Business": BriefcaseBusiness, "Construction": Building2, "Masonry & Labour": Hammer,
+  "Plumbing": Wrench, "Electrical Work": Zap, "Painting": Paintbrush, "Carpentry": Sofa,
+  "AC & Appliance Repair": Snowflake, "Vehicle Repair": Car, "Cleaning & Home Services": Sparkles,
+  "Gardening": Sprout, "Transport": Truck, "Education & Tutoring": GraduationCap, "Events & Catering": CalendarDays
+};
+
 const getGigVisitorKey = () => {
   try {
     let key = localStorage.getItem("skillbridge-gig-visitor");
