@@ -18,25 +18,7 @@ const categoryIcons = {
   "Plumbing": Wrench, "Electrical Work": Zap, "Painting": Paintbrush, "Carpentry": Sofa,
   "AC & Appliance Repair": Snowflake, "Vehicle Repair": Car, "Cleaning & Home Services": Sparkles,
   "Gardening": Sprout, "Transport": Truck, "Education & Tutoring": GraduationCap, "Events & Catering": CalendarDays
-  const switchMode = async mode => {
-    if (!session?.user || !["buyer","seller"].includes(mode) || busy || mode===activeMode) return;
-    setBusy(true);
-    try {
-      const { data, error } = await supabase.from("profiles").update({active_mode:mode}).eq("id",session.user.id).select("*").single();
-      if (error) throw error;
-      const { error:metadataError } = await supabase.auth.updateUser({data:{active_mode:mode}});
-      setProfile(current=>({...current,...data,active_mode:mode}));
-      setActiveMode(mode);
-      setAccountMenu(false);
-      if (["create-gig","my-gigs","portfolio"].includes(page)) setPage("dashboard");
-      show(metadataError ? "Workspace changed. It will be remembered after your next login." : (mode==="seller" ? "Seller workspace is now active." : "Buyer workspace is now active."));
-    } catch (error) {
-      show(error.message || "Workspace could not be changed. Please try again.");
-    } finally {
-      setBusy(false);
-    }
-  };
-
+};
 const getGigVisitorKey = () => {
   try {
     let key = localStorage.getItem("skillbridge-gig-visitor");
