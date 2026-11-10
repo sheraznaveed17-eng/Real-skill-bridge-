@@ -234,32 +234,41 @@ function App() {
   const show = msg => { setNotice(msg); setTimeout(() => setNotice(""), 4200); };
   const handleAssistantPointerDown = event => {
     if (event.button !== undefined && event.button !== 0) return;
+    event.preventDefault();
     const rect = event.currentTarget.getBoundingClientRect();
     assistantDragRef.current = {pointerId:event.pointerId,startX:event.clientX,startY:event.clientY,left:rect.left,top:rect.top,moved:false};
-    event.currentTarget.setPointerCapture?.(event.pointerId);
+    window.addEventListener("pointermove",handleAssistantPointerMove,{passive:false});
+    window.addEventListener("pointerup",handleAssistantPointerUp);
+    window.addEventListener("pointercancel",handleAssistantPointerUp);
   };
   const handleAssistantPointerMove = event => {
     const drag = assistantDragRef.current;
     if (!drag || drag.pointerId !== event.pointerId) return;
+    event.preventDefault();
     const dx = event.clientX-drag.startX, dy = event.clientY-drag.startY;
-    if (!drag.moved && Math.hypot(dx,dy)<5) return;
+    if (!drag.moved && Math.hypot(dx,dy)<3) return;
     drag.moved = true;
     suppressAssistantClick.current = true;
-    const size = 60, margin = 8;
+    const size = window.innerWidth<=760?56:60, margin = 6;
     const x = Math.max(margin,Math.min(window.innerWidth-size-margin,drag.left+dx));
     const y = Math.max(margin,Math.min(window.innerHeight-size-margin,drag.top+dy));
     setAssistantPosition({x,y});
   };
   const handleAssistantPointerUp = event => {
     const drag = assistantDragRef.current;
-    if (!drag || drag.pointerId !== event.pointerId) return;
+    if (!drag || (event.pointerId!==undefined && drag.pointerId !== event.pointerId)) return;
+    window.removeEventListener("pointermove",handleAssistantPointerMove);
+    window.removeEventListener("pointerup",handleAssistantPointerUp);
+    window.removeEventListener("pointercancel",handleAssistantPointerUp);
     assistantDragRef.current = null;
     if (drag.moved) {
-      setAssistantPosition(current => {
-        if (current) { try { localStorage.setItem("skillbridge-ai-position",JSON.stringify(current)); } catch {} }
-        return current;
-      });
-      window.setTimeout(()=>{suppressAssistantClick.current=false;},80);
+      const size = window.innerWidth<=760?56:60, margin = 6;
+      const x = Math.max(margin,Math.min(window.innerWidth-size-margin,drag.left+(event.clientX-drag.startX)));
+      const y = Math.max(margin,Math.min(window.innerHeight-size-margin,drag.top+(event.clientY-drag.startY)));
+      const next = {x,y};
+      setAssistantPosition(next);
+      try { localStorage.setItem("skillbridge-ai-position",JSON.stringify(next)); } catch {}
+      window.setTimeout(()=>{suppressAssistantClick.current=false;},180);
     }
   };
   const toggleAssistant = () => {
@@ -923,7 +932,7 @@ function App() {
       onPointerUp={handleAssistantPointerUp}
       onPointerCancel={handleAssistantPointerUp}
       onClick={toggleAssistant}
-    ><Bot size={25}/><span>AI</span></button>
+    ><svg className="skillbridge-ai-mark" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="30" fill="#292747"/><path d="M11 43h42M16 43V31m32 12V31M20 43V34m24 9V34" fill="none" stroke="#f0c77e" strokeWidth="3.2" strokeLinecap="round"/><path d="M14 31c4-12 12-18 18-18s14 6 18 18M20 31c3-7 7-11 12-11s9 4 12 11" fill="none" stroke="#f0c77e" strokeWidth="3.2" strokeLinecap="round"/><path d="M32 25v12M27 32h10" stroke="#fff4d8" strokeWidth="2.5" strokeLinecap="round"/><path d="M49 11l1.8 4.2L55 17l-4.2 1.8L49 23l-1.8-4.2L43 17l4.2-1.8z" fill="#fff4d8"/></svg></button>
     {assistantOpen && <section className="voice-assistant-panel" aria-label="Skill Bridge voice assistant">
       <div className="voice-assistant-head"><span className="voice-assistant-avatar"><Bot size={21}/></span><div><strong>Skill Bridge Assistant</strong><small>{assistantListening?"Listening…":assistantBusy?"AI soch raha hai…":"AI voice assistant · Hugging Face"}</small></div><button aria-label="Close assistant" onClick={()=>{setAssistantOpen(false);recognitionRef.current?.abort();window.speechSynthesis?.cancel();}}><X size={18}/></button></div>
       <div className="voice-assistant-message"><Volume2 size={16}/><p>{assistantReply}</p></div>
