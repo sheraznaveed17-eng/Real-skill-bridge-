@@ -186,7 +186,7 @@ function App() {
       loadPortfolio();
       loadSellerGigs();
     }
-  }, [session]);
+  }, [session, workType]);
 
   useEffect(() => {
     if (!session?.user?.id) {
