@@ -225,7 +225,7 @@ function App() {
       resolvedProfile=updatedProfile||{...resolvedProfile,work_type:selectedWorkType};
     }
     if (resolvedProfile) {
-      const preferredMode = user.user_metadata?.active_mode || resolvedProfile.active_mode || (resolvedProfile.role==="seller"?"seller":"buyer");
+      const preferredMode = resolvedProfile.active_mode || user.user_metadata?.active_mode || (resolvedProfile.role==="seller"?"seller":"buyer");
       setActiveMode(preferredMode); setWorkType(selectedWorkType);
       if (resolvedProfile.active_mode !== preferredMode) supabase.from("profiles").update({active_mode:preferredMode}).eq("id",user.id);
       setProfile(resolvedProfile);
