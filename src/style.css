@@ -1429,8 +1429,8 @@ html,body,.app-shell{background:#f7f6f2;color:#20243a}
 
 
 /* Draggable floating Skill Bridge AI launcher */
-.assistant-floating{position:fixed;z-index:1002;width:60px;height:60px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;border:2px solid #f0d69e;border-radius:50%;background:linear-gradient(145deg,#292747,#514887);color:#f0c77e;box-shadow:0 8px 24px #201d3d45,0 0 0 5px #e9c27c24;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;transition:box-shadow .18s,background .18s}
+.assistant-floating{position:fixed;z-index:1002;width:60px;height:60px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;border:2px solid #f0d69e;border-radius:50%;background:linear-gradient(145deg,#292747,#514887);color:#f0c77e;box-shadow:0 8px 24px #201d3d45,0 0 0 5px #e9c27c24;cursor:grab;touch-action:none;user-select:none;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;transition:box-shadow .18s,background .18s}
 .assistant-floating:active{cursor:grabbing}
-.assistant-floating span{font-size:9px;font-weight:900;letter-spacing:.8px;line-height:1.1}
+.skillbridge-ai-mark{display:block;width:43px;height:43px;pointer-events:none;filter:drop-shadow(0 2px 3px #100f25aa)}
 .assistant-floating:hover,.assistant-floating-active{background:linear-gradient(145deg,#e9c27c,#f4d99e);color:#292747;box-shadow:0 10px 28px #201d3d50,0 0 0 6px #e9c27c35}
-@media(max-width:760px){.assistant-floating{width:56px;height:56px}.assistant-floating span{font-size:8px}}
+@media(max-width:760px){.assistant-floating{width:56px;height:56px}.skillbridge-ai-mark{width:41px;height:41px}}
