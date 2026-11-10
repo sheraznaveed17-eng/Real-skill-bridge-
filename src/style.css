@@ -1867,3 +1867,28 @@ body{background:#f7faf9;color:#18323a}
   .category{padding:10px 13px!important}
   .marketplace-filters label{padding:8px!important}
 }
+
+
+/* Digital vs Practical account choice */
+.work-type-picker{display:grid;gap:12px;margin:8px 0 4px}
+.work-type-heading{display:grid;gap:4px}
+.work-type-heading strong{font-size:14px;color:#18383e}
+.work-type-heading span{font-size:11px;line-height:1.5;color:#708486}
+.work-type-options{display:grid;gap:10px}
+.work-type-option{display:flex;align-items:center;gap:12px;width:100%;padding:14px;border:2px solid #e2ecea;border-radius:15px;text-align:left;background:#f7faf9;color:#28474b;cursor:pointer;transition:.18s}
+.work-type-option.digital{background:linear-gradient(120deg,#eff6ff,#f7f3ff);border-color:#dce8fb}
+.work-type-option.practical{background:linear-gradient(120deg,#effaf3,#f1f8ec);border-color:#d8eddf}
+.work-type-option.digital.selected{border-color:#5689d8;box-shadow:0 0 0 3px #5689d81a}
+.work-type-option.practical.selected{border-color:#39a477;box-shadow:0 0 0 3px #39a4771a}
+.work-type-icon{display:grid;place-items:center;flex:0 0 46px;height:46px;border-radius:13px;background:#fff;color:#416fba;box-shadow:0 3px 12px #23455b10}
+.work-type-option.practical .work-type-icon{color:#27845c}
+.work-type-copy{display:grid;gap:4px;flex:1;min-width:0}
+.work-type-copy strong{font-size:14px}
+.work-type-copy small{font-size:10px;line-height:1.45;color:#647a7d}
+.work-type-check{font-size:21px;font-weight:800;color:#416fba}
+.work-type-option.practical .work-type-check{color:#27845c}
+.public-work-switch{display:flex;justify-content:center;gap:10px;padding:12px 14px;background:#f4f8f7;border-bottom:1px solid #e5eeec}
+.public-work-switch button{display:flex;align-items:center;gap:8px;padding:10px 16px;border:1px solid #dce9e7;border-radius:12px;background:#fff;color:#456366;font-size:12px;font-weight:750}
+.public-work-switch button.active.digital{background:#eaf2ff;border-color:#cbdcf7;color:#3567a9}
+.public-work-switch button.active.practical{background:#eaf7ee;border-color:#cce8d5;color:#28764f}
+@media(max-width:600px){.work-type-option{padding:11px;gap:9px}.work-type-icon{flex-basis:40px;height:40px}.work-type-copy small{font-size:9px}.public-work-switch{gap:7px}.public-work-switch button{flex:1;justify-content:center;padding:10px 6px;font-size:11px}}
