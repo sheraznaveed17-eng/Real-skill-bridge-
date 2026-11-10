@@ -102,6 +102,9 @@ function App() {
   const [settingsPasswordConfirm,setSettingsPasswordConfirm]=useState("");
   const [settingsEmail,setSettingsEmail]=useState("");
   const [assistantOpen,setAssistantOpen]=useState(false);
+  const [assistantPosition,setAssistantPosition]=useState(()=>{try{return JSON.parse(localStorage.getItem("skillbridge-ai-position")||"null");}catch{return null;}});
+  const assistantDragRef=useRef(null);
+  const suppressAssistantClick=useRef(false);
   const [assistantListening,setAssistantListening]=useState(false);
   const [assistantTranscript,setAssistantTranscript]=useState("");
   const [assistantText,setAssistantText]=useState("");
@@ -229,6 +232,41 @@ function App() {
   },[gigs,search,category,locationFilter,minBudget,maxBudget,deliveryFilter,sortBy]);
 
   const show = msg => { setNotice(msg); setTimeout(() => setNotice(""), 4200); };
+  const handleAssistantPointerDown = event => {
+    if (event.button !== undefined && event.button !== 0) return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    assistantDragRef.current = {pointerId:event.pointerId,startX:event.clientX,startY:event.clientY,left:rect.left,top:rect.top,moved:false};
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+  };
+  const handleAssistantPointerMove = event => {
+    const drag = assistantDragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    const dx = event.clientX-drag.startX, dy = event.clientY-drag.startY;
+    if (!drag.moved && Math.hypot(dx,dy)<5) return;
+    drag.moved = true;
+    suppressAssistantClick.current = true;
+    const size = 60, margin = 8;
+    const x = Math.max(margin,Math.min(window.innerWidth-size-margin,drag.left+dx));
+    const y = Math.max(margin,Math.min(window.innerHeight-size-margin,drag.top+dy));
+    setAssistantPosition({x,y});
+  };
+  const handleAssistantPointerUp = event => {
+    const drag = assistantDragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    assistantDragRef.current = null;
+    if (drag.moved) {
+      setAssistantPosition(current => {
+        if (current) { try { localStorage.setItem("skillbridge-ai-position",JSON.stringify(current)); } catch {} }
+        return current;
+      });
+      window.setTimeout(()=>{suppressAssistantClick.current=false;},80);
+    }
+  };
+  const toggleAssistant = () => {
+    if (suppressAssistantClick.current) { suppressAssistantClick.current=false; return; }
+    setAssistantOpen(v=>!v);
+    if (!assistantOpen) speakAssistant("Assalam-o-Alaikum! Main Skill Bridge assistant hoon. Mic dabaa kar apna kaam batayein.");
+  };
   const speakAssistant = message => {
     setAssistantReply(message);
     if (typeof window !== "undefined" && window.speechSynthesis && window.SpeechSynthesisUtterance) {
@@ -870,12 +908,22 @@ function App() {
             <button onClick={()=>{setAuthMode("signup");setAccountMenu(false);navigate("auth");}}><Plus size={17}/> {t.join}</button>
           </div>}
         </div>}
-        <button className={"assistant-launcher "+(assistantOpen?"assistant-launcher-active":"")} aria-label="Open Skill Bridge voice assistant" title="Skill Bridge AI Assistant" onClick={()=>{setAssistantOpen(v=>!v);if(!assistantOpen)speakAssistant("Assalam-o-Alaikum! Main Skill Bridge assistant hoon. Mic dabaa kar apna kaam batayein.");}}><Bot size={20}/><span>AI</span></button>
         <form className="header-search" onSubmit={e=>{e.preventDefault();navigate("home");document.getElementById("explore")?.scrollIntoView({behavior:"smooth"});}}>
           <Search size={17}/><input aria-label="Search services" value={search} onChange={e=>setSearch(e.target.value)} placeholder="What service do you need?"/><button type="submit">Search</button>
         </form>
       </div>
     </header>
+    <button
+      className={"assistant-floating "+(assistantOpen?"assistant-floating-active":"")}
+      aria-label="Open Skill Bridge AI assistant"
+      title="Hold and drag to move · Tap to open AI"
+      style={assistantPosition?{left:assistantPosition.x,top:assistantPosition.y,right:"auto",bottom:"auto"}:{right:18,bottom:92}}
+      onPointerDown={handleAssistantPointerDown}
+      onPointerMove={handleAssistantPointerMove}
+      onPointerUp={handleAssistantPointerUp}
+      onPointerCancel={handleAssistantPointerUp}
+      onClick={toggleAssistant}
+    ><Bot size={25}/><span>AI</span></button>
     {assistantOpen && <section className="voice-assistant-panel" aria-label="Skill Bridge voice assistant">
       <div className="voice-assistant-head"><span className="voice-assistant-avatar"><Bot size={21}/></span><div><strong>Skill Bridge Assistant</strong><small>{assistantListening?"Listening…":assistantBusy?"AI soch raha hai…":"AI voice assistant · Hugging Face"}</small></div><button aria-label="Close assistant" onClick={()=>{setAssistantOpen(false);recognitionRef.current?.abort();window.speechSynthesis?.cancel();}}><X size={18}/></button></div>
       <div className="voice-assistant-message"><Volume2 size={16}/><p>{assistantReply}</p></div>
