@@ -1680,3 +1680,35 @@ body{background:#f7faf9;color:#18323a}
  .header-search{flex-basis:150px}
  .account-trigger-name{display:none}
 }
+
+
+/* Stable hamburger dropdown: keep the menu compact and above page content */
+.mobile-menu{
+  display:grid !important;
+  position:fixed !important;
+  top:76px !important;
+  left:auto !important;
+  right:20px !important;
+  width:min(360px,calc(100vw - 24px)) !important;
+  max-height: min(72vh,600px) !important;
+  overflow-y:auto !important;
+  overscroll-behavior:contain;
+  grid-template-columns:1fr 1fr !important;
+  align-content:start;
+  background:#ffffff !important;
+  border:1px solid #dce9e7 !important;
+  border-radius:14px !important;
+  box-shadow:0 14px 36px rgba(24,56,62,.18) !important;
+  z-index:1000 !important;
+}
+.mobile-menu .menu-heading{position:sticky;top:0;background:#fff;z-index:1}
+@media(max-width:760px){
+  .mobile-menu{
+    top:65px !important;
+    left:auto !important;
+    right:8px !important;
+    width:min(340px,calc(100vw - 16px)) !important;
+    max-height:72vh !important;
+    grid-template-columns:1fr 1fr !important;
+  }
+}
