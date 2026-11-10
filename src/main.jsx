@@ -391,7 +391,7 @@ function App() {
           return;
         }
         if (activeMode !== "seller") {
-          speakAssistant("Gig draft banane ke liye account menu se Seller Mode select karein, phir dobara keh dein.");
+          speakAssistant("Gig draft banane ke liye website ke top par Seller select karein, phir dobara keh dein.");
           setAssistantBusy(false);
           return;
         }
@@ -1073,17 +1073,6 @@ options:{ data:{ full_name:authForm.name, role:"buyer", active_mode:"buyer", acc
           <div className="hero-stats"><div><strong>Digital + Local</strong><span>all kinds of services</span></div><div><strong>One platform</strong><span>for workers and customers</span></div><div><strong>Simple to use</strong><span>for everyone</span></div></div>
         </div>
         <div className="hero-orb orb-one"></div><div className="hero-orb orb-two"></div>
-      </section>
-      <section className="choice-section">
-        <div className="choice-heading"><span className="eyebrow muted">{t.getStarted}</span><h2>{t.whatDo}</h2><p>Choose how you want to use Skill Bridge.</p></div>
-        <div className="choice-grid">
-          <button className="choice-card" onClick={()=>{if(session){switchMode("seller");}else{setAuthForm(v=>({...v,role:"seller"}));setAuthMode("signup");navigate("auth");}}}>
-            <span className="choice-icon"><BriefcaseBusiness size={25}/></span><span className="choice-copy"><strong>{t.findWork}</strong><small>Show your skills and let customers discover your services.</small></span><ArrowRight className="choice-arrow"/>
-          </button>
-          <button className="choice-card" onClick={()=>{if(session){switchMode("buyer");}else{setAuthForm(v=>({...v,role:"buyer"}));setAuthMode("signup");navigate("auth");}}}>
-            <span className="choice-icon"><UserRound size={25}/></span><span className="choice-copy"><strong>{t.hireSomeone}</strong><small>Find skilled people for digital tasks and practical work.</small></span><ArrowRight className="choice-arrow"/>
-          </button>
-        </div>
       </section>
       <section className="trust-strip"><span><ShieldCheck size={18}/> For every kind of work</span><span><CheckCircle2 size={18}/> Clear work agreements</span><span><MessageCircle size={18}/> Buyer-seller messaging</span></section>
       <main className="content" id="explore">
