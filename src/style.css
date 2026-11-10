@@ -1434,3 +1434,84 @@ html,body,.app-shell{background:#f7f6f2;color:#20243a}
 .skillbridge-ai-mark{display:block;width:29px;height:29px;pointer-events:none}
 .assistant-floating:hover,.assistant-floating-active{background:linear-gradient(135deg,#5149e8 0%,#7044df 55%,#9550df 100%);box-shadow:0 7px 22px #7656e977,0 0 0 4px #8a70ff20}
 @media(max-width:760px){.assistant-floating{width:44px;height:44px}.skillbridge-ai-mark{width:27px;height:27px}}
+
+
+/* Skill Bridge refined teal & ivory design system */
+:root{
+  --ink:#18323a;
+  --muted:#687d82;
+  --line:#e3eceb;
+  --green:#168b8b;
+  --soft:#f3f8f7;
+}
+body{background:#f7faf9;color:#18323a}
+.topbar{background:rgba(255,255,255,.96);border-bottom:1px solid #e5eeed;box-shadow:0 2px 12px #123b3b08}
+.brand,.footer-brand{color:#18323a}
+.brand-mark{background:#e2f3f1;color:#168b8b;border-radius:10px}
+.brand-accent,.desktop-nav button:hover,.nav-plain:hover{color:#168b8b}
+.btn-dark{background:#168b8b;color:#fff;box-shadow:0 5px 14px #168b8b20}
+.btn-dark:hover{background:#117777;box-shadow:0 7px 18px #168b8b30}
+.hero{
+ background:linear-gradient(112deg,#e9f8f5 0%,#e5f5f5 48%,#e9f4fa 100%);
+ color:#18323a;min-height:490px
+}
+.hero-inner{padding:66px 0}
+.hero .eyebrow{color:#168b8b}
+.hero .eyebrow-dot{background:#168b8b;box-shadow:0 0 0 5px #168b8b18}
+.hero h1{color:#17363c}
+.hero h1 span{color:#168b8b}
+.hero p{color:#60777c}
+.hero-search{border:1px solid #d9e9e7;box-shadow:0 12px 32px #1b5b5b0d;border-radius:12px}
+.hero-search button{background:#168b8b;border-radius:9px}
+.hero-search button:hover{background:#117777}
+.popular{color:#637b80}
+.popular button{border-color:#bddbd7;color:#286d70;background:#ffffff70}
+.popular button:hover{background:#dff2ef}
+.hero-stats strong{color:#24454a}
+.hero-stats span{color:#6d8588}
+.orb-one{background:radial-gradient(circle at 40% 40%,#75c9c255,transparent 68%);border-color:#168b8b18}
+.orb-two{background:#7ac8c522}
+.trust-strip{background:#fff;color:#587176;border-top:1px solid #e9f0ef;border-bottom:1px solid #e9f0ef}
+.trust-strip svg{color:#168b8b}
+.content{margin-top:62px}
+.section-heading h2,.page-content h2,.narrow-page h2,.choice-heading h2{color:#18383e}
+.category{border-color:#e2ebea;color:#62777b;background:#fff}
+.category:hover,.category.active{background:#e5f4f2;border-color:#a9d7d1;color:#137b7d}
+.gig-card{border-color:#e5eceb;border-radius:14px;box-shadow:0 3px 14px #183b3b08}
+.gig-card:hover{border-color:#b9dcd7;box-shadow:0 14px 32px #183b3b12}
+.gig-art{background:linear-gradient(135deg,#4d9fa0,#a5d9d1)}
+.art-purple{background:linear-gradient(135deg,#678ca8,#b2d5df)}
+.art-blue{background:linear-gradient(135deg,#398c9a,#a4d9dc)}
+.art-orange{background:linear-gradient(135deg,#b78c60,#e7cba4)}
+.art-green{background:linear-gradient(135deg,#368d79,#a1d2bd)}
+.gig-info h3{color:#24434a}
+.seller-tag{background:#e8f5f2;color:#167c7d}
+.gig-price strong{color:#18383e}
+.choice-card{border-color:#e1ecea;border-radius:14px;box-shadow:0 3px 14px #183b3b06}
+.choice-card:hover{border-color:#a9d7d1;box-shadow:0 10px 28px #168b8b12}
+.choice-icon{background:#e4f4f1;color:#168b8b}
+.choice-arrow{color:#168b8b}
+.join-banner{background:linear-gradient(110deg,#e7f5f1,#edf7f8);border:1px solid #dcecea;border-radius:15px}
+.footer{background:#18383e;color:#f6fbfa}
+.footer-brand{color:#fff}
+.footer p{color:#c0d4d2}
+.footer-bottom{border-color:#ffffff24;color:#b2c9c7}
+.narrow-page{background:linear-gradient(135deg,#f1f8f6,#f4f8fa)}
+.auth-card,.form-panel{border-color:#e2ecea;border-radius:17px;box-shadow:0 12px 36px #183b3b0b}
+.stack-form input,.stack-form textarea,.stack-form select,.checkout-box textarea{border-color:#dbe7e5;border-radius:10px}
+.stack-form input:focus,.stack-form textarea:focus,.stack-form select:focus{border-color:#69b7b1;box-shadow:0 0 0 3px #168b8b14}
+.switch-auth button{color:#168b8b}
+.outline-btn:hover{border-color:#168b8b;color:#137b7d}
+.avatar,.order-icon,.empty-icon{background:#e4f4f1;color:#168b8b}
+.metric-card,.order-card,.quick-actions,.chat-panel{border-color:#e2ecea;border-radius:14px;background:#fff}
+.quick-actions button svg:first-child{color:#168b8b}
+.status.completed{background:#e5f4ee;color:#247c5a}
+.profile-pill{border-color:#e2ecea}
+@media(max-width:760px){
+ .hero{min-height:510px}
+ .hero-inner{padding:48px 0}
+ .hero-stats{gap:18px}
+ .content{margin-top:42px}
+ .mobile-menu{background:#fff;border-top:1px solid #e7efee}
+ .mobile-menu button{color:#28474b}
+}
