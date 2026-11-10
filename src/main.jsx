@@ -947,7 +947,25 @@ function App() {
     {page === "home" && <nav className="marketplace-subnav" aria-label="Popular categories">
       {categories.slice(1,11).map(c=><button key={c} className={category===c?"selected":""} onClick={()=>{setCategory(c);navigate("home");document.getElementById("explore")?.scrollIntoView({behavior:"smooth"});}}>{c}</button>)}
     </nav>}
-    {mobileMenu && <div className="mobile-menu"><button onClick={()=>navigate("home")}>{t.explore}</button>{session ? <><button onClick={()=>navigate("dashboard")}>{t.dashboard}</button><button onClick={()=>navigate("profile")}>{t.profile}</button><button onClick={()=>navigate("settings")}>Settings</button><button onClick={()=>navigate("saved")}>{t.saved}</button><button onClick={()=>navigate("orders")}>{t.orders}</button>{activeMode==="seller"&&<button onClick={()=>navigate("portfolio")}>{t.portfolio}</button>}<button onClick={()=>{setActiveOrder(null);setActiveConversation(null);setPage("messages");loadInbox();}}>{t.messages} {unreadMessages>0&&"("+unreadMessages+")"}</button>{activeMode==="seller"&&<button onClick={()=>navigate("my-gigs")}>{t.myServices}</button>}{isAdmin&&<button onClick={()=>navigate("admin")}>Admin moderation</button>}<button onClick={signOut}>{t.logout}</button></> : <><button onClick={()=>{setAuthMode("login");navigate("auth")}}>{t.login}</button><button onClick={()=>{setAuthMode("signup");navigate("auth")}}>{t.join}</button></>}</div>}
+    {mobileMenu && <div className="mobile-menu">
+      <div className="menu-heading"><strong>Skill Bridge Menu</strong><button aria-label="Close menu" onClick={()=>setMobileMenu(false)}><X size={17}/></button></div>
+      <button onClick={()=>{navigate("home");setMobileMenu(false)}}><Compass size={17}/> {t.explore}</button>
+      {session ? <>
+        <button onClick={()=>{setActiveOrder(null);setActiveConversation(null);setPage("messages");loadInbox();setMobileMenu(false)}}><MessageCircle size={17}/> {t.messages} {unreadMessages>0&&"("+unreadMessages+")"}</button>
+        <button onClick={()=>{navigate("orders");setMobileMenu(false)}}><PackageCheck size={17}/> {t.orders}</button>
+        <button onClick={()=>{navigate("dashboard");setMobileMenu(false)}}><LayoutDashboard size={17}/> {t.dashboard}</button>
+        <button onClick={()=>{navigate("profile");setMobileMenu(false)}}><UserCircle size={17}/> {t.profile}</button>
+        <button onClick={()=>{navigate("saved");setMobileMenu(false)}}><Bookmark size={17}/> {t.saved}</button>
+        {activeMode==="seller"&&<button onClick={()=>{navigate("my-gigs");setMobileMenu(false)}}><BriefcaseBusiness size={17}/> {t.myServices}</button>}
+        {activeMode==="seller"&&<button onClick={()=>{navigate("portfolio");setMobileMenu(false)}}><FolderOpen size={17}/> {t.portfolio}</button>}
+        <button onClick={()=>{navigate("settings");setMobileMenu(false)}}><Settings size={17}/> Settings</button>
+        {isAdmin&&<button onClick={()=>{navigate("admin");setMobileMenu(false)}}><ShieldCheck size={17}/> Admin moderation</button>}
+        <button onClick={()=>{setMobileMenu(false);signOut()}}><LogOut size={17}/> {t.logout}</button>
+      </> : <>
+        <button onClick={()=>{setAuthMode("login");navigate("auth");setMobileMenu(false)}}><UserRound size={17}/> {t.login}</button>
+        <button onClick={()=>{setAuthMode("signup");navigate("auth");setMobileMenu(false)}}><Plus size={17}/> {t.join}</button>
+      </>}
+    </div>}
     {demoMode && <div className="setup-banner"><span><Sparkles size={15}/> Setup required: connect your free Supabase project to enable real multi-user features.</span><button onClick={()=>show("README.md mein Android setup ke simple steps diye gaye hain.")}>How to connect</button></div>}
     {notice && <div className="toast"><CheckCircle2 size={18}/>{notice}<button onClick={()=>setNotice("")}><X size={16}/></button></div>}
 
