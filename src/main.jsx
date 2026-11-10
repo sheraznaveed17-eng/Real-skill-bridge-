@@ -876,7 +876,7 @@ function App() {
         {isAdmin && <button onClick={() => navigate("admin")}>Admin</button>}
       </nav>
       <div className="top-actions">
-        <button className="icon-btn nav-menu-trigger" aria-label="Open navigation" onClick={() => setMobileMenu(!mobileMenu)}>{mobileMenu?<X/>:<Menu/>}</button>
+        
         {session ? <>
           <div className="notification-wrap">
             <button className="icon-btn notification-trigger" aria-label="Notifications" aria-expanded={notificationsOpen} onClick={()=>setNotificationsOpen(value=>!value)}>
@@ -917,9 +917,8 @@ function App() {
             <button onClick={()=>{setAuthMode("signup");setAccountMenu(false);navigate("auth");}}><Plus size={17}/> {t.join}</button>
           </div>}
         </div>}
-        <form className="header-search" onSubmit={e=>{e.preventDefault();navigate("home");document.getElementById("explore")?.scrollIntoView({behavior:"smooth"});}}>
-          <Search size={17}/><input aria-label="Search services" value={search} onChange={e=>setSearch(e.target.value)} placeholder="What service do you need?"/><button type="submit">Search</button>
-        </form>
+
+        <button className="icon-btn nav-menu-trigger" aria-label="Open navigation" onClick={() => setMobileMenu(!mobileMenu)}>{mobileMenu?<X/>:<Menu/>}</button>
       </div>
     </header>
     <button
