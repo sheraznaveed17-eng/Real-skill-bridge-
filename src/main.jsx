@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
-  Search, BriefcaseBusiness, UserRound, Plus, LogOut, Menu, X, Star, Bookmark, Trash2, ExternalLink, Flag,
+  Search, BriefcaseBusiness, UserRound, Plus, LogOut, Menu, X, Star, Bookmark, Trash2, ExternalLink, Flag, Compass, FolderOpen,
   MessageCircle, LayoutDashboard, ShieldCheck, ArrowRight, CheckCircle2, Bell, Mic, MicOff, Bot, Volume2,
   Clock3, Wallet, Sparkles, Filter, PackageCheck, Send, ChevronRight, ChevronDown, Camera, Save, UserCircle, Settings, ShoppingBag, Eye
 } from "lucide-react";
