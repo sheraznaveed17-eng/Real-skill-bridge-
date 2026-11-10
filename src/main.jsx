@@ -18,7 +18,24 @@ const categoryIcons = {
   "Plumbing": Wrench, "Electrical Work": Zap, "Painting": Paintbrush, "Carpentry": Sofa,
   "AC & Appliance Repair": Snowflake, "Vehicle Repair": Car, "Cleaning & Home Services": Sparkles,
   "Gardening": Sprout, "Transport": Truck, "Education & Tutoring": GraduationCap, "Events & Catering": CalendarDays
-};
+  const switchMode = async mode => {
+    if (!session?.user || !["buyer","seller"].includes(mode) || busy || mode===activeMode) return;
+    setBusy(true);
+    try {
+      const { data, error } = await supabase.from("profiles").update({active_mode:mode}).eq("id",session.user.id).select("*").single();
+      if (error) throw error;
+      const { error:metadataError } = await supabase.auth.updateUser({data:{active_mode:mode}});
+      setProfile(current=>({...current,...data,active_mode:mode}));
+      setActiveMode(mode);
+      setAccountMenu(false);
+      if (["create-gig","my-gigs","portfolio"].includes(page)) setPage("dashboard");
+      show(metadataError ? "Workspace changed. It will be remembered after your next login." : (mode==="seller" ? "Seller workspace is now active." : "Buyer workspace is now active."));
+    } catch (error) {
+      show(error.message || "Workspace could not be changed. Please try again.");
+    } finally {
+      setBusy(false);
+    }
+  };
 
 const getGigVisitorKey = () => {
   try {
@@ -431,7 +448,7 @@ function App() {
       if (authMode === "signup") {
         const { data, error } = await supabase.auth.signUp({
           email:authForm.email, password:authForm.password,
-          options:{ data:{ full_name:authForm.name, role:authForm.role, active_mode:authForm.role, account_modes:["buyer","seller"], work_type:authForm.work_type } }
+options:{ data:{ full_name:authForm.name, role:"buyer", active_mode:"buyer", account_modes:["buyer","seller"], work_type:authForm.work_type } }
         });
         if (error) throw error;
         if (data.session) {
@@ -453,7 +470,6 @@ function App() {
 
   const signOut = async () => { if (!demoMode) await supabase.auth.signOut(); setActiveMode("buyer"); navigate("home"); show("You have logged out."); };
 
-  const switchMode = async mode => {
     if (!session?.user || !["buyer","seller"].includes(mode)) return;
     if (mode===activeMode) { setPage("dashboard"); setAccountMenu(false); return; }
     setBusy(true);
@@ -961,7 +977,7 @@ function App() {
         {session && activeMode==="seller" && <button onClick={() => navigate("my-gigs")}>{t.myServices}</button>}
         {isAdmin && <button onClick={() => navigate("admin")}>Admin</button>}
       </nav>
-      <div className="top-actions"><select className="language-switcher language-switcher-left" aria-label="Choose language" value={language} onChange={e=>setLanguage(e.target.value)}><option value="en">English</option><option value="ur">اردو</option><option value="pa">پنجابی</option><option value="hi">हिन्दी</option><option value="ar">العربية</option><option value="es">Español</option><option value="fr">Français</option><option value="zh">中文</option><option value="tr">Türkçe</option><option value="de">Deutsch</option></select>
+<div className="top-actions">{session && <div className="header-mode-switch" role="group" aria-label="Switch workspace"><button type="button" className={activeMode==="buyer"?"active":""} onClick={()=>switchMode("buyer")} disabled={busy}><ShoppingBag size={14}/> Buyer</button><button type="button" className={activeMode==="seller"?"active":""} onClick={()=>switchMode("seller")} disabled={busy}><BriefcaseBusiness size={14}/> Seller</button></div>}<select className="language-switcher language-switcher-left"
         
         {session ? <>
           <div className="notification-wrap">
@@ -984,7 +1000,6 @@ function App() {
             </button>
             {accountMenu && <div className="account-dropdown">
               <div className="account-dropdown-user"><strong>{profile?.full_name || "Skill Bridge member"}</strong><small>{session.user.email}</small></div>
-              <div className="account-mode-actions"><button onClick={()=>switchMode("buyer")}>{t.buyerMode}</button><button onClick={()=>switchMode("seller")}>{t.sellerMode}</button></div>
               <button onClick={()=>{navigate("profile");setAccountMenu(false)}}><UserCircle size={17}/> {t.profile}</button>
               <button onClick={()=>{navigate("settings");setAccountMenu(false)}}><Settings size={17}/> Settings</button>
               <button onClick={()=>{navigate("dashboard");setAccountMenu(false)}}><LayoutDashboard size={17}/> Dashboard</button>
@@ -1178,7 +1193,6 @@ function App() {
         <section className="dashboard-panel settings-panel">
           <div className="dashboard-panel-heading"><div><h3><UserRound size={18}/> Account information</h3><p>These details are managed in their own sections.</p></div></div>
           <div className="settings-link-row"><div><strong>Public profile</strong><small>Name, photo, bio, skills and availability</small></div><button className="outline-btn" onClick={()=>navigate("profile")}>Open profile <ChevronRight size={15}/></button></div>
-          <div className="settings-link-row"><div><strong>Workspace mode</strong><small>Switch between Buyer and Seller workspaces</small></div><div className="mode-switch"><button className={activeMode==="buyer"?"selected":""} onClick={()=>switchMode("buyer")} disabled={busy}>Buyer</button><button className={activeMode==="seller"?"selected":""} onClick={()=>switchMode("seller")} disabled={busy}>Seller</button></div></div>
           <div className="settings-link-row"><div><strong>Saved services</strong><small>Your bookmarked services</small></div><button className="outline-btn" onClick={()=>navigate("saved")}>Open saved <ChevronRight size={15}/></button></div>
           <div className="settings-link-row"><div><strong>Notifications</strong><small>Review messages and order updates from the bell in the top bar</small></div><button className="outline-btn" onClick={()=>{setNotificationsOpen(true);navigate("dashboard");}}>View notifications <ChevronRight size={15}/></button></div>
         </section>
@@ -1203,7 +1217,6 @@ function App() {
           <p>{activeMode==="seller"?"Your business overview, orders and services — all in one place.":"Your projects, purchases and conversations — all in one place."}</p>
         </div>
         <div className="dashboard-welcome-actions">
-          <div className="mode-switch"><span>{t.switchWorkspace}</span><button className={activeMode==="buyer"?"selected":""} onClick={()=>switchMode("buyer")} disabled={busy}>{t.buyerMode}</button><button className={activeMode==="seller"?"selected":""} onClick={()=>switchMode("seller")} disabled={busy}>{t.sellerMode}</button></div>
           {activeMode==="seller"
             ? <button className="btn btn-dark" onClick={()=>navigate("create-gig")}><Plus size={17}/> Create a service</button>
             : <button className="btn btn-dark" onClick={()=>navigate("home")}><Search size={17}/> Find a service</button>}
