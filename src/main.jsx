@@ -470,17 +470,27 @@ options:{ data:{ full_name:authForm.name, role:"buyer", active_mode:"buyer", acc
 
   const signOut = async () => { if (!demoMode) await supabase.auth.signOut(); setActiveMode("buyer"); navigate("home"); show("You have logged out."); };
 
-    if (!session?.user || !["buyer","seller"].includes(mode)) return;
-    if (mode===activeMode) { setPage("dashboard"); setAccountMenu(false); return; }
+  const switchMode = async mode => {
+    if (!session?.user || !["buyer","seller"].includes(mode) || busy || mode===activeMode) return;
     setBusy(true);
-    const { data, error } = await supabase.from("profiles").update({active_mode:mode,account_modes:["buyer","seller"]}).eq("id",session.user.id).select().single();
-    if (error) show(error.message);
-    else {
+    try {
+      const { data, error } = await supabase.from("profiles")
+        .update({active_mode:mode})
+        .eq("id",session.user.id)
+        .select("*")
+        .single();
+      if (error) throw error;
       const { error:metadataError } = await supabase.auth.updateUser({data:{active_mode:mode}});
-      setProfile(data); setActiveMode(mode); setPage("dashboard"); setAccountMenu(false);
-      show(metadataError ? "Mode changed. Your account preference may refresh on next login." : (mode==="seller" ? "Seller mode is now active." : "Buyer mode is now active."));
+      setProfile(current=>({...current,...data,active_mode:mode}));
+      setActiveMode(mode);
+      setAccountMenu(false);
+      if (["create-gig","my-gigs","portfolio"].includes(page)) setPage("dashboard");
+      show(metadataError ? "Workspace changed. It will be remembered after your next login." : (mode==="seller" ? "Seller workspace is now active." : "Buyer workspace is now active."));
+    } catch (error) {
+      show(error.message || "Workspace could not be changed. Please try again.");
+    } finally {
+      setBusy(false);
     }
-    setBusy(false);
   };
 
   const updateAccountPassword = async e => {
