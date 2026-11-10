@@ -8,7 +8,8 @@ import {
 import { supabase, isConfigured } from "./supabase";
 import "./style.css";
 
-const categories = ["All", "Graphics & Design", "Writing & Translation", "Programming & Tech", "Video & Animation", "Digital Marketing", "Business", "Construction", "Masonry & Labour", "Plumbing", "Electrical Work", "Painting", "Carpentry", "AC & Appliance Repair", "Vehicle Repair", "Cleaning & Home Services", "Gardening", "Transport", "Education & Tutoring", "Events & Catering"];
+const digitalCategories = ["All", "Graphics & Design", "Writing & Translation", "Programming & Tech", "Video & Animation", "Digital Marketing", "Business"];
+const practicalCategories = ["All", "Construction", "Masonry & Labour", "Plumbing", "Electrical Work", "Painting", "Carpentry", "AC & Appliance Repair", "Vehicle Repair", "Cleaning & Home Services", "Gardening", "Transport", "Education & Tutoring", "Events & Catering"];
 const money = n => `Rs. ${Number(n || 0).toLocaleString("en-PK")}`;
 const categoryIcons = {
   "All": Compass, "Graphics & Design": Palette, "Writing & Translation": PenLine,
@@ -58,6 +59,7 @@ function App() {
   const [session, setSession] = useState(null);
   const [profile, setProfile] = useState(null);
   const [activeMode, setActiveMode] = useState("buyer");
+  const [workType, setWorkType] = useState("digital");
   const [page, setPage] = useState("home");
   const [language,setLanguage]=useState(()=>{try{return localStorage.getItem("skillbridge-language")||"en";}catch{return "en";}});
   const [gigs, setGigs] = useState([]);
@@ -78,7 +80,7 @@ function App() {
   const [inboxSearch, setInboxSearch] = useState("");
   const [authMode, setAuthMode] = useState("login");
   const [signupConfirmationPending, setSignupConfirmationPending] = useState(false);
-  const [authForm, setAuthForm] = useState({ email:"", password:"", name:"", role:"buyer" });
+  const [authForm, setAuthForm] = useState({ email:"", password:"", name:"", role:"buyer", work_type:"digital" });
   const [gigForm, setGigForm] = useState({ title:"", description:"", category:"Graphics & Design", price:"", delivery_days:"3", image_url:"" });
   const [gigImageBusy,setGigImageBusy]=useState(false);
   const [editGigImageBusy,setEditGigImageBusy]=useState(false);
@@ -139,6 +141,10 @@ function App() {
   const [reportForm, setReportForm] = useState({reason:"fake_service",details:""});
 
   const demoMode = !isConfigured;
+  const categories = workType === "practical" ? practicalCategories : digitalCategories;
+  useEffect(()=>{ if(profile?.work_type && profile.work_type!==workType) setWorkType(profile.work_type); },[profile?.work_type]);
+  useEffect(()=>{ if(isConfigured) loadGigs(); },[workType]);
+  useEffect(()=>{ const first=categories[1]; if(first && !categories.includes(gigForm.category)) setGigForm(prev=>({...prev,category:first})); },[workType]);
   const t={...uiTranslations.en,...(uiTranslations[language]||{}),...(uiExtraTranslations[language]||{})};
   useEffect(()=>{try{localStorage.setItem("skillbridge-language",language);}catch{}},[language]);
 
@@ -161,6 +167,7 @@ function App() {
         if (_event === "SIGNED_IN") setPage("dashboard");
       } else {
         setProfile(null);
+        setWorkType("digital");
         setOrders([]);
         if (_event === "SIGNED_OUT") setPage("home");
       }
@@ -199,16 +206,28 @@ function App() {
   const loadProfile = async user => {
     const { data } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
     if (data && data.account_status && data.account_status!=="active") { await supabase.auth.signOut(); setProfile(null); show(data.account_status==="banned"?"This account has been permanently banned after moderation review.":"This account is currently suspended."); return; }
-    if (data) { const preferredMode = user.user_metadata?.active_mode || data.active_mode || (data.role==="seller"?"seller":"buyer"); setActiveMode(preferredMode); if (data.active_mode !== preferredMode) supabase.from("profiles").update({active_mode:preferredMode}).eq("id",user.id); setProfile(data); setProfileForm({ full_name:data.full_name || "", bio:data.bio || "", professional_title:data.professional_title || "", country:data.country || "", city:data.city || "", languages:(data.languages || []).join(", "), skills:(data.skills || []).join(", "), experience_years:data.experience_years ?? "", education:data.education || "", certifications:data.certifications || "", website_url:data.website_url || "", availability:data.availability ?? true }); }
-    else {
-      const fallback = { id:user.id, full_name:user.user_metadata?.full_name || user.email?.split("@")[0], role:user.user_metadata?.role || "buyer", account_modes:["buyer","seller"], active_mode:user.user_metadata?.active_mode || "buyer" };
+    const selectedWorkType = data?.work_type || user.user_metadata?.work_type || "digital";
+    let resolvedProfile = data;
+    if (resolvedProfile && !resolvedProfile.work_type) {
+      const {data:updatedProfile}=await supabase.from("profiles").update({work_type:selectedWorkType}).eq("id",user.id).select().maybeSingle();
+      resolvedProfile=updatedProfile||{...resolvedProfile,work_type:selectedWorkType};
+    }
+    if (resolvedProfile) {
+      const preferredMode = user.user_metadata?.active_mode || resolvedProfile.active_mode || (resolvedProfile.role==="seller"?"seller":"buyer");
+      setActiveMode(preferredMode); setWorkType(selectedWorkType);
+      if (resolvedProfile.active_mode !== preferredMode) supabase.from("profiles").update({active_mode:preferredMode}).eq("id",user.id);
+      setProfile(resolvedProfile);
+      setProfileForm({ full_name:resolvedProfile.full_name || "", bio:resolvedProfile.bio || "", professional_title:resolvedProfile.professional_title || "", country:resolvedProfile.country || "", city:resolvedProfile.city || "", languages:(resolvedProfile.languages || []).join(", "), skills:(resolvedProfile.skills || []).join(", "), experience_years:resolvedProfile.experience_years ?? "", education:resolvedProfile.education || "", certifications:resolvedProfile.certifications || "", website_url:resolvedProfile.website_url || "", availability:resolvedProfile.availability ?? true });
+    } else {
+      const fallback = { id:user.id, full_name:user.user_metadata?.full_name || user.email?.split("@")[0], role:user.user_metadata?.role || "buyer", account_modes:["buyer","seller"], active_mode:user.user_metadata?.active_mode || "buyer", work_type:selectedWorkType };
       const { data: created } = await supabase.from("profiles").upsert(fallback).select().single();
-      setProfile(created || fallback); setActiveMode(fallback.active_mode); setProfileForm({ full_name:fallback.full_name || "", bio:fallback.bio || "", professional_title:"", country:"", languages:"", skills:"", experience_years:"", education:"", certifications:"", website_url:"", availability:true });
+      setProfile(created || fallback); setActiveMode(fallback.active_mode); setWorkType(selectedWorkType);
+      setProfileForm({ full_name:fallback.full_name || "", bio:"", professional_title:"", country:"", city:"", languages:"", skills:"", experience_years:"", education:"", certifications:"", website_url:"", availability:true });
     }
   };
 
   const loadGigs = async () => {
-    const { data, error } = await supabase.from("gigs").select("*, profiles(full_name, avatar_url, country, city)").eq("is_active", true).order("created_at", { ascending:false });
+    const { data, error } = await supabase.from("gigs").select("*, profiles(full_name, avatar_url, country, city, work_type)").eq("is_active", true).eq("work_type",workType).order("created_at", { ascending:false });
     if (error) { show(error.message); return; }
     const list=data||[], sellerIds=[...new Set(list.map(g=>g.seller_id))];
     if (!sellerIds.length) { setGigs([]); return; }
@@ -223,7 +242,7 @@ function App() {
   };
 
   const loadOrders = async () => {
-    const { data } = await supabase.from("orders").select("*, gigs(title, price), buyer:profiles!orders_buyer_id_fkey(full_name), seller:profiles!orders_seller_id_fkey(full_name)").order("created_at", { ascending:false });
+    const { data } = await supabase.from("orders").select("*, gigs(title, price, work_type), buyer:profiles!orders_buyer_id_fkey(full_name), seller:profiles!orders_seller_id_fkey(full_name)").order("created_at", { ascending:false });
     setOrders(data || []);
   };
 
@@ -399,7 +418,7 @@ function App() {
       if (authMode === "signup") {
         const { data, error } = await supabase.auth.signUp({
           email:authForm.email, password:authForm.password,
-          options:{ data:{ full_name:authForm.name, role:authForm.role, active_mode:authForm.role, account_modes:["buyer","seller"] } }
+          options:{ data:{ full_name:authForm.name, role:authForm.role, active_mode:authForm.role, account_modes:["buyer","seller"], work_type:authForm.work_type } }
         });
         if (error) throw error;
         if (data.session) {
@@ -529,7 +548,7 @@ function App() {
     const requirements=requirementsText.split("\n").map(x=>x.trim()).filter(Boolean);
     const { error } = await supabase.from("gigs").insert({
       seller_id:session.user.id, title:gigForm.title.trim(), description:gigForm.description.trim(),
-      category:gigForm.category, price:Number(gigForm.price), delivery_days:Number(gigForm.delivery_days), image_url:gigForm.image_url.trim()||null, packages, faqs, requirements
+      category:gigForm.category, work_type:workType, price:Number(gigForm.price), delivery_days:Number(gigForm.delivery_days), image_url:gigForm.image_url.trim()||null, packages, faqs, requirements
     });
     if (error) show(error.message);
     else { show("Your service with packages is now published!"); setGigForm({title:"",description:"",category:"Graphics & Design",price:"",delivery_days:"3",image_url:""}); setExtraPackages([{name:"Standard",description:"",price:"",delivery_days:"5",revisions:"2"},{name:"Premium",description:"",price:"",delivery_days:"7",revisions:"3"}]);setFaqText("");setRequirementsText(""); await loadGigs(); await loadSellerGigs(); navigate("my-gigs"); }
@@ -542,18 +561,19 @@ function App() {
   const openSellerProfile = async sellerId => {
     const [p,g,portfolio,reviews]=await Promise.all([
       supabase.from("profiles").select("*").eq("id",sellerId).maybeSingle(),
-      supabase.from("gigs").select("*, profiles(full_name,avatar_url)").eq("seller_id",sellerId).eq("is_active",true).order("created_at",{ascending:false}),
+      supabase.from("gigs").select("*, profiles(full_name,avatar_url,work_type)").eq("seller_id",sellerId).eq("work_type",workType).eq("is_active",true).order("created_at",{ascending:false}),
       supabase.from("portfolio_items").select("*").eq("user_id",sellerId).order("created_at",{ascending:false}),
       supabase.from("reviews").select("id,rating,comment,created_at,buyer:profiles!reviews_buyer_id_fkey(full_name)").eq("seller_id",sellerId).order("created_at",{ascending:false})
     ]);
     if (p.error || !p.data) { show(p.error?.message || "Seller profile not found."); return; }
+    if (p.data.work_type !== workType) { show("This seller belongs to a different Skill Bridge marketplace."); return; }
     const sellerReviewRows=reviews.data||[], avg=sellerReviewRows.length?(sellerReviewRows.reduce((n,r)=>n+Number(r.rating||0),0)/sellerReviewRows.length).toFixed(1):null;
     setPublicSeller(p.data); setPublicSellerGigs((g.data||[]).map(item=>({...item,sellerRating:avg,sellerReviewCount:sellerReviewRows.length}))); setPublicSellerPortfolio(portfolio.data||[]); setPublicSellerReviews(sellerReviewRows); setSelectedGig(null); setPage("seller-profile");
   };
 
   const loadSellerGigs = async () => {
     if (!session?.user) return;
-    const {data,error}=await supabase.from("gigs").select("*, profiles(full_name,avatar_url)").eq("seller_id",session.user.id).order("created_at",{ascending:false});
+    const {data,error}=await supabase.from("gigs").select("*, profiles(full_name,avatar_url,work_type)").eq("seller_id",session.user.id).eq("work_type",workType).order("created_at",{ascending:false});
     if (error) { show(error.message); return; }
     const ownGigs=data||[]; setSellerGigs(ownGigs);
     if (!ownGigs.length) { setGigAnalytics({}); return; }
@@ -607,7 +627,7 @@ function App() {
   const loadFavorites = async () => {
     if (!session?.user) return;
     const {data,error}=await supabase.from("favorites").select("*, gigs(*, profiles(full_name,avatar_url))").eq("user_id",session.user.id).order("created_at",{ascending:false});
-    if (!error) setFavoriteGigs((data||[]).filter(x=>x.gigs?.id).map(x=>x.gigs));
+    if (!error) setFavoriteGigs((data||[]).filter(x=>x.gigs?.id && x.gigs.work_type===workType).map(x=>x.gigs));
   };
 
   const loadPortfolio = async () => {
@@ -852,7 +872,7 @@ function App() {
   },[activeOrder?.id,session?.user?.id]);
 
   const myGigs = sellerGigs;
-  const myOrders = orders.filter(o => o.buyer_id === session?.user?.id || o.seller_id === session?.user?.id);
+  const myOrders = orders.filter(o => (o.buyer_id === session?.user?.id || o.seller_id === session?.user?.id) && o.gigs?.work_type === workType);
   const sellerOrders = myOrders.filter(o => o.seller_id === session?.user?.id);
   const buyerOrders = myOrders.filter(o => o.buyer_id === session?.user?.id);
   const profileProgressItems = activeMode === "seller"
@@ -978,6 +998,7 @@ function App() {
     {notice && <div className="toast"><CheckCircle2 size={18}/>{notice}<button onClick={()=>setNotice("")}><X size={16}/></button></div>}
 
     {page === "home" && <>
+      {!profile && <div className="public-work-switch"><button className={workType==="digital"?"active digital":""} onClick={()=>setWorkType("digital")}><Code2 size={17}/> Digital Work</button><button className={workType==="practical"?"active practical":""} onClick={()=>setWorkType("practical")}><Wrench size={17}/> Practical Work</button></div>}
       <section className="hero">
         <div className="hero-inner">
           <div className="eyebrow"><span className="eyebrow-dot"></span> {t.heroEyebrow}</div>
@@ -1002,7 +1023,7 @@ function App() {
       </section>
       <section className="trust-strip"><span><ShieldCheck size={18}/> For every kind of work</span><span><CheckCircle2 size={18}/> Clear work agreements</span><span><MessageCircle size={18}/> Buyer-seller messaging</span></section>
       <main className="content" id="explore">
-        <div className="section-heading"><div><div className="eyebrow muted">{t.discover}</div><h2>{t.exploreAll}</h2><p>Browse digital skills, skilled trades and everyday services.</p></div><button className="outline-btn" onClick={()=>{setSearch("");setCategory("All");setLocationFilter("");setMinBudget("");setMaxBudget("");setDeliveryFilter("any");setSortBy("newest");}}><Filter size={16}/> Clear filters</button></div>
+        <div className="section-heading"><div><div className="eyebrow muted">{t.discover}</div><h2>{workType==="digital"?"Digital Work Marketplace":"Practical Work Marketplace"}</h2><p>{workType==="digital"?"Digital services, creative skills and online expertise.":"Local services, skilled trades and hands-on work."}</p></div><button className="outline-btn" onClick={()=>{setSearch("");setCategory("All");setLocationFilter("");setMinBudget("");setMaxBudget("");setDeliveryFilter("any");setSortBy("newest");}}><Filter size={16}/> Clear filters</button></div>
         <div className="category-row">{categories.map(c=>{const CategoryIcon=categoryIcons[c]||BriefcaseBusiness;return <button key={c} className={category===c?"category active":"category"} onClick={()=>setCategory(c)}><CategoryIcon size={14}/><span>{c}</span></button>;})}</div>
         <div className="marketplace-filters"><label>City or country<input value={locationFilter} onChange={e=>setLocationFilter(e.target.value)} placeholder="e.g. Lahore"/></label><label>Min budget (PKR)<input type="number" min="0" value={minBudget} onChange={e=>setMinBudget(e.target.value)} placeholder="Any"/></label><label>Max budget (PKR)<input type="number" min="0" value={maxBudget} onChange={e=>setMaxBudget(e.target.value)} placeholder="Any"/></label><label>Delivery time<select value={deliveryFilter} onChange={e=>setDeliveryFilter(e.target.value)}><option value="any">Any time</option><option value="1">Within 1 day</option><option value="3">Within 3 days</option><option value="7">Within 7 days</option></select></label><label>Sort by<select value={sortBy} onChange={e=>setSortBy(e.target.value)}><option value="newest">Newest first</option><option value="price-low">Price: low to high</option><option value="price-high">Price: high to low</option></select></label></div>
         <div className="gig-grid">{filteredGigs.map(g=><GigCard key={g.id} gig={g} onImpression={trackGigImpression} onClick={()=>{trackGigClick(g);openSellerProfile(g.seller_id);}}/> )}</div>
@@ -1014,7 +1035,7 @@ function App() {
     {page === "auth" && <main className="narrow-page"><div className="auth-card"><div className="auth-logo"><span className="brand-mark"><Sparkles size={20}/></span></div><div className="eyebrow muted">WELCOME TO SKILL BRIDGE</div><h2>{authMode==="signup"?"Create your account":"Welcome back"}</h2><p className="subtext">{authMode==="signup"?"Join the community of buyers and independent sellers.":"Log in to manage your projects and services."}</p>
       {signupConfirmationPending && authMode==="login" && <div className="auth-mode-note" role="status"><strong>Check your email to confirm your account.</strong><p>After confirming, return here and log in with the same email and password. If you opened the confirmation link on your phone, your laptop will not sign in automatically — sign in on this laptop after verification.</p></div>}
       <form onSubmit={signUpOrIn} className="stack-form">
-        {authMode==="signup" && <><label>Full name<input required value={authForm.name} onChange={e=>setAuthForm({...authForm,name:e.target.value})} placeholder="Your name"/></label><p className="auth-mode-note">One account gives you both Buyer and Seller modes. You can switch anytime.</p></>}
+        {authMode==="signup" && <><label>Full name<input required value={authForm.name} onChange={e=>setAuthForm({...authForm,name:e.target.value})} placeholder="Your name"/></label><div className="work-type-picker"><div className="work-type-heading"><strong>Choose your Skill Bridge marketplace</strong><span>Select one work type for this account. It cannot be changed later.</span></div><div className="work-type-options"><button type="button" className={`work-type-option digital ${authForm.work_type==="digital"?"selected":""}`} onClick={()=>setAuthForm({...authForm,work_type:"digital"})}><span className="work-type-icon"><Code2 size={25}/></span><span className="work-type-copy"><strong>Digital Work</strong><small>Design, websites, programming, writing, video editing and online services.</small></span><span className="work-type-check">{authForm.work_type==="digital"?"✓":"○"}</span></button><button type="button" className={`work-type-option practical ${authForm.work_type==="practical"?"selected":""}`} onClick={()=>setAuthForm({...authForm,work_type:"practical"})}><span className="work-type-icon"><Wrench size={25}/></span><span className="work-type-copy"><strong>Practical Work</strong><small>Plumbing, carpentry, AC repair, construction, painting and local services.</small></span><span className="work-type-check">{authForm.work_type==="practical"?"✓":"○"}</span></button></div><p className="auth-mode-note">You can hire people and offer your own services inside the selected marketplace. Buyer and Seller modes both remain available.</p></div></>}
         <label>Email address<input required type="email" value={authForm.email} onChange={e=>setAuthForm({...authForm,email:e.target.value})} placeholder="you@example.com"/></label>
         <label>Password<input required minLength="6" type="password" value={authForm.password} onChange={e=>setAuthForm({...authForm,password:e.target.value})} placeholder="At least 6 characters"/></label>
         <button className="btn btn-dark full" disabled={busy}>{busy?"Please wait...":authMode==="signup"?"Create account":"Log in"} <ArrowRight size={17}/></button>
