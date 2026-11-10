@@ -66,6 +66,8 @@ Never put a Supabase `service_role` key in frontend code or any `VITE_*` variabl
 
 Database migrations are maintained in `supabase/migrations`. The production database has application tables for profiles, services, orders, conversations, messages, custom offers, notifications, favourites, portfolio items, analytics, reports and reviews. RLS is enabled on these public tables.
 
+Gig cover photos are selected directly from a phone or computer gallery and uploaded to the public `gig-images` Supabase Storage bucket. To enable this, open Supabase Dashboard → SQL Editor → New query, paste and run the complete contents of `supabase/gig-image-storage.sql`. Uploads are limited to image files up to 5 MB; each signed-in user can upload only into their own storage folder. Gig photos are publicly viewable because they appear on marketplace listings.
+
 ## Deploy
 
 Vercel is connected to the GitHub repository. The Vite build uses:
