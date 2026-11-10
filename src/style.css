@@ -1369,3 +1369,60 @@ html,body,.app-shell{background:#f7f6f2;color:#20243a}
 .gig-image-preview{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px;border:1px solid var(--line);border-radius:13px;background:#fff}
 .gig-image-preview img{width:116px;height:82px;object-fit:cover;border-radius:9px;border:1px solid var(--line)}
 @media(max-width:420px){.gig-image-preview{align-items:stretch;flex-direction:column}.gig-image-preview img{width:100%;height:150px}.gig-image-preview .outline-btn{justify-content:center}}
+
+
+/* WhatsApp-inspired Skill Bridge inbox refresh */
+.inbox-page .inbox-layout{grid-template-columns:minmax(285px,355px) minmax(0,1fr);gap:0;min-height:680px;height:min(76vh,820px);border:1px solid #e7e5dc;border-radius:18px;overflow:hidden;background:#fff;box-shadow:0 14px 38px #25213b0d}
+.inbox-page .inbox-list{max-height:none;min-height:0;border:0;border-right:1px solid #e9e6df;border-radius:0;overflow:auto;background:#fffefa}
+.inbox-page .inbox-list-head{padding:19px 18px 13px;border:0;background:#fffefa}
+.inbox-page .inbox-list-head strong{font-size:17px;color:#252443}
+.inbox-page .inbox-list-head span{display:grid;place-items:center;min-width:24px;height:24px;padding:0 6px;border-radius:20px;background:#f0edfa;color:#6d60b9;font-size:11px;font-weight:800}
+.inbox-page .inbox-search{width:calc(100% - 28px);margin:0 14px 12px;border:0;border-radius:22px;background:#f3f2f5;padding:12px 16px}
+.inbox-page .inbox-thread{position:relative;gap:12px;padding:14px 15px;border-bottom:1px solid #f0eee9;background:#fffefa}
+.inbox-page .inbox-thread.active,.inbox-page .inbox-thread:hover{background:#f2f0fa}
+.inbox-page .inbox-thread.active{box-shadow:inset 3px 0 #8273c8}
+.inbox-page .inbox-thread .avatar{display:grid;place-items:center;flex:0 0 46px;width:46px;height:46px;border-radius:50%;background:linear-gradient(145deg,#eae5f7,#f6e9cf);color:#51477e;font-size:17px;font-weight:800}
+.inbox-page .inbox-thread-copy{flex:1;gap:5px}
+.inbox-page .inbox-thread-copy strong{font-size:13px;color:#252443}
+.inbox-page .inbox-thread-copy small{font-size:11px;color:#898697}
+.inbox-page .inbox-thread-copy small:last-of-type{max-width:220px}
+.inbox-page .inbox-unread{position:absolute;right:14px;bottom:13px;display:grid;place-items:center;min-width:19px;height:19px;padding:0 5px;border-radius:20px;background:#6f61b9;color:#fff;font-size:10px;font-weight:800}
+.inbox-page .inbox-chat{position:relative;min-height:0;height:100%;border:0;border-radius:0;background:#f8f7f2}
+.inbox-page .inbox-chat-head{flex:none;min-height:72px;padding:12px 20px;gap:12px;border-bottom:1px solid #e9e6df;background:#fffefa}
+.inbox-page .inbox-chat-head>div{flex:1;min-width:0}
+.inbox-page .inbox-chat-head strong{font-size:14px;color:#252443}
+.inbox-page .inbox-chat-head small{font-size:11px;color:#898697}
+.inbox-page .chat-person-avatar{display:grid;place-items:center;flex:0 0 43px;width:43px;height:43px;border-radius:50%;background:#eeeaf8;color:#5e5495;font-weight:850}
+.inbox-page .chat-back{display:none;border:0;background:transparent;color:#6d60b9;font-size:12px;font-weight:750;cursor:pointer}
+.inbox-page .inbox-chat-body{flex:1;min-height:0;max-height:none;padding:22px clamp(14px,4vw,42px);gap:10px;overflow-y:auto;background-color:#f6f4ed;background-image:radial-gradient(#d8d3c7 0.65px,transparent 0.65px);background-size:17px 17px}
+.inbox-page .chat-msg{max-width:min(76%,520px);padding:9px 12px 7px;border:1px solid #e8e5dc;border-radius:5px 14px 14px 14px;background:#fffefa;box-shadow:0 1px 1px #25213b0a}
+.inbox-page .chat-msg.own{align-self:flex-end;border-color:#e5dfc9;border-radius:14px 5px 14px 14px;background:#f0eddf}
+.inbox-page .chat-msg strong{display:none}
+.inbox-page .chat-msg p{margin:0;color:#29283a;font-size:13px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}
+.inbox-page .chat-msg .chat-msg-meta{display:flex;justify-content:flex-end;align-items:center;gap:6px;margin-top:4px;color:#96919a;font-size:9px}
+.inbox-page .chat-read-status.seen{color:#7567bf}
+.inbox-page .empty-chat{padding:12px 18px;border-radius:12px;background:#fffefa;color:#817c88}
+.inbox-page .custom-offer-form{flex:none;max-height:210px;overflow:auto;background:#fffefa;border-top:1px solid #e9e6df}
+.inbox-page .custom-offer-form>strong{color:#292747;font-size:13px}
+.inbox-page .custom-offer-form .offer-form-hint{font-size:11px}
+.inbox-page .chat-compose{flex:none;align-items:center;gap:10px;padding:12px 16px;background:#f8f7f2;border-top:1px solid #e9e6df}
+.inbox-page .chat-compose input{height:46px;padding:0 18px;border:1px solid #e8e4da;border-radius:24px;background:#fffefa;font-size:13px;outline:none}
+.inbox-page .chat-compose input:focus{border-color:#b8acd9;box-shadow:0 0 0 3px #8273c81a}
+.inbox-page .chat-compose .btn{display:grid;place-items:center;flex:0 0 45px;width:45px;height:45px;padding:0;border:0;border-radius:50%;background:#292747;color:#f0c77e}
+.inbox-page .inbox-placeholder{color:#8d8795}
+.inbox-page .inbox-placeholder svg{color:#8273c8}
+@media(max-width:760px){
+ .inbox-page .inbox-layout{display:block;height:calc(100dvh - 205px);min-height:480px;margin-top:18px;border-radius:14px}
+ .inbox-page .inbox-list{height:100%;max-height:none;border:0;overflow:auto}
+ .inbox-page .inbox-chat{display:none;height:100%;min-height:0}
+ .inbox-page .inbox-layout.has-active-chat .inbox-list{display:none}
+ .inbox-page .inbox-layout.has-active-chat .inbox-chat{display:flex}
+ .inbox-page .inbox-chat-head{min-height:64px;padding:9px 10px;gap:8px}
+ .inbox-page .chat-back{display:inline-flex;align-items:center;flex:none;padding:8px 3px}
+ .inbox-page .chat-person-avatar{flex-basis:38px;width:38px;height:38px}
+ .inbox-page .inbox-chat-head .seller-tag{font-size:9px;padding:5px 7px}
+ .inbox-page .inbox-chat-body{padding:16px 12px}
+ .inbox-page .chat-msg{max-width:88%}
+ .inbox-page .chat-compose{padding:9px}
+ .inbox-page .custom-offer-form{max-height:190px;padding:10px}
+}
