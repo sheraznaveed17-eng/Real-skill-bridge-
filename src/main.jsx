@@ -867,7 +867,7 @@ function App() {
   return <div className="app-shell" lang={language} dir={["ur","pa","ar"].includes(language)?"rtl":"ltr"}>
     <header className="topbar">
       <button className="brand" onClick={() => navigate("home")}><span className="brand-mark"><Sparkles size={20}/></span><span className="brand-wordmark"><span>skill<span className="brand-accent">bridge</span></span><small>Made by Yousaf</small></span></button>
-      <select className="language-switcher language-switcher-left" aria-label="Choose language" value={language} onChange={e=>setLanguage(e.target.value)}><option value="en">English</option><option value="ur">اردو</option><option value="pa">پنجابی</option><option value="hi">हिन्दी</option><option value="ar">العربية</option><option value="es">Español</option><option value="fr">Français</option><option value="zh">中文</option><option value="tr">Türkçe</option><option value="de">Deutsch</option></select>
+      
       <nav className="desktop-nav">
         <button onClick={() => navigate("home")}>{t.explore}</button>
         {session && <button onClick={() => navigate("orders")}>{t.orders}</button>}
@@ -875,7 +875,7 @@ function App() {
         {session && activeMode==="seller" && <button onClick={() => navigate("my-gigs")}>{t.myServices}</button>}
         {isAdmin && <button onClick={() => navigate("admin")}>Admin</button>}
       </nav>
-      <div className="top-actions">
+      <div className="top-actions"><select className="language-switcher language-switcher-left" aria-label="Choose language" value={language} onChange={e=>setLanguage(e.target.value)}><option value="en">English</option><option value="ur">اردو</option><option value="pa">پنجابی</option><option value="hi">हिन्दी</option><option value="ar">العربية</option><option value="es">Español</option><option value="fr">Français</option><option value="zh">中文</option><option value="tr">Türkçe</option><option value="de">Deutsch</option></select>
         
         {session ? <>
           <div className="notification-wrap">
