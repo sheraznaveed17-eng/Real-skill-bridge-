@@ -1734,3 +1734,62 @@ body{background:#f7faf9;color:#18323a}
   .top-actions>.nav-menu-trigger{width:35px!important;flex-basis:35px!important;height:35px!important}
   .topbar>.brand{min-width:0!important}
 }
+
+
+/* Mobile marketplace polish: readable cards, filters and safe floating assistant */
+.gig-art-fallback::after{
+  content:"✦  Image unavailable";
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  color:#ffffffed;font-size:13px;font-weight:700;letter-spacing:.2px;
+  background:linear-gradient(135deg,#367f80,#8bbfba);
+}
+.gig-art img{z-index:0}
+.gig-art>span{z-index:1}
+@media(max-width:760px){
+  .content{width:calc(100% - 28px)!important;margin:38px auto!important}
+  .section-heading{align-items:flex-start;gap:12px}
+  .section-heading h2{font-size:24px!important;line-height:1.2}
+  .section-heading p{font-size:12px;line-height:1.5}
+  .category-row{
+    display:flex!important;flex-wrap:nowrap!important;overflow-x:auto!important;
+    overscroll-behavior-x:contain;scroll-snap-type:x proximity;
+    padding:16px 1px 18px!important;gap:8px!important;
+    -webkit-overflow-scrolling:touch;scrollbar-width:none;
+  }
+  .category-row::-webkit-scrollbar{display:none}
+  .category{flex:0 0 auto;scroll-snap-align:start;padding:9px 13px;font-size:11px}
+  .marketplace-filters{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:11px!important;padding:13px!important;margin:0 0 18px!important;
+  }
+  .marketplace-filters label{min-width:0;font-size:10px!important;gap:6px}
+  .marketplace-filters label:first-child{grid-column:1/-1}
+  .marketplace-filters input,.marketplace-filters select{
+    min-width:0;width:100%;height:42px;padding:0 10px;font-size:12px!important;
+  }
+  .gig-grid{
+    grid-template-columns:minmax(0,1fr)!important;
+    gap:16px!important;
+  }
+  .gig-card{width:100%;border-radius:15px!important}
+  .gig-art{height:190px!important}
+  .gig-info{padding:15px!important}
+  .seller-line{font-size:11px!important;gap:8px}
+  .seller-tag{font-size:9px!important;padding:5px 7px}
+  .gig-info h3{font-size:16px!important;min-height:0!important;margin:12px 0!important}
+  .gig-meta{font-size:11px!important;gap:14px!important;flex-wrap:wrap;padding:10px 0 13px}
+  .gig-price small{font-size:9px!important}
+  .gig-price strong{font-size:17px!important}
+  .hero h1{font-size:clamp(34px,9vw,43px)!important;line-height:1.08;letter-spacing:-1.6px}
+  .hero p{font-size:13px!important;line-height:1.55}
+  .hero-search{width:100%;max-width:100%;min-width:0}
+  .hero-search input{font-size:12px!important}
+  .trust-strip{gap:10px 16px;font-size:10px!important}
+  .assistant-floating{width:44px;height:44px;z-index:1002}
+}
+@media(max-width:390px){
+  .marketplace-filters{gap:9px!important;padding:11px!important}
+  .gig-art{height:170px!important}
+  .gig-info{padding:13px!important}
+  .topbar>.brand{font-size:15px!important}
+}
