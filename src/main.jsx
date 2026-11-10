@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import {
   Search, BriefcaseBusiness, UserRound, Plus, LogOut, Menu, X, Star, Bookmark, Trash2, ExternalLink, Flag, Compass, FolderOpen,
   MessageCircle, LayoutDashboard, ShieldCheck, ArrowRight, CheckCircle2, Bell, Mic, MicOff, Bot, Volume2,
-  Clock3, Wallet, Sparkles, Filter, PackageCheck, Send, ChevronRight, ChevronDown, Camera, Save, UserCircle, Settings, ShoppingBag, Eye, Palette, PenLine, Code2, Video, Megaphone, Building2, Hammer, Wrench, Zap, Paintbrush, Sofa, Snowflake, Car, Sprout, Truck, GraduationCap, CalendarDays
+  Clock3, Wallet, Sparkles, Filter, PackageCheck, Send, ChevronRight, ChevronDown, Camera, Save, UserCircle, Settings, ShoppingBag, Eye, Palette, PenLine, Code2, Video, Megaphone, Building2, Hammer, Wrench, Zap, Paintbrush, Sofa, Snowflake, Car, Sprout, Truck, GraduationCap, CalendarDays, Users, UserCog, Ban, Unlock, MessageSquareText, ClipboardList, RefreshCw, ShieldAlert
 } from "lucide-react";
 import { supabase, isConfigured } from "./supabase";
 import "./style.css";
@@ -139,6 +139,14 @@ function App() {
   const [reports, setReports] = useState([]);
   const [reportOpen, setReportOpen] = useState(false);
   const [reportForm, setReportForm] = useState({reason:"fake_service",details:""});
+  const [adminUsers,setAdminUsers]=useState([]);
+  const [adminSelectedUser,setAdminSelectedUser]=useState(null);
+  const [adminDetails,setAdminDetails]=useState(null);
+  const [adminSearch,setAdminSearch]=useState("");
+  const [adminStatusFilter,setAdminStatusFilter]=useState("all");
+  const [adminDetailTab,setAdminDetailTab]=useState("overview");
+  const [adminLogs,setAdminLogs]=useState([]);
+  const [adminLoading,setAdminLoading]=useState(false);
 
   const demoMode = !isConfigured;
   const categories = workType === "practical" ? practicalCategories : digitalCategories;
@@ -204,8 +212,13 @@ function App() {
   }, [session?.user?.id]);
 
   const loadProfile = async user => {
-    const { data } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
-    if (data && data.account_status && data.account_status!=="active") { await supabase.auth.signOut(); setProfile(null); show(data.account_status==="banned"?"This account has been permanently banned after moderation review.":"This account is currently suspended."); return; }
+    let { data } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
+    if (data?.account_status==="suspended" && data.ban_until && new Date(data.ban_until).getTime()<=Date.now()) {
+      await supabase.rpc("refresh_my_temporary_ban");
+      const refreshed=await supabase.from("profiles").select("*").eq("id",user.id).maybeSingle();
+      data=refreshed.data||data;
+    }
+    if (data && data.account_status && data.account_status!=="active") { await supabase.auth.signOut(); setProfile(null); show(data.account_status==="banned"?"This account has been permanently banned after moderation review.":"This account is temporarily suspended until "+(data.ban_until?new Date(data.ban_until).toLocaleString():"further notice")); return; }
     const selectedWorkType = data?.work_type || user.user_metadata?.work_type || "digital";
     let resolvedProfile = data;
     if (resolvedProfile && !resolvedProfile.work_type) {
@@ -668,6 +681,48 @@ function App() {
     if (error) show(error.message); else setReports(data||[]);
   };
 
+  const loadAdminUsers = async () => {
+    if (profile?.role!=="admin") return;
+    setAdminLoading(true);
+    const {data,error}=await supabase.rpc("admin_list_users");
+    if(error) show(error.message); else setAdminUsers(Array.isArray(data)?data:[]);
+    setAdminLoading(false);
+  };
+
+  const loadAdminLogs = async () => {
+    if (profile?.role!=="admin") return;
+    const {data,error}=await supabase.rpc("admin_list_action_logs");
+    if(error) show(error.message); else setAdminLogs(Array.isArray(data)?data:[]);
+  };
+
+  const openAdminUser = async user => {
+    setAdminSelectedUser(user); setAdminDetails(null); setAdminDetailTab("overview");
+    const {data,error}=await supabase.rpc("admin_get_user_details",{p_user_id:user.id});
+    if(error) show(error.message); else setAdminDetails(data);
+  };
+
+  const adminSetUserStatus = async (user,status,days=null) => {
+    const label=status==="active"?"restore access":status==="banned"?"permanently ban":"temporarily ban";
+    if(!window.confirm("Are you sure you want to "+label+" for "+(user.full_name||user.email)+"?")) return;
+    const reason=status==="active"?"Access restored by administrator":(window.prompt("Enter the moderation reason:","Policy violation review")||"").trim();
+    if(status!=="active"&&!reason) return show("A reason is required for moderation.");
+    const until=days?new Date(Date.now()+days*86400000).toISOString():null;
+    const {error}=await supabase.rpc("admin_set_account_status",{p_user_id:user.id,p_status:status,p_reason:reason,p_ban_until:until});
+    if(error){show(error.message);return;}
+    show(status==="active"?"Account access restored.":status==="banned"?"Account permanently banned.":"Account temporarily banned for "+days+" day(s).");
+    await loadAdminUsers(); await loadAdminLogs(); await openAdminUser(user);
+  };
+
+  const adminSetGigStatus = async gig => {
+    const next=!gig.is_active;
+    if(!window.confirm((next?"Reactivate":"Deactivate")+" this service?")) return;
+    const {error}=await supabase.rpc("admin_set_gig_status",{p_gig_id:gig.id,p_is_active:next,p_reason:"Admin moderation action"});
+    if(error){show(error.message);return;}
+    show(next?"Service reactivated.":"Service deactivated.");
+    await loadAdminUsers(); await loadAdminLogs();
+    if(adminSelectedUser) await openAdminUser(adminSelectedUser);
+  };
+
   const submitReport = async e => {
     e.preventDefault();
     if (!session?.user) { setAuthMode("login"); setSelectedGig(null); navigate("auth"); show("Log in to submit a report."); return; }
@@ -888,7 +943,7 @@ function App() {
   const inboxNeedle = inboxSearch.trim().toLowerCase();
   const filteredInboxConversations = conversations.filter(c => { const other=c.buyer_id===session?.user?.id?c.seller:c.buyer; return `${other?.full_name||""} ${c.gigs?.title||""} ${c.last_message||""}`.toLowerCase().includes(inboxNeedle); });
   const filteredInboxOrders = myOrders.filter(o => { const other=o.buyer_id===session?.user?.id?o.seller:o.buyer; return `${other?.full_name||""} ${o.gigs?.title||""} ${o.status||""}`.toLowerCase().includes(inboxNeedle); });
-  useEffect(() => { if (isAdmin) loadReports(); }, [isAdmin]);
+  useEffect(() => { if (isAdmin) { loadReports(); loadAdminUsers(); loadAdminLogs(); } else { setAdminUsers([]); setAdminSelectedUser(null); setAdminDetails(null); setAdminLogs([]); } }, [isAdmin]);
   useEffect(() => { if (selectedGig?.id) { setSelectedPackage(selectedGig.packages?.[0]?.name || "Basic"); setRecentViewedIds(prev => { const next=[selectedGig.id,...prev.filter(id=>id!==selectedGig.id)].slice(0,8); try { localStorage.setItem("skillbridge-recently-viewed",JSON.stringify(next)); } catch {} return next; }); } }, [selectedGig?.id]);
   const packageOptions = selectedGig?.packages?.length ? selectedGig.packages : selectedGig ? [{name:"Basic",description:selectedGig.description,price:selectedGig.price,delivery_days:selectedGig.delivery_days,revisions:0}] : [];
   const activePackage = packageOptions.find(p=>p.name===selectedPackage) || packageOptions[0];
@@ -1226,7 +1281,56 @@ function App() {
       </div>
     </main>}
 
-    {page === "admin" && (isAdmin ? <main className="content page-content"><div className="eyebrow muted">ADMINISTRATION</div><h2>Trust & safety</h2><p className="subtext">Review user reports. Three distinct reports against one account automatically move its cases into investigation.</p><div className="dashboard-stats"><div className="dashboard-stat"><span>Reports received</span><strong>{reports.length}</strong><small>All visible reports</small></div><div className="dashboard-stat"><span>Under investigation</span><strong>{reports.filter(r=>r.status==="investigating").length}</strong><small>Threshold reached or manually flagged</small></div><div className="dashboard-stat"><span>Pending review</span><strong>{reports.filter(r=>r.status==="pending").length}</strong><small>Awaiting moderation</small></div></div><section className="dashboard-panel moderation-panel"><div className="dashboard-panel-heading"><div><h3>Reported accounts and services</h3><p>Complaints are reviewed as evidence, not treated as proof.</p></div><button className="outline-btn" onClick={loadReports}>Refresh</button></div>{reports.map(r=>{const count=reports.filter(x=>x.reported_user_id===r.reported_user_id).length;return <article className="report-row" key={r.id}><div className="report-main"><strong>{r.reported?.full_name||"Member"} {count>=3&&<span className="investigation-flag">3+ reports</span>} {r.reported?.account_status==="banned"&&<span className="report-status dismissed">Banned</span>}</strong><small>{r.gigs?.title||"Account report"} · {r.reason.replaceAll("_"," ")} · {new Date(r.created_at).toLocaleDateString()}</small><p>{r.details}</p><small>Reported by {r.reporter?.full_name||"Member"}</small></div><div className="report-actions"><span className={"report-status "+r.status}>{r.status}</span>{r.status!=="resolved"&&<button className="outline-btn" onClick={()=>updateReport(r,"resolved")}>Resolve</button>}{r.status!=="dismissed"&&<button className="outline-btn" onClick={()=>updateReport(r,"dismissed")}>Dismiss</button>}{r.status==="investigating"&&r.reported?.account_status!=="banned"&&<button className="outline-btn danger-outline" onClick={()=>permanentlyBanUser(r)}>Permanently ban</button>}</div></article>;})}{!reports.length&&<Empty icon={<ShieldCheck/>} title="No reports received" text="When users report a service or account, it will appear here for review."/>}</section><h3 className="list-title">Recent services</h3>{gigs.slice(0,10).map(g=><div className="admin-row" key={g.id}><div><strong>{g.title}</strong><small>{g.profiles?.full_name} · {g.category}</small></div><strong>{money(g.price)}</strong><button className="outline-btn" onClick={async()=>{const {error}=await supabase.from("gigs").update({is_active:false}).eq("id",g.id);if(error)show(error.message);else{show("Service deactivated.");loadGigs();}}}>Deactivate</button></div>)}</main> : <main className="content page-content"><h2>Admin access required</h2><p className="subtext">This area is only available to authorized Skill Bridge administrators.</p></main>)}
+    {page === "admin" && (isAdmin ? <main className="content page-content admin-page">
+      <div className="admin-page-heading"><div><div className="eyebrow muted">PRIVATE ADMINISTRATION</div><h2>Admin Control Center</h2><p className="subtext">Manage accounts, services, orders, conversations and moderation from one secure place.</p></div><button className="outline-btn" onClick={()=>{loadAdminUsers();loadReports();loadAdminLogs();}}><RefreshCw size={15}/> Refresh all</button></div>
+      <div className="admin-overview-stats">
+        <div className="admin-overview-stat"><Users/><span>All accounts</span><strong>{adminUsers.length}</strong></div>
+        <div className="admin-overview-stat"><UserCog/><span>Active</span><strong>{adminUsers.filter(u=>u.account_status==="active").length}</strong></div>
+        <div className="admin-overview-stat"><Ban/><span>Suspended / banned</span><strong>{adminUsers.filter(u=>u.account_status!=="active").length}</strong></div>
+        <div className="admin-overview-stat"><ShieldAlert/><span>Open reports</span><strong>{reports.filter(r=>["pending","investigating"].includes(r.status)).length}</strong></div>
+      </div>
+      <div className="admin-control-layout">
+        <section className="admin-users-panel">
+          <div className="admin-panel-title"><div><h3>All accounts</h3><p>{adminUsers.length} registered users</p></div><button className="admin-icon-button" onClick={loadAdminUsers} title="Refresh accounts"><RefreshCw size={16}/></button></div>
+          <input className="admin-search" value={adminSearch} onChange={e=>setAdminSearch(e.target.value)} placeholder="Search name, email or city..."/>
+          <select className="admin-filter" value={adminStatusFilter} onChange={e=>setAdminStatusFilter(e.target.value)}><option value="all">All statuses</option><option value="active">Active</option><option value="suspended">Temporary ban</option><option value="banned">Permanent ban</option></select>
+          <div className="admin-user-list">
+            {adminUsers.filter(u=>(adminStatusFilter==="all"||u.account_status===adminStatusFilter)&&[u.full_name,u.email,u.city,u.country].join(" ").toLowerCase().includes(adminSearch.toLowerCase())).map(u=><button key={u.id} className={"admin-user-item "+(adminSelectedUser?.id===u.id?"selected":"")} onClick={()=>openAdminUser(u)}>
+              <span className="admin-user-avatar">{u.avatar_url?<img src={u.avatar_url} alt=""/>:(u.full_name||u.email||"U").slice(0,1).toUpperCase()}</span>
+              <span className="admin-user-copy"><strong>{u.full_name||"New member"}</strong><small>{u.email}</small><small>{u.role||"buyer"} · {u.work_type||"digital"} · {u.city||"Location not set"}</small></span>
+              <span className={"admin-status-chip "+(u.account_status||"active")}>{u.account_status==="suspended"?"Banned":u.account_status||"active"}</span>
+            </button>)}
+            {!adminUsers.length&&!adminLoading&&<Empty icon={<Users/>} title="No accounts yet" text="New registrations will appear here."/>}
+            {adminLoading&&<p className="admin-muted">Loading accounts…</p>}
+          </div>
+        </section>
+        <section className="admin-detail-panel">
+          {!adminSelectedUser ? <div className="admin-empty-detail"><ShieldCheck size={38}/><h3>Select an account</h3><p>Choose a user from the list to inspect their profile, services, orders and conversations.</p></div> : <>
+            <div className="admin-selected-heading"><div><div className="eyebrow muted">ACCOUNT DETAILS</div><h3>{adminSelectedUser.full_name||"Member"}</h3><p>{adminSelectedUser.email}</p><span className={"admin-status-chip "+(adminSelectedUser.account_status||"active")}>{adminSelectedUser.account_status||"active"}</span></div><button className="outline-btn" onClick={()=>openAdminUser(adminSelectedUser)}><RefreshCw size={14}/> Reload</button></div>
+            <div className="admin-user-metrics"><span><strong>{adminSelectedUser.gigs_count||0}</strong> Services</span><span><strong>{adminSelectedUser.orders_count||0}</strong> Orders</span><span><strong>{adminSelectedUser.messages_count||0}</strong> Messages</span><span><strong>{adminSelectedUser.reports_count||0}</strong> Reports</span></div>
+            <div className="admin-moderation-actions">
+              <span>Account controls</span>
+              {adminSelectedUser.account_status!=="active"&&<button className="admin-action restore" onClick={()=>adminSetUserStatus(adminSelectedUser,"active")}><Unlock size={14}/> Unblock</button>}
+              {adminSelectedUser.account_status==="active"&&<><button className="admin-action" onClick={()=>adminSetUserStatus(adminSelectedUser,"suspended",1)}>1 day</button><button className="admin-action" onClick={()=>adminSetUserStatus(adminSelectedUser,"suspended",7)}>7 days</button><button className="admin-action" onClick={()=>adminSetUserStatus(adminSelectedUser,"suspended",30)}>30 days</button><button className="admin-action danger" onClick={()=>adminSetUserStatus(adminSelectedUser,"banned")}>Permanent ban</button></>}
+            </div>
+            {adminDetails?.profile?.ban_reason&&<p className="admin-ban-reason"><strong>Moderation reason:</strong> {adminDetails.profile.ban_reason}{adminDetails.profile.ban_until&&<span> · Until {new Date(adminDetails.profile.ban_until).toLocaleString()}</span>}</p>}
+            <div className="admin-detail-tabs">{[["overview","Overview"],["gigs","Services"],["orders","Orders"],["chats","Chats"],["reports","Reports"],["activity","Activity"]].map(([key,label])=><button key={key} className={adminDetailTab===key?"active":""} onClick={()=>setAdminDetailTab(key)}>{label}</button>)}</div>
+            {!adminDetails?<p className="admin-muted">Loading account details…</p>:<>
+              {adminDetailTab==="overview"&&<div className="admin-info-grid">
+                <div><small>Full name</small><strong>{adminDetails.profile?.full_name||"—"}</strong></div><div><small>Email</small><strong>{adminDetails.account?.email||"—"}</strong></div><div><small>Role</small><strong>{adminDetails.profile?.role||"—"}</strong></div><div><small>Marketplace</small><strong>{adminDetails.profile?.work_type||"—"}</strong></div><div><small>City / country</small><strong>{[adminDetails.profile?.city,adminDetails.profile?.country].filter(Boolean).join(", ")||"—"}</strong></div><div><small>Joined</small><strong>{adminDetails.account?.created_at?new Date(adminDetails.account.created_at).toLocaleString():"—"}</strong></div><div><small>Last sign-in</small><strong>{adminDetails.account?.last_sign_in_at?new Date(adminDetails.account.last_sign_in_at).toLocaleString():"Never"}</strong></div><div><small>Account status</small><strong>{adminDetails.profile?.account_status||"active"}</strong></div>
+                <div className="admin-info-wide"><small>Bio</small><p>{adminDetails.profile?.bio||"No bio provided."}</p></div><div className="admin-info-wide"><small>Skills</small><p>{(adminDetails.profile?.skills||[]).join(", ")||"No skills listed."}</p></div>
+              </div>}
+              {adminDetailTab==="gigs"&&<div className="admin-detail-list">{(adminDetails.gigs||[]).map(g=><article className="admin-content-card" key={g.id}><div><strong>{g.title}</strong><small>{g.category} · {money(g.price)} · {new Date(g.created_at).toLocaleDateString()}</small><p>{g.description}</p></div><div className="admin-content-actions"><span className={"admin-status-chip "+(g.is_active?"active":"suspended")}>{g.is_active?"Live":"Hidden"}</span><button className="outline-btn" onClick={()=>adminSetGigStatus(g)}>{g.is_active?"Deactivate":"Reactivate"}</button></div></article>)}{!adminDetails.gigs?.length&&<Empty icon={<BriefcaseBusiness/>} title="No services" text="This account has not published any services."/ >}</div>}
+              {adminDetailTab==="orders"&&<div className="admin-detail-list">{(adminDetails.orders||[]).map(x=><article className="admin-content-card" key={x.order.id}><div><strong>{x.gig_title||"Order"}</strong><small>{x.buyer_name||"Buyer"} → {x.seller_name||"Seller"} · {money(x.order.amount)}</small></div><span className={"admin-status-chip "+x.order.status}>{x.order.status}</span></article>)}{!adminDetails.orders?.length&&<Empty icon={<PackageCheck/>} title="No orders" text="No order history for this account."/ >}</div>}
+              {adminDetailTab==="chats"&&<div className="admin-detail-list">{(adminDetails.conversations||[]).map(x=><article className="admin-chat-card" key={x.conversation.id}><div className="admin-chat-heading"><div><strong>{x.gig_title||"Conversation"}</strong><small>{x.buyer_name||"Buyer"} ↔ {x.seller_name||"Seller"} · {new Date(x.conversation.created_at).toLocaleString()}</small></div><span>{x.messages?.length||0} messages</span></div><div className="admin-chat-messages">{(x.messages||[]).map(m=><div key={m.id}><small>{m.sender_name||"Member"} · {new Date(m.created_at).toLocaleString()}</small><p>{m.body}</p></div>)}{!x.messages?.length&&<p className="admin-muted">No messages in this conversation.</p>}</div></article>)}{!adminDetails.conversations?.length&&<Empty icon={<MessageSquareText/>} title="No conversations" text="No chats for this account."/ >}</div>}
+              {adminDetailTab==="reports"&&<div className="admin-detail-list">{(adminDetails.reports||[]).map(r=><article className="admin-content-card" key={r.id}><div><strong>{r.reason.replaceAll("_"," ")}</strong><small>{new Date(r.created_at).toLocaleString()} · {r.status}</small><p>{r.details}</p></div><span className={"admin-status-chip "+r.status}>{r.status}</span></article>)}{!adminDetails.reports?.length&&<Empty icon={<Flag/>} title="No reports" text="No reports connected to this account."/ >}</div>}
+              {adminDetailTab==="activity"&&<div className="admin-detail-list">{adminLogs.filter(l=>l.target_user_id===adminSelectedUser.id).map(l=><article className="admin-content-card" key={l.id}><div><strong>{l.action.replaceAll("_"," ")}</strong><small>{new Date(l.created_at).toLocaleString()} · {l.admin_name||"Admin"}</small><p>{l.reason}</p></div></article>)}{!adminLogs.some(l=>l.target_user_id===adminSelectedUser.id)&&<Empty icon={<ClipboardList/>} title="No admin actions" text="Moderation history will appear here."/ >}</div>}
+            </>}
+          </>}
+        </section>
+      </div>
+      <section className="dashboard-panel moderation-panel admin-reports-panel"><div className="dashboard-panel-heading"><div><h3>Trust & safety reports</h3><p>Complaints are reviewed as evidence, not treated as proof.</p></div><button className="outline-btn" onClick={loadReports}>Refresh reports</button></div>{reports.map(r=>{const count=reports.filter(x=>x.reported_user_id===r.reported_user_id).length;return <article className="report-row" key={r.id}><div className="report-main"><strong>{r.reported?.full_name||"Member"} {count>=3&&<span className="investigation-flag">3+ reports</span>} {r.reported?.account_status==="banned"&&<span className="report-status dismissed">Banned</span>}</strong><small>{r.gigs?.title||"Account report"} · {r.reason.replaceAll("_"," ")} · {new Date(r.created_at).toLocaleDateString()}</small><p>{r.details}</p><small>Reported by {r.reporter?.full_name||"Member"}</small></div><div className="report-actions"><span className={"report-status "+r.status}>{r.status}</span>{r.status!=="resolved"&&<button className="outline-btn" onClick={()=>updateReport(r,"resolved")}>Resolve</button>}{r.status!=="dismissed"&&<button className="outline-btn" onClick={()=>updateReport(r,"dismissed")}>Dismiss</button>}</div></article>;})}{!reports.length&&<Empty icon={<ShieldCheck/>} title="No reports received" text="New reports will appear here for review."/>}</section>
+    </main> : <main className="content page-content"><h2>Admin access required</h2><p className="subtext">This area is only available to authorized Skill Bridge administrators.</p></main>)}
 
     {selectedGig && <div className="modal-backdrop" onClick={()=>{setSelectedGig(null);setPage("home");}}><div className="gig-modal" onClick={e=>e.stopPropagation()}><button className="modal-close" onClick={()=>{setSelectedGig(null);setPage("home");}}><X/></button><div className="gig-art large-art">{selectedGig.image_url?<img src={selectedGig.image_url} alt={selectedGig.title}/>:<Sparkles size={34}/>}</div><div className="eyebrow muted">{selectedGig.category}</div><h2>{selectedGig.title}</h2><div className="seller-line"><span className="avatar">{(selectedGig.profiles?.full_name||"S").slice(0,1).toUpperCase()}</span><button className="seller-profile-link" onClick={()=>openSellerProfile(selectedGig.seller_id)}><strong>{selectedGig.profiles?.full_name || "Skill Bridge seller"}</strong></button><span className="seller-tag">Seller</span></div><p>{selectedGig.description}</p><div className="gig-facts"><span><Clock3 size={16}/> {activePackage?.delivery_days||selectedGig.delivery_days} day delivery</span><span><MessageCircle size={16}/> Discuss details before starting</span></div>
       <section className="gig-package-options"><div className="eyebrow muted">CHOOSE A PACKAGE</div><div className="gig-package-grid">{packageOptions.map(p=><button type="button" key={p.name} className={activePackage?.name===p.name?"gig-package-option selected":"gig-package-option"} onClick={()=>setSelectedPackage(p.name)}><strong>{p.name}</strong><b>{money(p.price)}</b><span>{p.delivery_days} day delivery</span><small>{p.revisions||0} revisions</small><p>{p.description}</p></button>)}</div></section>
