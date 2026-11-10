@@ -54,3 +54,6 @@ drop trigger if exists validate_gig_marketplace_type on public.gigs;
 create trigger validate_gig_marketplace_type before insert or update of seller_id,work_type on public.gigs
 for each row execute function public.validate_gig_marketplace_type();
 create index if not exists gigs_work_type_active_created_idx on public.gigs(work_type,is_active,created_at desc);
+
+alter table public.gigs add constraint gigs_category_matches_work_type check ((work_type='digital' and category in ('Graphics & Design','Writing & Translation','Programming & Tech','Video & Animation','Digital Marketing','Business')) or (work_type='practical' and category in ('Construction','Masonry & Labour','Plumbing','Electrical Work','Painting','Carpentry','AC & Appliance Repair','Vehicle Repair','Cleaning & Home Services','Gardening','Transport','Education & Tutoring','Events & Catering'))) not valid;
+alter table public.gigs validate constraint gigs_category_matches_work_type;
