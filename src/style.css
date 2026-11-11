@@ -2067,3 +2067,7 @@ body{background:#f7faf9;color:#18323a}
 .verification-request-card .admin-content-actions{flex-shrink:0}
 .header-mode-switch button:disabled{cursor:not-allowed;opacity:.42}
 @media(max-width:650px){.verification-request-card{align-items:stretch;flex-direction:column}.verification-request-card .admin-content-actions{width:100%}.verification-request-card .admin-content-actions button{flex:1}.seller-verification-requests-panel .dashboard-panel-heading{align-items:flex-start;flex-direction:column}}
+
+
+.verification-reason-input{display:block;width:100%;max-width:620px;min-height:62px;margin-top:8px;padding:10px 12px;border:1px solid #dce7e4;border-radius:10px;background:#fbfdfc;color:#294647;font:500 12px/1.5 inherit;resize:vertical}
+.verification-reason-input:focus{outline:0;border-color:#72aaa1;box-shadow:0 0 0 3px #168b8b12}
