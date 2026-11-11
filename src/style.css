@@ -2404,3 +2404,122 @@ html,body,#root{min-height:100%;width:100%}
  .footer p{font-size:13px}
  .footer-bottom{font-size:11px;line-height:1.5}
 }
+
+/* Comprehensive responsive layout pass */
+*,*::before,*::after{min-width:0}
+img,video,svg{max-width:100%}
+html,body,#root{width:100%;max-width:100%;overflow-x:clip}
+.app-shell{width:100%;max-width:100%;overflow-x:clip}
+.page-content,.content,.dashboard-page,.public-seller-page,.settings-page,.inbox-page{min-width:0;max-width:100%}
+.page-content>*,.dashboard-main>*{min-width:0;max-width:100%}
+:where(input,select,textarea){max-width:100%}
+:where(button,a){overflow-wrap:anywhere}
+.gig-card,.dashboard-panel,.profile-card,.profile-edit-card,.settings-panel,.admin-users-panel,.admin-reports-panel,.inbox-list,.inbox-chat,.portfolio-card{min-width:0;max-width:100%}
+.admin-content-card,.admin-row,.seller-gig-row,.order-main,.verification-request-card{min-width:0}
+@media(max-width:1050px){
+ .admin-control-layout{grid-template-columns:minmax(0,1fr);gap:18px}
+ .admin-overview-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .profile-layout{grid-template-columns:minmax(0,1fr) minmax(0,1.4fr)}
+ .settings-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:760px){
+ .topbar{width:100%;gap:8px}
+ .brand{min-width:0;max-width:45vw}
+ .top-actions{gap:7px;min-width:0}
+ .top-actions>*{flex-shrink:0}
+ .desktop-nav,.desktop-account-link{display:none!important}
+ .mobile-only{display:grid!important}
+ .mobile-menu{max-height:calc(100dvh - 72px);overflow-y:auto;flex-wrap:wrap}
+ .marketplace-subnav{display:flex;max-width:100%;overflow-x:auto;white-space:nowrap}
+ .marketplace-subnav button{flex:0 0 auto}
+ .marketplace-filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:14px}
+ .marketplace-filters label,.marketplace-filters input,.marketplace-filters select{min-width:0;width:100%}
+ .profile-layout{grid-template-columns:minmax(0,1fr);gap:14px}
+ .profile-card,.profile-edit-card{width:100%;padding:18px}
+ .profile-edit-card .two-fields{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .settings-grid{grid-template-columns:minmax(0,1fr)}
+ .settings-page{margin-left:auto;margin-right:auto;width:92%}
+ .settings-panel{padding:16px}
+ .inbox-page{display:flex;flex-direction:column;gap:14px}
+ .inbox-list{width:100%;max-height:320px;overflow:auto}
+ .inbox-chat{width:100%;min-height:420px}
+ .inbox-chat-body{min-height:240px;max-height:52dvh;overflow-y:auto}
+ .inbox-chat-head{flex-wrap:wrap}
+ .chat-compose{position:sticky;bottom:0;background:#fff}
+ .admin-page-heading{align-items:flex-start;flex-direction:column;gap:12px}
+ .admin-page-heading>.outline-btn{width:100%}
+ .admin-overview-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+ .admin-overview-stat{min-width:0;padding:14px}
+ .admin-control-layout{display:flex;flex-direction:column;gap:14px}
+ .admin-users-panel,.admin-reports-panel,.admin-detail-panel{width:100%;max-width:100%;min-width:0}
+ .admin-user-list{max-height:420px;overflow:auto}
+ .admin-user-metrics,.admin-info-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .admin-detail-tabs{display:flex;overflow-x:auto;max-width:100%}
+ .admin-detail-tabs button{flex:0 0 auto}
+ .admin-content-actions,.report-actions,.admin-moderation-actions{display:flex;flex-wrap:wrap;gap:8px}
+ .admin-content-actions button{flex:1 1 130px}
+ .admin-row{align-items:flex-start;flex-wrap:wrap}
+ .admin-row>div{flex:1 1 160px}
+ .seller-gig-row{display:flex;flex-wrap:wrap;align-items:flex-start}
+ .seller-gig-copy{flex:1 1 180px}
+ .seller-gig-actions{width:100%;display:flex;flex-wrap:wrap}
+ .seller-gig-actions button{flex:1 1 120px}
+ .portfolio-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .public-seller-hero{display:flex;flex-direction:column;align-items:flex-start}
+ .public-seller-info,.public-seller-meta{width:100%;min-width:0}
+ .gig-package-grid,.gig-package-options{grid-template-columns:minmax(0,1fr)}
+ .gig-modal{width:min(100%,560px);max-height:calc(100dvh - 24px);overflow-y:auto}
+ .modal-backdrop{align-items:flex-start;padding:12px;overflow-y:auto}
+ .gig-facts,.modal-bottom{flex-wrap:wrap}
+ .modal-bottom>.btn{width:100%}
+ .footer-bottom{align-items:flex-start}
+ .toast{right:12px;left:12px;max-width:none;width:auto}
+}
+@media(max-width:480px){
+ .topbar{padding:0 10px}
+ .brand{gap:6px;max-width:44vw;font-size:18px}
+ .brand-mark{width:33px;height:33px;flex:0 0 33px}
+ .brand-wordmark small{font-size:9px}
+ .top-actions{gap:4px}
+ .content,.page-content{width:calc(100% - 24px);margin-left:auto;margin-right:auto}
+ .dashboard-page{width:calc(100% - 24px)}
+ .section-heading{flex-direction:column;align-items:stretch}
+ .section-heading>.outline-btn{align-self:flex-start}
+ .marketplace-filters{grid-template-columns:minmax(0,1fr)}
+ .profile-edit-card .two-fields{grid-template-columns:minmax(0,1fr)}
+ .dashboard-welcome{align-items:flex-start;flex-direction:column}
+ .dashboard-welcome-actions{width:100%}
+ .dashboard-stats,.admin-overview-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .dashboard-stat{padding:13px 10px;overflow-wrap:anywhere}
+ .dashboard-stat>span{font-size:12px}
+ .dashboard-stat>strong{font-size:25px}
+ .dashboard-stat>small{font-size:11px}
+ .dashboard-sidebar{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .dashboard-side-link{min-width:0;overflow-wrap:anywhere}
+ .admin-overview-stat{padding:12px 10px}
+ .admin-overview-stat span{font-size:12px}
+ .admin-overview-stat strong{font-size:24px}
+ .admin-info-grid,.admin-user-metrics{grid-template-columns:minmax(0,1fr)}
+ .portfolio-grid{grid-template-columns:minmax(0,1fr)}
+ .order-main{flex-wrap:wrap}
+ .order-info{min-width:0;flex:1 1 140px}
+ .order-main>strong{margin-left:auto}
+ .order-actions{display:flex;flex-wrap:wrap}
+ .order-actions button{flex:1 1 125px}
+ .verification-request-card{padding:13px}
+ .verification-request-card .admin-content-actions{display:grid;grid-template-columns:minmax(0,1fr)}
+ .chat-compose{gap:6px;padding:9px}
+ .chat-compose .btn{padding:9px 11px}
+ .footer{padding-left:14px;padding-right:14px}
+}
+@media(max-width:360px){
+ .topbar{padding:0 7px}
+ .brand{font-size:16px;max-width:42vw}
+ .top-actions{gap:2px}
+ .dashboard-sidebar{padding:9px}
+ .dashboard-side-link{font-size:12px;padding:9px 7px}
+ .dashboard-stat>span{font-size:11px}
+ .dashboard-stat>strong{font-size:23px}
+ .admin-content-actions button{flex-basis:100%}
+ .gig-grid{grid-template-columns:minmax(0,1fr)}
+}
