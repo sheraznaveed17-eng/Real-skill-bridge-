@@ -149,6 +149,8 @@ function App() {
   const [adminDetailTab,setAdminDetailTab]=useState("overview");
   const [adminLogs,setAdminLogs]=useState([]);
   const [adminLoading,setAdminLoading]=useState(false);
+  const [sellerVerificationRequest,setSellerVerificationRequest]=useState(null);
+  const [adminVerificationRequests,setAdminVerificationRequests]=useState([]);
 
   const demoMode = !isConfigured;
   const categories = workType === "practical" ? practicalCategories : digitalCategories;
@@ -228,7 +230,8 @@ function App() {
       resolvedProfile=updatedProfile||{...resolvedProfile,work_type:selectedWorkType};
     }
     if (resolvedProfile) {
-      const preferredMode = resolvedProfile.active_mode || user.user_metadata?.active_mode || (resolvedProfile.role==="seller"?"seller":"buyer");
+      const requestedMode = resolvedProfile.active_mode || user.user_metadata?.active_mode || (resolvedProfile.role==="seller"?"seller":"buyer");
+      const preferredMode = requestedMode==="seller" && resolvedProfile.seller_verification_status!=="verified" ? "buyer" : requestedMode;
       setActiveMode(preferredMode); setWorkType(selectedWorkType);
       if (resolvedProfile.active_mode !== preferredMode) supabase.from("profiles").update({active_mode:preferredMode}).eq("id",user.id);
       setProfile(resolvedProfile);
@@ -287,8 +290,46 @@ function App() {
     setLocationLoading(true);
     navigator.geolocation.getCurrentPosition(async position=>{const lat=Number(position.coords.latitude.toFixed(2)),lon=Number(position.coords.longitude.toFixed(2));const {data,error}=await supabase.from("profiles").update({service_latitude:lat,service_longitude:lon}).eq("id",session.user.id).select().single();setLocationLoading(false);if(error){show(error.message);return;}setProfile(data);await loadGigs();show("Approximate service area saved. Exact coordinates are not stored.");},()=>{setLocationLoading(false);show("Location permission was not granted. You can keep using your city and country.");},{enableHighAccuracy:false,timeout:12000,maximumAge:300000});
   };
-  const requestSellerVerification = async () => {if(!session?.user)return;const {data,error}=await supabase.from("profiles").update({seller_verification_status:"pending"}).eq("id",session.user.id).select().single();if(error){show(error.message);return;}setProfile(data);show("Verification request sent. An administrator must review it before you can publish gigs.");};
-  const adminSetSellerVerification = async (user,status) => {if(!window.confirm("Confirm that the seller was checked through a trusted process without saving CNIC images or numbers in Skill Bridge?"))return;const {error}=await supabase.rpc("admin_set_seller_verification",{p_user_id:user.id,p_status:status});if(error){show(error.message);return;}show("Seller verification status updated.");await openAdminUser({...user,seller_verification_status:status});await loadAdminUsers();};
+  const loadSellerVerificationRequest = async () => {
+    if(!session?.user?.id)return;
+    const {data,error}=await supabase.from("seller_verification_requests").select("*").eq("user_id",session.user.id).order("created_at",{ascending:false}).limit(1).maybeSingle();
+    if(!error)setSellerVerificationRequest(data||null);
+  };
+  const loadAdminVerificationRequests = async () => {
+    if(profile?.role!=="admin")return;
+    const {data,error}=await supabase.from("seller_verification_requests").select("*").eq("status","pending").order("created_at",{ascending:true});
+    if(error){show(error.message);return;}
+    const rows=data||[];
+    const ids=[...new Set(rows.map(r=>r.user_id))];
+    const {data:profiles}=ids.length?await supabase.from("profiles").select("id,full_name,work_type,city,country,seller_verification_status").in("id",ids):{data:[]};
+    const byId=Object.fromEntries((profiles||[]).map(p=>[p.id,p]));
+    setAdminVerificationRequests(rows.map(r=>({...r,profile:byId[r.user_id]||null})));
+  };
+  const requestSellerVerification = async () => {
+    if(!session?.user)return;
+    if(profile?.seller_verification_status==="verified")return show("Your seller account is already verified.");
+    const {data:existing}=await supabase.from("seller_verification_requests").select("id").eq("user_id",session.user.id).eq("status","pending").limit(1).maybeSingle();
+    if(existing){setSellerVerificationRequest(existing);return show("Your verification request is already waiting for admin review.");}
+    const {data,error}=await supabase.from("seller_verification_requests").insert({user_id:session.user.id}).select().single();
+    if(error){show(error.message);return;}
+    const {data:updated,error:updateError}=await supabase.from("profiles").update({seller_verification_status:"pending"}).eq("id",session.user.id).select().single();
+    if(updateError){show(updateError.message);return;}
+    setProfile(updated);setSellerVerificationRequest(data);
+    show("Request submitted. An administrator will review it. Gig publishing remains locked until approval.");
+  };
+  const reviewSellerVerification = async (request,status) => {
+    let reason=null;
+    if(status==="rejected"){
+      reason=(window.prompt("Enter the reason for rejection. This will be sent to the seller in English:","Please show valid identity proof to an authorized administrator.")||"").trim();
+      if(reason.length<5)return show("A clear rejection reason is required.");
+    }
+    if(!window.confirm(status==="approved"?"Approve this seller verification request and enable Seller mode and gig publishing?":"Reject this request and send the reason to the seller?"))return;
+    const {error}=await supabase.rpc("admin_review_seller_verification",{p_request_id:request.id,p_status:status,p_reason:reason});
+    if(error){show(error.message);return;}
+    show(status==="approved"?"Seller verified. Seller mode and gig publishing are enabled.":"Request rejected. The seller has been sent the reason.");
+    await loadAdminVerificationRequests();await loadAdminUsers();
+    if(adminSelectedUser?.id===request.user_id)await openAdminUser(adminSelectedUser);
+  };
   const handleAssistantPointerDown = event => {
     if (event.button !== undefined && event.button !== 0) return;
     event.preventDefault();
@@ -471,6 +512,7 @@ options:{ data:{ full_name:authForm.name, role:"buyer", active_mode:"buyer", acc
 
   const switchMode = async mode => {
     if (!session?.user || !["buyer","seller"].includes(mode) || busy || mode===activeMode) return;
+    if(mode==="seller" && profile?.seller_verification_status!=="verified"){show("Seller mode is locked until an administrator approves your seller verification request.");navigate("profile");return;}
     setBusy(true);
     try {
       const { data, error } = await supabase.from("profiles")
@@ -844,6 +886,10 @@ options:{ data:{ full_name:authForm.name, role:"buyer", active_mode:"buyer", acc
       const {data}=await supabase.from("conversations").select("*, gigs(title), buyer:profiles!conversations_buyer_id_fkey(full_name,avatar_url), seller:profiles!conversations_seller_id_fkey(full_name,avatar_url)").eq("id",notification.entity_id).maybeSingle();
       if (data) { setPage("messages"); await loadConversation(data); }
       else navigate("messages");
+    } else if (notification.entity_type==="seller_verification") {
+      await loadProfile(session.user);
+      await loadSellerVerificationRequest();
+      navigate("profile");
     } else if (notification.entity_type==="order") {
       await loadOrders();
       navigate("orders");
@@ -967,11 +1013,12 @@ options:{ data:{ full_name:authForm.name, role:"buyer", active_mode:"buyer", acc
     ...conversations.map(c => ({id:"conversation-"+c.id,kind:"message",title:c.gigs?.title || "Service discussion",detail:c.last_message || "Conversation started",date:c.updated_at,conversation:c}))
   ].filter(x=>x.date).sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,5);
   const isAdmin = profile?.role === "admin";
+  useEffect(()=>{if(session?.user?.id)loadSellerVerificationRequest();else setSellerVerificationRequest(null);},[session?.user?.id]);
   const recentViewedGigs = recentViewedIds.map(id => gigs.find(g => g.id === id)).filter(Boolean).filter(g => g.is_active !== false);
   const inboxNeedle = inboxSearch.trim().toLowerCase();
   const filteredInboxConversations = conversations.filter(c => { const other=c.buyer_id===session?.user?.id?c.seller:c.buyer; return `${other?.full_name||""} ${c.gigs?.title||""} ${c.last_message||""}`.toLowerCase().includes(inboxNeedle); });
   const filteredInboxOrders = myOrders.filter(o => { const other=o.buyer_id===session?.user?.id?o.seller:o.buyer; return `${other?.full_name||""} ${o.gigs?.title||""} ${o.status||""}`.toLowerCase().includes(inboxNeedle); });
-  useEffect(() => { if (isAdmin) { loadReports(); loadAdminUsers(); loadAdminLogs(); } else { setAdminUsers([]); setAdminSelectedUser(null); setAdminDetails(null); setAdminLogs([]); } }, [isAdmin]);
+  useEffect(() => { if (isAdmin) { loadReports(); loadAdminUsers(); loadAdminLogs(); loadAdminVerificationRequests(); } else { setAdminUsers([]); setAdminSelectedUser(null); setAdminDetails(null); setAdminLogs([]); setAdminVerificationRequests([]); } }, [isAdmin]);
   useEffect(() => { if (selectedGig?.id) { setSelectedPackage(selectedGig.packages?.[0]?.name || "Basic"); setRecentViewedIds(prev => { const next=[selectedGig.id,...prev.filter(id=>id!==selectedGig.id)].slice(0,8); try { localStorage.setItem("skillbridge-recently-viewed",JSON.stringify(next)); } catch {} return next; }); } }, [selectedGig?.id]);
   const packageOptions = selectedGig?.packages?.length ? selectedGig.packages : selectedGig ? [{name:"Basic",description:selectedGig.description,price:selectedGig.price,delivery_days:selectedGig.delivery_days,revisions:0}] : [];
   const activePackage = packageOptions.find(p=>p.name===selectedPackage) || packageOptions[0];
@@ -987,7 +1034,7 @@ options:{ data:{ full_name:authForm.name, role:"buyer", active_mode:"buyer", acc
         {session && activeMode==="seller" && <button onClick={() => navigate("my-gigs")}>{t.myServices}</button>}
         {isAdmin && <button onClick={() => navigate("admin")}>Admin</button>}
       </nav>
-<div className="top-actions">{session && <div className="header-mode-switch" role="group" aria-label="Switch workspace"><button type="button" className={activeMode==="buyer"?"active":""} onClick={()=>switchMode("buyer")} disabled={busy}><ShoppingBag size={14}/> Buyer</button><button type="button" className={activeMode==="seller"?"active":""} onClick={()=>switchMode("seller")} disabled={busy}><BriefcaseBusiness size={14}/> Seller</button></div>}<select className="language-switcher language-switcher-left" aria-label="Choose language" value={language} onChange={e=>setLanguage(e.target.value)}><option value="en">English</option><option value="ur">اردو</option><option value="pa">پنجابی</option><option value="hi">हिन्दी</option><option value="ar">العربية</option><option value="es">Español</option><option value="fr">Français</option><option value="zh">中文</option><option value="tr">Türkçe</option><option value="de">Deutsch</option></select>
+<div className="top-actions">{session && <div className="header-mode-switch" role="group" aria-label="Switch workspace"><button type="button" className={activeMode==="buyer"?"active":""} onClick={()=>switchMode("buyer")} disabled={busy}><ShoppingBag size={14}/> Buyer</button><button type="button" className={activeMode==="seller"?"active":""} onClick={()=>switchMode("seller")} disabled={busy||profile?.seller_verification_status!=="verified"} title={profile?.seller_verification_status==="verified"?"Seller mode":"Seller mode unlocks after verification approval"}><BriefcaseBusiness size={14}/> Seller</button></div>}<select className="language-switcher language-switcher-left" aria-label="Choose language" value={language} onChange={e=>setLanguage(e.target.value)}><option value="en">English</option><option value="ur">اردو</option><option value="pa">پنجابی</option><option value="hi">हिन्दी</option><option value="ar">العربية</option><option value="es">Español</option><option value="fr">Français</option><option value="zh">中文</option><option value="tr">Türkçe</option><option value="de">Deutsch</option></select>
         
         {session ? <>
           <div className="notification-wrap">
@@ -1149,8 +1196,8 @@ options:{ data:{ full_name:authForm.name, role:"buyer", active_mode:"buyer", acc
             <label>Full name<input required maxLength="80" value={profileForm.full_name} onChange={e=>setProfileForm({...profileForm,full_name:e.target.value})} placeholder="Your full name"/></label>
             <label>Professional title<input maxLength="100" value={profileForm.professional_title} onChange={e=>setProfileForm({...profileForm,professional_title:e.target.value})} placeholder="e.g. Graphic designer / Electrician / Web developer"/></label>
             <label>About me<textarea rows="5" maxLength="1000" value={profileForm.bio} onChange={e=>setProfileForm({...profileForm,bio:e.target.value})} placeholder="Introduce yourself, your experience and the work you do..."/></label>
-            {activeMode==="seller" && <>
-              <div className="two-fields"><label>Country<input value={profileForm.country} onChange={e=>setProfileForm({...profileForm,country:e.target.value})} placeholder="Pakistan"/></label><label>City<input value={profileForm.city} onChange={e=>setProfileForm({...profileForm,city:e.target.value})} placeholder="Lahore"/></label></div><div className="seller-verification-panel"><strong>Seller verification · {(profile?.seller_verification_status||"unverified").replaceAll("_"," ")}</strong><p>Request review before publishing gigs. Skill Bridge does not collect or store CNIC numbers or photos. Verification must be checked through a trusted process by an administrator.</p><button type="button" className="outline-btn" onClick={requestSellerVerification} disabled={profile?.seller_verification_status==="pending"||profile?.seller_verification_status==="verified"}>Request verification</button><button type="button" className="outline-btn" onClick={saveSellerServiceArea} disabled={locationLoading}>{locationLoading?"Getting location…":"Set approximate service area"}</button>{profile?.service_latitude&&profile?.service_longitude&&<small>Approximate service area saved · precise coordinates are not displayed.</small>}</div><label>Experience (years)<input type="number" min="0" max="60" value={profileForm.experience_years} onChange={e=>setProfileForm({...profileForm,experience_years:e.target.value})} placeholder="e.g. 3"/></label>
+            {true && <>
+              <div className="two-fields"><label>Country<input value={profileForm.country} onChange={e=>setProfileForm({...profileForm,country:e.target.value})} placeholder="Pakistan"/></label><label>City<input value={profileForm.city} onChange={e=>setProfileForm({...profileForm,city:e.target.value})} placeholder="Lahore"/></label></div><div className="seller-verification-panel"><strong>Seller verification · {(profile?.seller_verification_status||"unverified").replaceAll("_"," ")}</strong><p>Submit a request, then show your original CNIC in person to an authorized administrator. Never upload a CNIC photo or enter its number on Skill Bridge. Under-18 applicants must use a guardian-supervised alternative identity-check process.</p>{sellerVerificationRequest?.status==="pending"&&<p className="verification-status-note">Your request is pending admin review. Seller mode and gig publishing are locked until approval.</p>}{sellerVerificationRequest?.status==="rejected"&&<p className="verification-rejection-note"><strong>Previous request rejected:</strong> {sellerVerificationRequest.admin_reason||"Please contact an administrator for details."}</p>}{sellerVerificationRequest?.status==="approved"&&<p className="verification-status-note">Your seller account is approved. Seller mode and gig publishing are enabled.</p>}<button type="button" className="outline-btn" onClick={requestSellerVerification} disabled={profile?.seller_verification_status==="pending"||profile?.seller_verification_status==="verified"}>{profile?.seller_verification_status==="rejected"?"Submit again":"Request verification"}</button><button type="button" className="outline-btn" onClick={saveSellerServiceArea} disabled={locationLoading}>{locationLoading?"Getting location…":"Set approximate service area"}</button>{profile?.service_latitude&&profile?.service_longitude&&<small>Approximate service area saved · precise coordinates are not displayed.</small>}</div><label>Experience (years)<input type="number" min="0" max="60" value={profileForm.experience_years} onChange={e=>setProfileForm({...profileForm,experience_years:e.target.value})} placeholder="e.g. 3"/></label>
               <label>Skills <small>Separate each skill with a comma</small><input value={profileForm.skills} onChange={e=>setProfileForm({...profileForm,skills:e.target.value})} placeholder="Logo design, Photoshop, Branding"/></label>
               <label>Languages <small>Separate each language with a comma</small><input value={profileForm.languages} onChange={e=>setProfileForm({...profileForm,languages:e.target.value})} placeholder="Urdu, English, Punjabi"/></label>
               <label>Education<input value={profileForm.education} onChange={e=>setProfileForm({...profileForm,education:e.target.value})} placeholder="Qualification, institute (optional)"/></label>
@@ -1297,6 +1344,7 @@ options:{ data:{ full_name:authForm.name, role:"buyer", active_mode:"buyer", acc
 
     {page === "admin" && (isAdmin ? <main className="content page-content admin-page">
       <div className="admin-page-heading"><div><div className="eyebrow muted">PRIVATE ADMINISTRATION</div><h2>Admin Control Center</h2><p className="subtext">Manage accounts, services, orders, conversations and moderation from one secure place.</p></div><button className="outline-btn" onClick={()=>{loadAdminUsers();loadReports();loadAdminLogs();}}><RefreshCw size={15}/> Refresh all</button></div>
+      <section className="dashboard-panel moderation-panel seller-verification-requests-panel"><div className="dashboard-panel-heading"><div><h3>Seller Verification Requests</h3><p>Review pending seller applications. Verify identity in person through an authorized process; do not collect CNIC images or numbers.</p></div><button className="outline-btn" onClick={loadAdminVerificationRequests}><RefreshCw size={14}/> Refresh requests</button></div>{adminVerificationRequests.map(request=><article className="admin-content-card verification-request-card" key={request.id}><div><strong>{request.profile?.full_name||"Seller applicant"}</strong><small>{request.profile?.work_type==="practical"?"Practical Work":"Digital Work"} · {[request.profile?.city,request.profile?.country].filter(Boolean).join(", ")||"Location not provided"} · Submitted {new Date(request.created_at).toLocaleString()}</small><p>Applicant must show original identity proof in person to an authorized administrator. No document image or ID number is stored in Skill Bridge.</p></div><div className="admin-content-actions"><button className="btn btn-dark btn-small" onClick={()=>reviewSellerVerification(request,"approved")}>Approve</button><button className="outline-btn danger-outline" onClick={()=>reviewSellerVerification(request,"rejected")}>Reject</button></div></article>)}{!adminVerificationRequests.length&&<Empty icon={<ShieldCheck/>} title="No pending seller requests" text="New seller verification requests will appear here."/>}</section>
       <div className="admin-overview-stats">
         <div className="admin-overview-stat"><Users/><span>All accounts</span><strong>{adminUsers.length}</strong></div>
         <div className="admin-overview-stat"><UserCog/><span>Active</span><strong>{adminUsers.filter(u=>u.account_status==="active").length}</strong></div>
