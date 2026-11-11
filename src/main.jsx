@@ -307,16 +307,22 @@ function App() {
     setAdminVerificationRequests(rows.map(r=>({...r,profile:byId[r.user_id]||null})));
   };
   const requestSellerVerification = async () => {
-    if(!session?.user)return;
+    if(!session?.user)return show("Please log in before requesting seller verification.");
     if(profile?.seller_verification_status==="verified")return show("Your seller account is already verified.");
-    const {data:existing}=await supabase.from("seller_verification_requests").select("id").eq("user_id",session.user.id).eq("status","pending").limit(1).maybeSingle();
-    if(existing){setSellerVerificationRequest(existing);return show("Your verification request is already waiting for admin review.");}
-    const {data,error}=await supabase.from("seller_verification_requests").insert({user_id:session.user.id}).select().single();
-    if(error){show(error.message);return;}
-    const {data:updated,error:updateError}=await supabase.from("profiles").update({seller_verification_status:"pending"}).eq("id",session.user.id).select().single();
-    if(updateError){show(updateError.message);return;}
-    setProfile(updated);setSellerVerificationRequest(data);
-    show("Request submitted. An administrator will review it. Gig publishing remains locked until approval.");
+    setBusy(true);
+    try {
+      const {data,error}=await supabase.rpc("submit_seller_verification_request");
+      if(error)throw error;
+      const request=Array.isArray(data)?data[0]:data;
+      if(!request?.id)throw new Error("The verification request could not be confirmed. Please refresh and try again.");
+      setSellerVerificationRequest(request);
+      await loadProfile(session.user);
+      show("Request submitted. An administrator will review it. Seller mode and gig publishing remain locked until approval.");
+    } catch(error) {
+      show(error.message||"Could not submit the seller verification request. Please try again.");
+    } finally {
+      setBusy(false);
+    }
   };
   const reviewSellerVerification = async (request,status) => {
     let reason=null;
