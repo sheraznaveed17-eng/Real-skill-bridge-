@@ -2211,3 +2211,139 @@ button,input,select,textarea{accent-color:#bd9740}
  .choice-section{margin-top:38px}
  .page-content .dashboard-sidebar{box-shadow:0 5px 18px #1d2b4208}
 }
+
+
+/* Accessibility pass: larger, clearer interface across every marketplace screen */
+html{font-size:17px}
+body,.app-shell{font-size:16px;line-height:1.55}
+:where(p,span,small,label,li,a,button,input,select,textarea,strong,b,em,time,summary,dt,dd){font-size:max(1em,14px)}
+:where(.muted,.subtext,.seller-line,.gig-meta,.gig-price small,.setup-banner,.popular,.trust-strip,.footer p,.footer-bottom,.stack-form label,.switch-auth,.back-link,.status,.metric-card small,.empty-state p,.chat-msg small,.admin-row small){font-size:max(1em,14px)}
+:where(h1,h2,h3,h4){line-height:1.25}
+button,.btn,.outline-btn,.category,.payment-option,.quick-actions button{min-height:42px}
+input,select,textarea{min-height:44px}
+.icon-btn,.notification-trigger,.account-trigger,.guest-account-trigger{min-width:42px;min-height:42px}
+.topbar{min-height:82px}
+.brand,.footer-brand{font-size:24px}
+.brand-mark{width:40px;height:40px}
+.desktop-nav button,.nav-plain{font-size:15px}
+.content,.choice-section{width:min(1240px,92%)}
+.hero-inner{width:min(1240px,92%)}
+.hero h1{font-size:clamp(42px,5.6vw,72px)}
+.hero p{font-size:18px;line-height:1.75}
+.hero-search input,.hero-search button{font-size:16px;min-height:48px}
+.section-heading h2,.page-content h2,.narrow-page h2,.choice-heading h2{font-size:clamp(27px,3vw,36px)}
+.section-heading p,.subtext{font-size:16px}
+.category{padding:11px 17px;font-size:14px}
+.gig-grid{gap:24px}
+.gig-art{height:185px}
+.gig-info{padding:19px}
+.gig-info h3{font-size:18px;line-height:1.5;min-height:54px}
+.seller-line,.gig-meta{font-size:14px;gap:10px}
+.seller-tag{font-size:11px;padding:5px 8px}
+.gig-price strong{font-size:21px}
+.gig-price small{font-size:12px}
+.choice-card{padding:25px;gap:19px}
+.choice-icon{width:60px;height:60px;flex-basis:60px}
+.choice-copy strong{font-size:20px}
+.choice-copy small{font-size:15px}
+.btn{padding:14px 22px;font-size:15px}
+.outline-btn{padding:12px 16px;font-size:14px}
+.auth-card,.form-panel{width:min(560px,100%)}
+.auth-card h2,.form-panel h2{font-size:32px}
+.auth-card .stack-form>label,.stack-form label{font-size:14px}
+.auth-card .stack-form input,.stack-form input,.stack-form textarea,.stack-form select{min-height:52px;font-size:16px;padding:13px 15px}
+.auth-card .btn-dark.full{min-height:54px;font-size:16px}
+.dashboard-grid{gap:20px}
+.metric-card{padding:24px}
+.metric-card>span{font-size:15px}
+.metric-card>strong{font-size:34px}
+.order-card,.profile-card,.profile-edit-card{padding:22px}
+.order-info h3{font-size:18px}
+.order-info p{font-size:14px}
+.order-main>strong{font-size:20px}
+.quick-actions button{padding:19px;font-size:16px}
+.chat-head{font-size:16px;padding:18px 20px}
+.chat-body{padding:20px;gap:15px}
+.chat-msg{padding:13px 16px}
+.chat-msg p{font-size:15px}
+.admin-row strong{font-size:15px}
+.admin-row small{font-size:13px}
+.footer{padding-top:44px}
+@media(max-width:760px){
+ html{font-size:16px}
+ body,.app-shell{font-size:15px}
+ .topbar{height:72px;min-height:72px;padding:0 14px}
+ .brand,.footer-brand{font-size:21px}
+ .brand-mark{width:37px;height:37px}
+ .mobile-menu{top:72px;padding:13px 16px;gap:12px;flex-wrap:wrap}
+ .mobile-menu button{font-size:15px;min-height:44px;padding:11px}
+ .hero{min-height:0}
+ .hero-inner{width:90%;padding:48px 0 42px}
+ .hero h1{font-size:clamp(36px,9vw,48px);letter-spacing:-1.3px;margin:18px 0 14px}
+ .hero p{font-size:16px;line-height:1.65}
+ .eyebrow{font-size:13px;letter-spacing:1.2px}
+ .hero-search{padding:7px 8px 7px 13px;gap:8px}
+ .hero-search input{font-size:15px;min-height:46px}
+ .hero-search button{font-size:14px;min-height:44px;padding:10px 14px}
+ .popular{font-size:13px;gap:9px}
+ .popular button{font-size:13px;padding:7px 11px}
+ .hero-stats{gap:22px;margin-top:28px}
+ .hero-stats strong{font-size:16px}
+ .hero-stats span{font-size:13px}
+ .trust-strip{padding:16px 5%;gap:12px;font-size:12px}
+ .content{width:92%;margin:38px auto}
+ .choice-section{width:92%;margin:30px auto 0}
+ .section-heading h2,.page-content h2,.choice-heading h2{font-size:26px}
+ .section-heading p,.choice-heading p{font-size:14px}
+ .category-row{padding:19px 0}
+ .category{font-size:14px;padding:10px 14px}
+ .gig-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+ .gig-art{height:140px}
+ .gig-info{padding:13px}
+ .gig-info h3{font-size:15px;line-height:1.45;min-height:66px}
+ .seller-line{font-size:12px;gap:5px;flex-wrap:wrap}
+ .seller-tag{font-size:10px}
+ .gig-meta{font-size:12px;gap:8px;flex-wrap:wrap}
+ .gig-price strong{font-size:17px}
+ .gig-price small{font-size:11px}
+ .choice-card{padding:17px;gap:13px}
+ .choice-icon{width:50px;height:50px;flex-basis:50px}
+ .choice-copy strong{font-size:17px}
+ .choice-copy small{font-size:14px}
+ .btn{font-size:14px;min-height:44px;padding:12px 16px}
+ .outline-btn{font-size:13px;min-height:42px}
+ .narrow-page{padding:24px 12px}
+ .auth-card,.form-panel{padding:27px 19px}
+ .auth-card h2,.form-panel h2{font-size:27px}
+ .auth-card .stack-form>label,.stack-form label{font-size:14px}
+ .auth-card .stack-form input,.stack-form input,.stack-form textarea,.stack-form select{font-size:15px;min-height:49px}
+ .auth-card .work-type-copy strong{font-size:15px}
+ .auth-card .work-type-copy small{font-size:13px}
+ .dashboard-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+ .metric-card{padding:15px}
+ .metric-card>span{font-size:13px}
+ .metric-card>strong{font-size:27px}
+ .metric-card small{font-size:12px}
+ .page-content{margin-top:30px}
+ .order-card{padding:15px}
+ .order-info h3{font-size:15px}
+ .order-info p{font-size:13px}
+ .order-main>strong{font-size:16px}
+ .quick-actions button{font-size:15px;padding:15px}
+ .chat-head{font-size:14px}
+ .chat-msg p{font-size:14px}
+ .admin-row strong{font-size:14px}
+ .admin-row small{font-size:12px}
+ .footer{padding:32px 18px 18px}
+}
+@media(max-width:420px){
+ .gig-grid{grid-template-columns:1fr;gap:16px}
+ .gig-art{height:180px}
+ .gig-info h3{font-size:17px;min-height:0}
+ .seller-line,.gig-meta{font-size:13px}
+ .gig-price strong{font-size:19px}
+ .dashboard-grid{grid-template-columns:1fr 1fr}
+ .two-fields{grid-template-columns:1fr}
+ .hero-stats{gap:15px}
+ .hero-stats span{font-size:12px}
+}
