@@ -151,6 +151,7 @@ function App() {
   const [adminLoading,setAdminLoading]=useState(false);
   const [sellerVerificationRequest,setSellerVerificationRequest]=useState(null);
   const [adminVerificationRequests,setAdminVerificationRequests]=useState([]);
+  const [verificationRejectReasons,setVerificationRejectReasons]=useState({});
 
   const demoMode = !isConfigured;
   const categories = workType === "practical" ? practicalCategories : digitalCategories;
@@ -320,13 +321,14 @@ function App() {
   const reviewSellerVerification = async (request,status) => {
     let reason=null;
     if(status==="rejected"){
-      reason=(window.prompt("Enter the reason for rejection. This will be sent to the seller in English:","Please show valid identity proof to an authorized administrator.")||"").trim();
-      if(reason.length<5)return show("A clear rejection reason is required.");
+      reason=String(verificationRejectReasons[request.id]||"").trim();
+      if(reason.length<5)return show("Enter a clear rejection reason in English before rejecting.");
     }
     if(!window.confirm(status==="approved"?"Approve this seller verification request and enable Seller mode and gig publishing?":"Reject this request and send the reason to the seller?"))return;
     const {error}=await supabase.rpc("admin_review_seller_verification",{p_request_id:request.id,p_status:status,p_reason:reason});
     if(error){show(error.message);return;}
     show(status==="approved"?"Seller verified. Seller mode and gig publishing are enabled.":"Request rejected. The seller has been sent the reason.");
+    if(status==="rejected")setVerificationRejectReasons(prev=>({...prev,[request.id]:""}));
     await loadAdminVerificationRequests();await loadAdminUsers();
     if(adminSelectedUser?.id===request.user_id)await openAdminUser(adminSelectedUser);
   };
@@ -1344,7 +1346,7 @@ options:{ data:{ full_name:authForm.name, role:"buyer", active_mode:"buyer", acc
 
     {page === "admin" && (isAdmin ? <main className="content page-content admin-page">
       <div className="admin-page-heading"><div><div className="eyebrow muted">PRIVATE ADMINISTRATION</div><h2>Admin Control Center</h2><p className="subtext">Manage accounts, services, orders, conversations and moderation from one secure place.</p></div><button className="outline-btn" onClick={()=>{loadAdminUsers();loadReports();loadAdminLogs();}}><RefreshCw size={15}/> Refresh all</button></div>
-      <section className="dashboard-panel moderation-panel seller-verification-requests-panel"><div className="dashboard-panel-heading"><div><h3>Seller Verification Requests</h3><p>Review pending seller applications. Adult applicants must show their original CNIC in person to an authorized administrator. Under-18 applicants need a guardian-supervised alternative check. Never collect CNIC photos or numbers.</p></div><button className="outline-btn" onClick={loadAdminVerificationRequests}><RefreshCw size={14}/> Refresh requests</button></div>{adminVerificationRequests.map(request=><article className="admin-content-card verification-request-card" key={request.id}><div><strong>{request.profile?.full_name||"Seller applicant"}</strong><small>{request.profile?.work_type==="practical"?"Practical Work":"Digital Work"} · {[request.profile?.city,request.profile?.country].filter(Boolean).join(", ")||"Location not provided"} · Submitted {new Date(request.created_at).toLocaleString()}</small><p>Adult applicants must show their original CNIC in person to an authorized administrator. Under-18 applicants must use a guardian-supervised alternative identity check. No CNIC photo or number is uploaded or stored.</p></div><div className="admin-content-actions"><button className="btn btn-dark btn-small" onClick={()=>reviewSellerVerification(request,"approved")}>Accept &amp; Verify</button><button className="outline-btn danger-outline" onClick={()=>reviewSellerVerification(request,"rejected")}>Reject</button></div></article>)}{!adminVerificationRequests.length&&<Empty icon={<ShieldCheck/>} title="No pending seller requests" text="New seller verification requests will appear here."/>}</section>
+      <section className="dashboard-panel moderation-panel seller-verification-requests-panel"><div className="dashboard-panel-heading"><div><h3>Seller Verification Requests</h3><p>Review pending seller applications. Adult applicants must show their original CNIC in person to an authorized administrator. Under-18 applicants need a guardian-supervised alternative check. Never collect CNIC photos or numbers.</p></div><button className="outline-btn" onClick={loadAdminVerificationRequests}><RefreshCw size={14}/> Refresh requests</button></div>{adminVerificationRequests.map(request=><article className="admin-content-card verification-request-card" key={request.id}><div><strong>{request.profile?.full_name||"Seller applicant"}</strong><small>{request.profile?.work_type==="practical"?"Practical Work":"Digital Work"} · {[request.profile?.city,request.profile?.country].filter(Boolean).join(", ")||"Location not provided"} · Submitted {new Date(request.created_at).toLocaleString()}</small><p>Adult applicants must show their original CNIC in person to an authorized administrator. Under-18 applicants must use a guardian-supervised alternative identity check. No CNIC photo or number is uploaded or stored.</p><textarea className="verification-reason-input" rows="2" value={verificationRejectReasons[request.id]||""} onChange={e=>setVerificationRejectReasons(prev=>({...prev,[request.id]:e.target.value}))} placeholder="Write the rejection reason in English (required only when rejecting)"/></div><div className="admin-content-actions"><button className="btn btn-dark btn-small" onClick={()=>reviewSellerVerification(request,"approved")}>Accept &amp; Verify</button><button className="outline-btn danger-outline" onClick={()=>reviewSellerVerification(request,"rejected")}>Reject</button></div></article>)}{!adminVerificationRequests.length&&<Empty icon={<ShieldCheck/>} title="No pending seller requests" text="New seller verification requests will appear here."/>}</section>
       <div className="admin-overview-stats">
         <div className="admin-overview-stat"><Users/><span>All accounts</span><strong>{adminUsers.length}</strong></div>
         <div className="admin-overview-stat"><UserCog/><span>Active</span><strong>{adminUsers.filter(u=>u.account_status==="active").length}</strong></div>
