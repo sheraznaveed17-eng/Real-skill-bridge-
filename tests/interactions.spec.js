@@ -20,10 +20,15 @@ test.describe('public visitor interactions', () => {
     await expect(page.getByRole('heading', { name: 'Create your account' })).toBeVisible();
 
     await expect(page.getByLabel('Full name')).toBeVisible();
+    await expect(page.getByLabel('Country')).toBeVisible();
+    await expect(page.getByLabel('City')).toBeVisible();
     await expect(page.getByRole('button', { name: /Digital Work/i })).toBeVisible();
     const practical = page.getByRole('button', { name: /Practical Work/i });
     await practical.click();
     await expect(practical).toHaveClass(/selected/);
+    const adultConfirm = page.getByLabel('I confirm that I am 18 years old or above.');
+    await expect(adultConfirm).toBeVisible();
+    await expect(adultConfirm).not.toBeChecked();
 
     const email = page.getByLabel('Email address');
     const password = page.getByLabel('Password');
