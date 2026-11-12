@@ -2351,3 +2351,50 @@ input,select,textarea{min-height:44px}
 
 
 .gig-location{display:flex;align-items:center;gap:5px;margin-top:7px;color:#64748b;font-size:11px;font-weight:600;line-height:1.4;overflow-wrap:anywhere}.gig-location svg{flex:0 0 auto;color:#b68b3b}
+
+
+/* Mobile marketplace category cards: compact 3-column layout */
+@media (max-width: 767px) {
+  .category-row {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 9px !important;
+    overflow: visible !important;
+    padding: 16px 0 20px !important;
+    scroll-snap-type: none !important;
+  }
+  .category {
+    width: 100%;
+    min-width: 0;
+    height: 113px;
+    min-height: 113px;
+    padding: 12px 8px;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    white-space: normal;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.2;
+    flex: initial;
+  }
+  .category svg {
+    width: 30px;
+    height: 30px;
+    flex: 0 0 30px;
+    margin: 0 0 9px;
+  }
+  .category span {
+    display: block;
+    width: 100%;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.2;
+    text-align: center;
+    overflow-wrap: anywhere;
+  }
+}
