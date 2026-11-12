@@ -2398,3 +2398,193 @@ input,select,textarea{min-height:44px}
     overflow-wrap: anywhere;
   }
 }
+
+/* Final mobile viewport fit pass: prevent page sections and controls escaping the screen */
+@media (max-width: 760px) {
+  .app-shell, .app-shell * { box-sizing: border-box; }
+  .app-shell { width: 100%; max-width: 100%; min-width: 0; }
+  .content, .page-content, .choice-section, .hero-inner {
+    width: calc(100% - 28px) !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+  .content, .page-content, .dashboard-layout, .dashboard-main,
+  .dashboard-panel, .profile-layout, .profile-card, .profile-edit-card,
+  .admin-page, .admin-control-layout, .admin-users-panel, .admin-detail-panel,
+  .form-panel, .auth-card, .inbox-page, .inbox-layout, .inbox-list, .inbox-chat,
+  .gig-edit-panel, .portfolio-grid, .settings-grid, .settings-panel {
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+  .topbar {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    gap: 8px !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    padding: 10px 12px !important;
+  }
+  .topbar > .brand {
+    flex: 1 1 100% !important;
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+  .top-actions {
+    display: flex !important;
+    flex: 1 1 100% !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 6px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+  }
+  .top-actions > .header-mode-switch {
+    flex: 1 1 118px !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    justify-content: stretch !important;
+  }
+  .top-actions > .header-mode-switch button {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    padding: 0 6px !important;
+    font-size: 11px !important;
+    white-space: nowrap !important;
+  }
+  .top-actions > .language-switcher {
+    flex: 0 1 76px !important;
+    width: 76px !important;
+    min-width: 0 !important;
+    max-width: 76px !important;
+    height: 36px !important;
+    padding: 0 5px !important;
+    font-size: 11px !important;
+  }
+  .top-actions > .notification-wrap,
+  .top-actions > .account-menu-wrap,
+  .top-actions > .nav-menu-trigger {
+    flex: 0 0 36px !important;
+    width: 36px !important;
+    min-width: 36px !important;
+  }
+  .top-actions .icon-btn,
+  .top-actions .account-trigger,
+  .top-actions > .nav-menu-trigger {
+    width: 36px !important;
+    min-width: 36px !important;
+    height: 36px !important;
+    min-height: 36px !important;
+    padding: 0 !important;
+  }
+  .mobile-menu {
+    top: 116px !important;
+    right: 8px !important;
+    left: auto !important;
+    width: min(340px, calc(100vw - 16px)) !important;
+    max-width: calc(100vw - 16px) !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  .header-search, .hero-search, .marketplace-filters,
+  .stack-form, .gig-edit-panel, .package-builder,
+  .verification-request-card, .admin-content-card,
+  .admin-chat-card, .order-card, .report-row {
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+  .header-search input, .hero-search input,
+  .marketplace-filters input, .marketplace-filters select,
+  .stack-form input, .stack-form select, .stack-form textarea,
+  .gig-edit-panel input, .gig-edit-panel select, .gig-edit-panel textarea,
+  .verification-reason-input {
+    min-width: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  .section-heading, .dashboard-panel-heading, .admin-panel-title,
+  .admin-selected-heading, .public-seller-hero, .order-main,
+  .order-actions, .report-row, .admin-content-card,
+  .verification-request-card, .nearby-control {
+    min-width: 0 !important;
+    flex-wrap: wrap !important;
+  }
+  .section-heading > div, .dashboard-panel-heading > div,
+  .admin-selected-heading > div, .order-info, .report-main,
+  .admin-content-card > div:first-child {
+    flex: 1 1 100% !important;
+    min-width: 0 !important;
+  }
+  .section-heading > .outline-btn,
+  .admin-page-heading > .outline-btn {
+    max-width: 100% !important;
+    white-space: normal !important;
+  }
+  .gig-grid, .choice-grid, .portfolio-grid,
+  .settings-grid, .admin-control-layout {
+    grid-template-columns: minmax(0, 1fr) !important;
+    min-width: 0 !important;
+  }
+  .dashboard-stats, .dashboard-grid, .admin-overview-stats,
+  .admin-user-metrics, .admin-info-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    min-width: 0 !important;
+  }
+  .two-fields, .auth-card .work-type-options {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+  .dashboard-sidebar { width: 100% !important; min-width: 0 !important; }
+  .dashboard-side-link, .admin-action, .admin-content-actions button {
+    max-width: 100% !important;
+    white-space: normal !important;
+  }
+  .admin-content-actions {
+    flex: 1 1 100% !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    align-items: stretch !important;
+    min-width: 0 !important;
+  }
+  .admin-content-actions > * { flex: 1 1 auto !important; min-width: 0 !important; }
+  .inbox-page .inbox-layout {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+  .inbox-page .chat-compose,
+  .inbox-page .chat-compose form,
+  .inbox-page .chat-compose input {
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+  .inbox-page .chat-compose input { flex: 1 1 0 !important; width: 1% !important; }
+  .gig-image-preview { min-width: 0 !important; max-width: 100% !important; }
+  .gig-image-preview img { max-width: 100% !important; }
+  .footer, .footer-bottom { min-width: 0 !important; max-width: 100% !important; }
+  .footer-bottom { flex-wrap: wrap !important; overflow-wrap: anywhere; }
+  .hero h1, .section-heading h2, .page-content h2,
+  .admin-page-heading h2, .gig-info h3 {
+    overflow-wrap: anywhere;
+    word-break: normal;
+  }
+  .app-shell img, .app-shell video, .app-shell iframe {
+    max-width: 100%;
+  }
+  .app-shell pre, .app-shell code { max-width: 100%; overflow-wrap: anywhere; }
+}
+@media (max-width: 380px) {
+  .top-actions > .notification-wrap,
+  .top-actions > .account-menu-wrap { display: none !important; }
+  .top-actions > .language-switcher {
+    flex-basis: 66px !important;
+    width: 66px !important;
+    max-width: 66px !important;
+  }
+  .top-actions > .header-mode-switch { flex-basis: 112px !important; }
+  .mobile-menu { top: 112px !important; }
+  .marketplace-filters { grid-template-columns: minmax(0, 1fr) !important; }
+}
