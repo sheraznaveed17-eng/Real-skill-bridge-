@@ -505,7 +505,7 @@ function App() {
           return;
         }
         const d=result.action.data;
-        setGigForm({title:d.title,description:d.description,category:d.category,price:String(d.price),delivery_days:String(d.delivery_days),image_url:""});
+        setGigForm({title:d.title,description:d.description,category:d.category,location:d.location||"",price:String(d.price),delivery_days:String(d.delivery_days),image_url:""});
         navigate("create-gig");
         speakAssistant("Aapki gig ka draft tayyar hai. Form mein details check karein. Publish karne se pehle aap khud review aur confirmation dein.");
         setAssistantBusy(false);
