@@ -2550,3 +2550,52 @@ button, input, select, textarea { min-width:0; max-width:100%; }
   .trust-strip span { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; text-align:center; font-size:12px; font-weight:600; line-height:1.35; }
   .trust-strip svg { width:26px; height:26px; flex:0 0 26px; }
 }
+
+
+/* Compact continuous skill ticker placed directly below the hero/search banner */
+.skill-ticker {
+  width:100%;
+  overflow:hidden;
+  background:#f7f4ed;
+  border-top:1px solid #eee8da;
+  border-bottom:1px solid #eee8da;
+  padding:9px 0;
+}
+.skill-ticker-track {
+  display:flex;
+  align-items:center;
+  gap:9px;
+  width:max-content;
+  animation:skillTickerMove 42s linear infinite;
+  will-change:transform;
+}
+.skill-ticker-track button {
+  flex:0 0 auto;
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  border:1px solid #e5dcc7;
+  border-radius:999px;
+  background:#fff;
+  color:#344054;
+  padding:5px 10px;
+  font-size:10px;
+  line-height:1.2;
+  font-weight:600;
+  white-space:nowrap;
+}
+.skill-ticker-track button span { color:#b18b36; font-size:11px; }
+.skill-ticker-track button:hover { border-color:#c5a04b; color:#17243d; }
+@keyframes skillTickerMove {
+  from { transform:translateX(0); }
+  to { transform:translateX(-50%); }
+}
+.skill-ticker:hover .skill-ticker-track { animation-play-state:paused; }
+@media (prefers-reduced-motion: reduce) {
+  .skill-ticker-track { animation:none; }
+}
+@media (max-width:760px) {
+  .skill-ticker { padding:8px 0; }
+  .skill-ticker-track { gap:7px; animation-duration:34s; }
+  .skill-ticker-track button { padding:5px 9px; font-size:10px; }
+}
