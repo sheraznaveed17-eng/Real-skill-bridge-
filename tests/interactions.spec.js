@@ -30,7 +30,7 @@ test.describe('public visitor interactions', () => {
     await email.fill('not-an-email');
     await password.fill('123');
     await page.getByRole('button', { name: 'Create account' }).click();
-    await expect(email).toHaveJSProperty('validity.valid', false);
+    await expect.poll(() => email.evaluate(element => element.validity.valid)).toBe(false);
   });
 
   test('signup and login modes can be switched without submitting', async ({ page }) => {
