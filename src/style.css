@@ -2599,3 +2599,11 @@ button, input, select, textarea { min-width:0; max-width:100%; }
   .skill-ticker-track { gap:7px; animation-duration:34s; }
   .skill-ticker-track button { padding:5px 9px; font-size:10px; }
 }
+
+
+/* Skill Bridge hero background video: confined to the existing hero area only */
+.hero{isolation:isolate;background:#101a2e}
+.hero-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;pointer-events:none}
+.hero-video-shade{position:absolute;inset:0;z-index:1;background:linear-gradient(90deg,rgba(8,15,29,.91) 0%,rgba(8,15,29,.74) 52%,rgba(8,15,29,.60) 100%);pointer-events:none}
+.hero-inner{z-index:2}
+@media(prefers-reduced-motion:reduce){.hero-video{display:none}}
