@@ -52,7 +52,7 @@ Rules:
 - Context: user logged in = ${Boolean(context.loggedIn)}; active mode = ${String(context.activeMode || "guest")}; current profile update field = ${String(context.profileUpdateField || "none")}. If gig creation requires login or Seller mode, explain that before attempting to create the draft.
 - Keep replies short enough to speak aloud. `;
 
-    const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${encodeURIComponent(token)}", {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${encodeURIComponent(token)}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
