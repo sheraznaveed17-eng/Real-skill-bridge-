@@ -32,3 +32,23 @@ test('home page has no horizontal overflow on mobile and desktop', async ({ page
   }));
   expect(dimensions.content).toBeLessThanOrEqual(dimensions.viewport + 2);
 });
+
+for (const route of routes) {
+  test(`mobile layout stays inside the viewport on ${route}`, async ({ page }) => {
+    for (const width of [320, 360, 390, 430]) {
+      await page.setViewportSize({ width, height: 844 });
+      await page.goto(route, { waitUntil: 'domcontentloaded' });
+      await page.locator('body').waitFor();
+      await page.waitForTimeout(250);
+      const dimensions = await page.evaluate(() => ({
+        viewport: document.documentElement.clientWidth,
+        document: document.documentElement.scrollWidth,
+        body: document.body.scrollWidth,
+      }));
+      expect(
+        Math.max(dimensions.document, dimensions.body),
+        `Horizontal overflow on ${route} at ${width}px: ${JSON.stringify(dimensions)}`
+      ).toBeLessThanOrEqual(dimensions.viewport + 2);
+    }
+  });
+}
