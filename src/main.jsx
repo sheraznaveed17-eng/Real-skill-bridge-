@@ -124,7 +124,6 @@ function App() {
   const [assistantBusy,setAssistantBusy]=useState(false);
   const [assistantHistory,setAssistantHistory]=useState([]);
   const [assistantReply,setAssistantReply]=useState("Assalam-o-Alaikum! Main Skill Bridge assistant hoon. Aap bol kar website chala sakte hain.");
-  const [assistantLanguage,setAssistantLanguage]=useState("ur-PK");
   const [voiceFlow,setVoiceFlow]=useState("");
   const recognitionRef=useRef(null);
 
@@ -396,7 +395,7 @@ function App() {
     if (typeof window !== "undefined" && window.speechSynthesis && window.SpeechSynthesisUtterance) {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(message);
-      utterance.lang = assistantLanguage;
+      utterance.lang = document.documentElement.lang || navigator.language || "en-US";
       utterance.rate = 0.94;
       window.speechSynthesis.speak(utterance);
     }
@@ -411,7 +410,7 @@ function App() {
     try {
       if (recognitionRef.current) recognitionRef.current.abort();
       const recognition = new SpeechRecognition();
-      recognition.lang = assistantLanguage;
+      recognition.lang = navigator.language || document.documentElement.lang || "en-US";
       recognition.continuous = false;
       recognition.interimResults = false;
       recognition.maxAlternatives = 1;
@@ -1116,12 +1115,12 @@ options:{ data:{ full_name:authForm.name, role:"buyer", active_mode:"buyer", acc
       <div className="voice-assistant-head"><span className="voice-assistant-avatar"><svg viewBox="0 0 48 48" width="28" height="28" aria-hidden="true"><rect x="5" y="7" width="38" height="34" rx="13" fill="#168b8b"/><path d="M15 20c0-3 2.5-5 5.5-5h7c3 0 5.5 2 5.5 5v8c0 3-2.5 5-5.5 5h-7c-3 0-5.5-2-5.5-5z" fill="none" stroke="white" strokeWidth="2.5"/><path d="M19 23h.1M29 23h.1M20 28c2.5 2 5.5 2 8 0M24 10V6m-3 0h6" stroke="white" strokeWidth="2.5" strokeLinecap="round"/><path d="M37 8l1.2 3L41 12l-2.8 1.2L37 16l-1.2-2.8L33 12l2.8-1z" fill="#f0c77e"/></svg></span><div><strong>Skill Bridge Assistant</strong><small>{assistantListening?"Listening…":assistantBusy?"AI soch raha hai…":"AI voice assistant · Hugging Face"}</small></div><button aria-label="Close assistant" onClick={()=>{setAssistantOpen(false);recognitionRef.current?.abort();window.speechSynthesis?.cancel();}}><X size={18}/></button></div>
       <div className="voice-assistant-message"><Volume2 size={16}/><p>{assistantReply}</p></div>
       {assistantTranscript&&<div className="voice-assistant-transcript"><small>You said</small><span>{assistantTranscript}</span></div>}
-      <div className="voice-assistant-controls"><select aria-label="Assistant voice language" value={assistantLanguage} onChange={e=>setAssistantLanguage(e.target.value)}><option value="ur-PK">Urdu</option><option value="hi-IN">Hindi</option><option value="en-US">English</option></select><button className={assistantListening?"listening":""} onClick={beginVoiceCapture} disabled={assistantListening||assistantBusy}>{assistantBusy?<Sparkles size={18}/>:assistantListening?<MicOff size={18}/>:<Mic size={18}/>} {assistantBusy?"Thinking…":assistantListening?"Listening…":"Tap to speak"}</button></div>
+      <div className="voice-assistant-controls"><button className={assistantListening?"listening":""} onClick={beginVoiceCapture} disabled={assistantListening||assistantBusy}>{assistantBusy?<Sparkles size={18}/>:assistantListening?<MicOff size={18}/>:<Mic size={18}/>} {assistantBusy?"Thinking…":assistantListening?"Listening…":"Tap to speak"}</button></div>
       <form className="voice-assistant-text" onSubmit={e=>{e.preventDefault();const value=assistantText.trim();if(value&&!assistantBusy){setAssistantTranscript(value);setAssistantText("");handleVoiceCommand(value);}}}>
         <input aria-label="Type to assistant" value={assistantText} onChange={e=>setAssistantText(e.target.value)} placeholder="Mic na chale to yahan likhein…"/>
         <button type="submit" disabled={!assistantText.trim()||assistantBusy}><Send size={16}/></button>
       </form>
-      <div className="voice-assistant-hints">AI model natural Urdu, Roman Urdu, Punjabi, Hindi aur English samajhne ki koshish karega. Password ya private information share na karein.</div>
+      <div className="voice-assistant-hints">Aap apni pasand ki zubaan mein likh sakte hain. AI aapke message ki zubaan mein jawab dene ki koshish karega. Voice recognition browser ki language support par depend karti hai. Password ya private information share na karein.</div>
     </section>}
 
     {mobileMenu && <div className="mobile-menu">
