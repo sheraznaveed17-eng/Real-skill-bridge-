@@ -116,6 +116,7 @@ Rules:
       const title = String(d.title || "").trim();
       const description = String(d.description || "").trim();
       const category = String(d.category || "");
+      const location = String(d.location || "").trim();
       const price = Number(d.price);
       const delivery_days = Number(d.delivery_days);
       if (title.length >= 8 && title.length <= 80 && description.length >= 20 && description.length <= 1200 &&
