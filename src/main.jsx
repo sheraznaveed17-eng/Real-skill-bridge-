@@ -1123,9 +1123,7 @@ options:{ data:{ full_name:authForm.name, role:"buyer", active_mode:"buyer", acc
       </form>
       <div className="voice-assistant-hints">AI model natural Urdu, Roman Urdu, Punjabi, Hindi aur English samajhne ki koshish karega. Password ya private information share na karein.</div>
     </section>}
-    {page === "home" && <nav className="marketplace-subnav" aria-label="Popular categories">
-      {categories.slice(1,11).map(c=><button key={c} className={category===c?"selected":""} onClick={()=>{setCategory(c);navigate("home");document.getElementById("explore")?.scrollIntoView({behavior:"smooth"});}}>{c}</button>)}
-    </nav>}
+
     {mobileMenu && <div className="mobile-menu">
       <div className="menu-heading"><strong>Skill Bridge Menu</strong><button aria-label="Close menu" onClick={()=>setMobileMenu(false)}><X size={17}/></button></div>
       <button onClick={()=>{navigate("home");setMobileMenu(false)}}><Compass size={17}/> {t.explore}</button>
@@ -1160,6 +1158,11 @@ options:{ data:{ full_name:authForm.name, role:"buyer", active_mode:"buyer", acc
           <div className="hero-stats"><div><strong>Digital + Local</strong><span>all kinds of services</span></div><div><strong>One platform</strong><span>for workers and customers</span></div><div><strong>Simple to use</strong><span>for everyone</span></div></div>
         </div>
         <div className="hero-orb orb-one"></div><div className="hero-orb orb-two"></div>
+      </section>
+      <section className="skill-ticker" aria-label="Browse popular skills">
+        <div className="skill-ticker-track">
+          {[...categories.slice(1), ...categories.slice(1)].map((c,i)=><button key={`${c}-ticker-${i}`} type="button" onClick={()=>{setCategory(c);document.getElementById("explore")?.scrollIntoView({behavior:"smooth"});}}>{c}<span aria-hidden="true"> →</span></button>)}
+        </div>
       </section>
       <section className="trust-strip"><span><ShieldCheck size={18}/> For every kind of work</span><span><CheckCircle2 size={18}/> Clear work agreements</span><span><MessageCircle size={18}/> Buyer-seller messaging</span></section>
       <main className="content" id="explore">
