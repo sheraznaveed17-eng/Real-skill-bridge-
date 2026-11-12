@@ -123,6 +123,7 @@ function App() {
   const [assistantText,setAssistantText]=useState("");
   const [assistantBusy,setAssistantBusy]=useState(false);
   const [assistantHistory,setAssistantHistory]=useState([]);
+  const [profileAssistantField,setProfileAssistantField]=useState("");
   const [assistantReply,setAssistantReply]=useState("Assalam-o-Alaikum! Main Skill Bridge assistant hoon. Aap bol kar website chala sakte hain.");
   const [voiceFlow,setVoiceFlow]=useState("");
   const recognitionRef=useRef(null);
@@ -443,13 +444,38 @@ function App() {
       const response = await fetch("/api/assistant", {
         method:"POST",
         headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({messages:history,context:{loggedIn:Boolean(session),activeMode:session?activeMode:"guest"}})
+        body:JSON.stringify({messages:history,context:{loggedIn:Boolean(session),activeMode:session?activeMode:"guest",profileUpdateField:profileAssistantField}})
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.reply || result.error || "AI service unavailable");
       const reply = result.reply || "Main aapki madad kar sakta hoon. Batayein kya karna hai?";
       setAssistantHistory([...history,{role:"assistant",content:reply}].slice(-10));
-      if (result.action?.type === "navigate") {
+      if (result.action?.type === "start_profile_update") {
+        if (!session) {
+          setAuthMode("login");
+          navigate("auth");
+          speakAssistant("Profile update karne ke liye pehle login karein. Login ke baad dobara keh dein.");
+          setAssistantBusy(false);
+          return;
+        }
+        setProfileAssistantField("full_name");
+        navigate("profile");
+      } else if (result.action?.type === "profile_field") {
+        if (!session) {
+          setProfileAssistantField("");
+          navigate("auth");
+          speakAssistant("Profile update se pehle login zaroori hai.");
+          setAssistantBusy(false);
+          return;
+        }
+        const allowedProfileFields=["full_name","professional_title","bio","country","city","experience_years","skills","languages","education","certifications","website_url","availability"];
+        const field=result.action.field;
+        if (allowedProfileFields.includes(field) && field===profileAssistantField) {
+          if (result.action.value!==null) setProfileForm(prev=>({...prev,[field]:result.action.value}));
+          setProfileAssistantField(result.action.nextField||"");
+          navigate("profile");
+        }
+      } else if (result.action?.type === "navigate") {
         navigate(result.action.page);
       } else if (result.action?.type === "search_gigs") {
         setSearch(result.action.query);
