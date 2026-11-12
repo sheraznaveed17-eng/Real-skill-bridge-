@@ -1,4 +1,4 @@
-const MODEL = "openai/gpt-oss-20b";
+const MODEL = "gemini-2.5-flash";
 const ALLOWED_PAGES = new Set(["home","dashboard","orders","messages","my-gigs","profile","saved","portfolio","settings","create-gig"]);
 const PROFILE_FIELDS = ["full_name","professional_title","bio","country","city","experience_years","skills","languages","education","certifications","website_url","availability"];
 const REQUIRED_PROFILE_FIELDS = new Set(["full_name","country","city"]);
@@ -10,8 +10,8 @@ export default async function handler(req, res) {
     res.setHeader("Allow", "POST");
     return res.status(405).json({ error: "Method not allowed" });
   }
-  const token = process.env.GROQ_API_KEY;
-  if (!token) return res.status(503).json({ error: "AI_NOT_CONFIGURED", reply: "AI model abhi connect nahi hua. Vercel mein GROQ_API_KEY secret add karna baqi hai." });
+  const token = process.env.GEMINI_API_KEY;
+  if (!token) return res.status(503).json({ error: "AI_NOT_CONFIGURED", reply: "AI model abhi connect nahi hua. Vercel mein GEMINI_API_KEY secret add karna baqi hai." });
 
   try {
     const body = typeof req.body === "string" ? JSON.parse(req.body) : (req.body || {});
@@ -52,28 +52,27 @@ Rules:
 - Context: user logged in = ${Boolean(context.loggedIn)}; active mode = ${String(context.activeMode || "guest")}; current profile update field = ${String(context.profileUpdateField || "none")}. If gig creation requires login or Seller mode, explain that before attempting to create the draft.
 - Keep replies short enough to speak aloud. `;
 
-    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${encodeURIComponent(token)}", {
       method: "POST",
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: MODEL,
-        messages: [{ role: "system", content: system }, ...cleanMessages],
-        temperature: 0.25,
-        max_tokens: 320
+        systemInstruction: { parts: [{ text: system }] },
+        contents: cleanMessages.map(m => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] })),
+        generationConfig: { temperature: 0.25, maxOutputTokens: 700, responseMimeType: "application/json" }
       }),
       signal: AbortSignal.timeout(25000)
     });
 
     if (!response.ok) {
       const detail = await response.text();
-      console.error("Groq inference error:", response.status, detail.slice(0, 600));
+      console.error("Gemini inference error:", response.status, detail.slice(0, 600));
       if (response.status === 429) return res.status(429).json({ error: "AI_LIMIT", reply: "Free AI ki temporary limit poori ho gayi hai. Thori dair baad dobara try karein." });
-      if (response.status === 401 || response.status === 403) return res.status(503).json({ error: "AI_KEY_INVALID", reply: "AI connection key theek nahi. Vercel mein GROQ_API_KEY check karna hoga." });
+      if (response.status === 401 || response.status === 403) return res.status(503).json({ error: "AI_KEY_INVALID", reply: "AI connection key theek nahi. Vercel mein GEMINI_API_KEY check karna hoga." });
       return res.status(502).json({ error: "AI_PROVIDER_ERROR", reply: "AI model se jawab nahi aa saka. Dobara try karein." });
     }
 
     const payload = await response.json();
-    let raw = payload?.choices?.[0]?.message?.content || "";
+    let raw = payload?.candidates?.[0]?.content?.parts?.map(p => p.text || "").join("") || "";
     raw = raw.replace(/<think>[\s\S]*?<\/think>/gi, "").trim().replace(/^\`\`\`(?:json)?/i, "").replace(/\`\`\`$/,"").trim();
     const start = raw.indexOf("{");
     const end = raw.lastIndexOf("}");
