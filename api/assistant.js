@@ -1,5 +1,7 @@
 const MODEL = "Qwen/Qwen2.5-1.5B-Instruct:cheapest";
 const ALLOWED_PAGES = new Set(["home","dashboard","orders","messages","my-gigs","profile","saved","portfolio","settings","create-gig"]);
+const PROFILE_FIELDS = ["full_name","professional_title","bio","country","city","experience_years","skills","languages","education","certifications","website_url","availability"];
+const REQUIRED_PROFILE_FIELDS = new Set(["full_name","country","city"]);
 const ALLOWED_CATEGORIES = ["Graphics & Design","Writing & Translation","Programming & Tech","Video & Animation","Digital Marketing","Business","Construction","Masonry & Labour","Plumbing","Electrical Work","Painting","Carpentry","AC & Appliance Repair","Vehicle Repair","Cleaning & Home Services","Gardening","Transport","Education & Tutoring","Events & Catering"];
 
 export default async function handler(req, res) {
@@ -28,7 +30,9 @@ You can only request these safe UI actions:
 1) {"type":"navigate","page":"home|dashboard|orders|messages|my-gigs|profile|saved|portfolio|settings|create-gig"}
 2) {"type":"search_gigs","query":"short search phrase"}
 3) {"type":"draft_gig","data":{"title":"...","description":"...","category":"one exact allowed category","price":1234,"delivery_days":3}}
-4) null
+4) {"type":"start_profile_update"}
+5) {"type":"profile_field","field":"current field key","value":"extracted answer or null to keep existing value"}
+6) null
 
 Return ONLY one valid JSON object: {"reply":"spoken response text","action":null} or {"reply":"spoken response text","action":{...}}. No markdown, no code fences, no extra keys.
 
@@ -38,9 +42,14 @@ Rules:
 - If user asks to find work/jobs for themselves, explain that this marketplace currently searches listed services; ask what skill/service they want to search for and search those gigs. Do not claim to find external jobs.
 - If user asks to create a gig, help build an honest gig draft. Ask one question at a time for missing information: service/title, what they will deliver, category, price in PKR, and delivery days. Never invent experience, qualifications, price, or delivery promises. Only use draft_gig once all fields are known. The category MUST be one of: ${ALLOWED_CATEGORIES.join("; ")}. If a category does not fit, ask a follow-up.
 - For draft_gig, title 8-80 chars, description 20-1200 chars, price integer 1-10000000, delivery_days integer 1-60. Do not publish. Draft only.
+- If user asks to update, complete, edit, or fill their own profile, and context.profileUpdateField is empty, use start_profile_update and ask the first question (full name). If not logged in, do not start; ask them to log in first.
+- Profile update is a one-question-at-a-time interview in the same language/style as the user. The exact form fields in order are: full_name, professional_title, bio, country, city, experience_years, skills, languages, education, certifications, website_url, availability. Read-only email and account modes are not editable; do not ask for them. The profile photo is a manual gallery selection, not a text field.
+- When context.profileUpdateField is non-empty, interpret the latest user message as the answer to that field unless they clearly cancel. Return profile_field with exactly that current field and the extracted value. For optional fields, if user says skip/leave as is/keep existing, use value null. Required fields full_name, country, city cannot be skipped; ask again if missing. For availability return boolean true/false. For experience_years return an integer 0-60. For all other fields return a string; skills and languages should be comma-separated. Do not invent information.
+- After each profile_field answer, ask only the next field in the listed order. If the next field is availability, ask whether they are available for new work (yes/no). After the final field, tell the user the form has been filled and they should review it and press Save changes themselves. Never submit or click Save.
+- If the user clearly cancels the profile interview, respond that it is paused and do not modify another field.
 - For other page-opening requests, use navigate. If user is not logged in, explain login is needed for private pages.
 - Never send messages, accept/decline offers, change order status, publish/delete gigs, change account settings, or make irreversible changes. No payment features.
-- Context: user logged in = ${Boolean(context.loggedIn)}; active mode = ${String(context.activeMode || "guest")}. If gig creation requires login or Seller mode, explain that before attempting to create the draft.
+- Context: user logged in = ${Boolean(context.loggedIn)}; active mode = ${String(context.activeMode || "guest")}; current profile update field = ${String(context.profileUpdateField || "none")}. If gig creation requires login or Seller mode, explain that before attempting to create the draft.
 - Keep replies short enough to speak aloud. `;
 
     const response = await fetch("https://router.huggingface.co/v1/chat/completions", {
@@ -73,7 +82,33 @@ Rules:
     const reply = typeof parsed.reply === "string" ? parsed.reply.slice(0, 900) : "Main aapki madad kar sakta hoon. Batayein kya karna hai?";
     let action = null;
     const candidate = parsed.action;
-    if (candidate?.type === "navigate" && ALLOWED_PAGES.has(candidate.page)) {
+    if (candidate?.type === "start_profile_update" && context.loggedIn && !context.profileUpdateField) {
+      action = { type: "start_profile_update" };
+    } else if (candidate?.type === "profile_field" && context.loggedIn && PROFILE_FIELDS.includes(context.profileUpdateField) && candidate.field === context.profileUpdateField) {
+      const field = context.profileUpdateField;
+      let value = candidate.value;
+      let valid = true;
+      if (value === null || value === undefined || (typeof value === "string" && !value.trim())) {
+        value = null;
+        if (REQUIRED_PROFILE_FIELDS.has(field)) valid = false;
+      } else if (field === "availability") {
+        if (typeof value !== "boolean") valid = false;
+      } else if (field === "experience_years") {
+        value = Number(value);
+        if (!Number.isInteger(value) || value < 0 || value > 60) valid = false;
+      } else if (typeof value !== "string") {
+        valid = false;
+      } else {
+        value = value.trim();
+        const max = field === "bio" || field === "certifications" ? 1000 : field === "full_name" ? 80 : field === "professional_title" ? 100 : field === "website_url" ? 300 : 500;
+        if (value.length > max) valid = false;
+        if (field === "website_url" && value && !/^https?:\/\//i.test(value)) valid = false;
+      }
+      if (valid) {
+        const nextIndex = PROFILE_FIELDS.indexOf(field) + 1;
+        action = { type: "profile_field", field, value, nextField: PROFILE_FIELDS[nextIndex] || null };
+      }
+    } else if (candidate?.type === "navigate" && ALLOWED_PAGES.has(candidate.page)) {
       action = { type: "navigate", page: candidate.page };
     } else if (candidate?.type === "search_gigs" && typeof candidate.query === "string" && candidate.query.trim()) {
       action = { type: "search_gigs", query: candidate.query.trim().slice(0, 100) };
