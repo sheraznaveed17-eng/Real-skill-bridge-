@@ -1174,6 +1174,8 @@ options:{ data:{ full_name:authForm.name, role:"buyer", active_mode:"buyer", acc
     {page === "home" && <>
       {!profile && <div className="public-work-switch"><button className={workType==="digital"?"active digital":""} onClick={()=>setWorkType("digital")}><Code2 size={17}/> Digital Work</button><button className={workType==="practical"?"active practical":""} onClick={()=>setWorkType("practical")}><Wrench size={17}/> Practical Work</button></div>}
       <section className="hero">
+        <video className="hero-video" autoPlay muted loop playsInline preload="none" aria-hidden="true"><source src="https://videos.pexels.com/video-files/33193788/14146533_3840_2160_25fps.mp4" type="video/mp4"/></video>
+        <div className="hero-video-shade" aria-hidden="true"></div>
         <div className="hero-inner">
           <div className="eyebrow"><span className="eyebrow-dot"></span> {t.heroEyebrow}</div>
           <h1>{t.heroTitle}<br/><span>{t.heroTitle2}</span></h1>
