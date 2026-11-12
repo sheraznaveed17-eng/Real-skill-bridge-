@@ -276,11 +276,18 @@ function App() {
     });
     result=result.map(g=>{const hasCoords=g.profiles?.service_latitude!=null&&g.profiles?.service_longitude!=null;const lat=Number(g.profiles?.service_latitude),lon=Number(g.profiles?.service_longitude);const hasSellerLocation=hasCoords&&Number.isFinite(lat)&&Number.isFinite(lon);return {...g,distanceKm:nearbyLocation&&hasSellerLocation?distanceKm(nearbyLocation.lat,nearbyLocation.lon,lat,lon):null};});
     if(nearbyLocation){result.sort((a,b)=>{const aNear=Number.isFinite(a.distanceKm)&&a.distanceKm<=25,bNear=Number.isFinite(b.distanceKm)&&b.distanceKm<=25;if(aNear!==bNear)return aNear?-1:1;if(Number.isFinite(a.distanceKm)&&Number.isFinite(b.distanceKm)&&a.distanceKm!==b.distanceKm)return a.distanceKm-b.distanceKm;if(Number.isFinite(a.distanceKm)!==Number.isFinite(b.distanceKm))return Number.isFinite(a.distanceKm)?-1:1;return new Date(b.created_at)-new Date(a.created_at);});}
-    else if(sortBy==="price-low") result.sort((a,b)=>Number(a.price)-Number(b.price));
-    else if(sortBy==="price-high") result.sort((a,b)=>Number(b.price)-Number(a.price));
-    else result.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+    else {
+      const homeCity=String(profile?.city||"").trim().toLowerCase();
+      const sameCity=(g)=>homeCity && (String(g.profiles?.city||"").trim().toLowerCase()===homeCity || String(g.location||"").toLowerCase().includes(homeCity));
+      result.sort((a,b)=>{
+        if(homeCity && Boolean(sameCity(a))!==Boolean(sameCity(b))) return sameCity(a)?-1:1;
+        if(sortBy==="price-low") return Number(a.price)-Number(b.price);
+        if(sortBy==="price-high") return Number(b.price)-Number(a.price);
+        return new Date(b.created_at)-new Date(a.created_at);
+      });
+    }
     return result;
-  },[gigs,search,category,locationFilter,minBudget,maxBudget,deliveryFilter,sortBy,nearbyLocation]);
+  },[gigs,search,category,locationFilter,minBudget,maxBudget,deliveryFilter,sortBy,nearbyLocation,profile?.city]);
 
   const show = msg => { setNotice(msg); setTimeout(() => setNotice(""), 4200); };
   const requestNearbyGigs = () => {
