@@ -124,6 +124,7 @@ function App() {
   const [assistantBusy,setAssistantBusy]=useState(false);
   const [assistantHistory,setAssistantHistory]=useState([]);
   const [profileAssistantField,setProfileAssistantField]=useState("");
+  const [localGigFlow,setLocalGigFlow]=useState(null);
   const [assistantReply,setAssistantReply]=useState("Assalam-o-Alaikum! Main Skill Bridge assistant hoon. Aap bol kar website chala sakte hain.");
   const [voiceFlow,setVoiceFlow]=useState("");
   const recognitionRef=useRef(null);
@@ -449,71 +450,119 @@ function App() {
     const history = [...assistantHistory, {role:"user",content:command}].slice(-10);
     setAssistantHistory(history);
     setAssistantBusy(true);
+    const say = message => {
+      setAssistantHistory([...history,{role:"assistant",content:message}].slice(-10));
+      speakAssistant(message);
+    };
+    const norm = value => String(value||"").toLowerCase().normalize("NFKC").replace(/[،۔!?؟,.]/g," ").replace(/\s+/g," ").trim();
+    const q = norm(command);
+    const has = (...words) => words.some(word => q.includes(word));
+    const allCategories = [...digitalCategories.slice(1),...practicalCategories.slice(1)];
+    const matchCategory = () => allCategories.find(cat => q.includes(norm(cat)) || (cat==="Graphics & Design" && has("logo","graphic","design")) || (cat==="Writing & Translation" && has("writing","translation","content writing")) || (cat==="Programming & Tech" && has("coding","programming","website development")) || (cat==="Video & Animation" && has("video editing","animation")) || (cat==="Digital Marketing" && has("marketing","seo")) || (cat==="Masonry & Labour" && has("mason","labour","raj mistri")) || (cat==="AC & Appliance Repair" && has("ac repair","appliance repair")) || (cat==="Cleaning & Home Services" && has("cleaning","safai")) || (cat==="Education & Tutoring" && has("tutor","tuition")));
+    const pageCommands = [
+      {page:"home",keys:["home page","homepage","explore","main page","ghar wala page","home kholo","services dikhao"]},
+      {page:"dashboard",keys:["dashboard","mera account","my account","workspace"]},
+      {page:"orders",keys:["orders","order history","meri orders","purchases","meri khareedari"]},
+      {page:"messages",keys:["messages","inbox","chat kholo","meri chats","paigham"]},
+      {page:"my-gigs",keys:["my gigs","meri gigs","my services","meri services","manage gigs","manage services","gig manage"]},
+      {page:"create-gig",keys:["create gig","make gig","new gig","gig banao","gig banana","service post","service add","nayi service"]},
+      {page:"profile",keys:["profile","meri profile","my profile","profile kholo","profile update","profile edit"]},
+      {page:"saved",keys:["saved","bookmarks","favourites","favorites","save ki hui","pasandeeda"]},
+      {page:"portfolio",keys:["portfolio","my portfolio","mera portfolio","projects portfolio"]},
+      {page:"settings",keys:["settings","account settings","password change","security settings","setting kholo"]},
+      {page:"performance",keys:["performance","analytics","statistics","stats","earning report","gig performance"]},
+      {page:"seller-verification",keys:["seller verification","verification","verify seller","seller verify","tasdeeq"]},
+      {page:"admin",keys:["admin panel","admin dashboard","administrator panel"]}
+    ];
+    const fieldOrder=["full_name","professional_title","bio","country","city","experience_years","skills","languages","education","certifications","website_url","availability"];
+    const fieldPrompts={full_name:"Aapka poora naam kya hai?",professional_title:"Aapka professional title kya hona chahiye?",bio:"Apne baare mein chhota sa introduction likhein.",country:"Aap kis country mein rehte hain?",city:"Aapka city kya hai?",experience_years:"Aapko kitne saal ka experience hai? Number batayein.",skills:"Apni skills comma se alag karke batayein.",languages:"Aap kaun si languages jaante hain?",education:"Apni education batayein ya skip keh dein.",certifications:"Koi certifications hain? Warna skip keh dein.",website_url:"Apni website ka link dein ya skip keh dein.",availability:"Kya aap naye kaam ke liye available hain? Yes ya no batayein."};
     try {
-      const response = await fetch("/api/assistant", {
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({messages:history,context:{loggedIn:Boolean(session),activeMode:session?activeMode:"guest",profileUpdateField:profileAssistantField,currentPage:page}})
-      });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.reply || result.error || "AI service unavailable");
-      const reply = result.reply || "Main aapki madad kar sakta hoon. Batayein kya karna hai?";
-      setAssistantHistory([...history,{role:"assistant",content:reply}].slice(-10));
-      if (result.action?.type === "start_profile_update") {
-        if (!session) {
-          setAuthMode("login");
-          navigate("auth");
-          speakAssistant("Profile update karne ke liye pehle login karein. Login ke baad dobara keh dein.");
-          setAssistantBusy(false);
-          return;
-        }
-        setProfileAssistantField("full_name");
-        navigate("profile");
-      } else if (result.action?.type === "profile_field") {
-        if (!session) {
-          setProfileAssistantField("");
-          navigate("auth");
-          speakAssistant("Profile update se pehle login zaroori hai.");
-          setAssistantBusy(false);
-          return;
-        }
-        const allowedProfileFields=["full_name","professional_title","bio","country","city","experience_years","skills","languages","education","certifications","website_url","availability"];
-        const field=result.action.field;
-        if (allowedProfileFields.includes(field) && field===profileAssistantField) {
-          if (result.action.value!==null) setProfileForm(prev=>({...prev,[field]:result.action.value}));
-          setProfileAssistantField(result.action.nextField||"");
-          navigate("profile");
-        }
-      } else if (result.action?.type === "navigate") {
-        navigate(result.action.page);
-      } else if (result.action?.type === "search_gigs") {
-        setSearch(result.action.query);
-        setCategory("All");
-        setPage("home");
-        setTimeout(()=>document.getElementById("explore")?.scrollIntoView({behavior:"smooth"}),180);
-      } else if (result.action?.type === "draft_gig") {
-        if (!session) {
-          setAuthMode("login");
-          navigate("auth");
-          speakAssistant("Gig ka draft banane se pehle Skill Bridge mein login karein.");
-          setAssistantBusy(false);
-          return;
-        }
-        if (activeMode !== "seller") {
-          speakAssistant("Gig draft banane ke liye website ke top par Seller select karein, phir dobara keh dein.");
-          setAssistantBusy(false);
-          return;
-        }
-        const d=result.action.data;
-        setGigForm({title:d.title,description:d.description,category:d.category,location:d.location||"",price:String(d.price),delivery_days:String(d.delivery_days),image_url:""});
-        navigate("create-gig");
-        speakAssistant("Aapki gig ka draft tayyar hai. Form mein details check karein. Publish karne se pehle aap khud review aur confirmation dein.");
-        setAssistantBusy(false);
+      if (has("cancel","band karo","rehne do","stop")) {
+        if(profileAssistantField){setProfileAssistantField("");say("Theek hai, profile update rok di hai.");return;}
+        if(localGigFlow){setLocalGigFlow(null);say("Theek hai, gig draft process rok diya hai.");return;}
+      }
+      if (profileAssistantField) {
+        const field=profileAssistantField;
+        let value=command;
+        if(["skip","leave blank","rehne do","chhor do"].includes(q)) value=null;
+        if(field==="availability") value=has("yes","haan","han","available","ji")?true:has("no","nahi","nahin","not available")?false:null;
+        if(field==="experience_years"){const n=Number((command.match(/\d+/)||[])[0]);value=Number.isInteger(n)&&n>=0&&n<=60?n:null;}
+        if(["full_name","country","city"].includes(field)&&(!value||!String(value).trim())){say(fieldPrompts[field]);return;}
+        if(field==="availability"&&typeof value!=="boolean"){say(fieldPrompts[field]);return;}
+        if(field==="experience_years"&&value===null){say("Experience saalon mein number ki surat mein batayein, jaise 2.");return;}
+        setProfileForm(prev=>value===null?prev:{...prev,[field]:value});
+        const next=fieldOrder[fieldOrder.indexOf(field)+1]||"";
+        setProfileAssistantField(next);
+        if(next){say(fieldPrompts[next]);}
+        else {navigate("profile");say("Profile ke tamam text fields fill ho gaye hain. Ek baar review karein aur Save Changes khud press karein.");}
         return;
       }
-      speakAssistant(reply);
-    } catch (error) {
-      speakAssistant(error.message || "AI se connection nahi ho saka. Dobara try karein.");
+      if (localGigFlow) {
+        const flow={...localGigFlow,data:{...localGigFlow.data}};
+        const step=flow.step;
+        if(step==="title") flow.data.title=command;
+        if(step==="location") flow.data.location=command;
+        if(step==="description") flow.data.description=command;
+        if(step==="category"){
+          const cat=matchCategory() || allCategories.find(x=>norm(x)===q);
+          if(!cat){say("Category samajh nahi aayi. Digital Marketing, Graphics & Design, Programming & Tech, Plumbing, Electrical Work jaisi category batayein.");return;}
+          flow.data.category=cat;
+        }
+        if(step==="price"){const n=Number((command.replace(/,/g,"").match(/\d+/)||[])[0]);if(!Number.isInteger(n)||n<1){say("Price PKR mein number ki surat mein batayein, jaise 1500.");return;}flow.data.price=n;}
+        if(step==="delivery_days"){const n=Number((command.match(/\d+/)||[])[0]);if(!Number.isInteger(n)||n<1||n>60){say("Delivery days 1 se 60 ke darmiyan number mein batayein.");return;}flow.data.delivery_days=n;}
+        const steps=["title","location","description","category","price","delivery_days"];
+        const labels={title:"Gig ka title kya hoga? (Kam az kam 8 characters)",location:"Yeh service kis city ya area mein provide karoge?",description:"Customer ko kya service/deliverables doge? Thori detail likho.",category:"Is gig ki category kya hai?",price:"Is service ki starting price PKR mein kitni hogi?",delivery_days:"Delivery kitne din mein doge?"};
+        const next=steps[steps.indexOf(step)+1];
+        if(next){flow.step=next;setLocalGigFlow(flow);say(labels[next]);return;}
+        const d=flow.data;
+        if(String(d.title||"").trim().length<8){flow.step="title";setLocalGigFlow(flow);say(labels.title);return;}
+        if(String(d.description||"").trim().length<20){flow.step="description";setLocalGigFlow(flow);say("Description kam az kam 20 characters ki honi chahiye. Thori tafseel dein.");return;}
+        setGigForm({title:d.title,location:d.location,description:d.description,category:d.category,price:String(d.price),delivery_days:String(d.delivery_days),image_url:""});
+        setLocalGigFlow(null);
+        navigate("create-gig");
+        say("Gig ka draft form mein bhar diya hai. Details check karein; image aur extra options khud add kar sakte hain. Publish aapki review aur confirmation ke baad hi hoga.");
+        return;
+      }
+      if (has("profile update","update profile","edit profile","profile complete","profile fill","meri profile bhar","profile bhar do")) {
+        if(!session){setAuthMode("login");navigate("auth");say("Pehle login karein, phir profile update karwa sakte hain.");return;}
+        setProfileAssistantField("full_name");navigate("profile");say(fieldPrompts.full_name);return;
+      }
+      if (has("gig banao","gig banana","create gig","make gig","new gig","service post","service banao","nayi service")) {
+        if(!session){setAuthMode("login");navigate("auth");say("Gig banane ke liye pehle login karein.");return;}
+        if(activeMode!=="seller"){say("Gig banane ke liye Seller workspace chahiye. Agar Seller verification complete hai to Seller mode select karein.");return;}
+        setLocalGigFlow({step:"title",data:{}});navigate("create-gig");say("Chalo gig banate hain. Gig ka title kya hoga? (Kam az kam 8 characters)");return;
+      }
+      const searchIntent=has("search","find","dhundo","dhoondo","talash","services dikhao","gigs dikhao","show gigs","show services");
+      if(searchIntent){
+        let term=command.replace(/^(please\s+)?(search|find|show|look for|dhundo|dhoondo|talash karo)\s*/i,"").replace(/\b(gigs?|services?|on skill bridge|please|karo|kar do|dikhao)\b/gi," ").trim();
+        const cat=matchCategory();
+        if(cat){setCategory(cat);term=term.replace(new RegExp(cat.replace(/[.*+?^\${}()|[\]\\]/g,"\\$&"),"ig"),"").trim();}
+        if(!term||term.length<2) term=cat||"";
+        if(!term){say("Kaunsi service search karni hai? Misal: logo design, website development ya plumbing.");return;}
+        setSearch(term);setPage("home");setTimeout(()=>document.getElementById("explore")?.scrollIntoView({behavior:"smooth"}),180);
+        say("Theek hai, Explore mein "+term+" search kar raha hoon.");return;
+      }
+      if(has("buyer mode","buyer workspace","buyer par jao","buyer bano")){await switchMode("buyer");say("Buyer workspace select karne ki request process ho gayi.");return;}
+      if(has("seller mode","seller workspace","seller par jao","seller bano")){await switchMode("seller");say(profile?.seller_verification_status==="verified"?"Seller workspace khol diya.":"Seller mode ke liye verification zaroori hai; verification page dekh lein.");return;}
+      if(has("logout","log out","sign out","account se niklo")){await signOut();say("Aap logout ho gaye hain.");return;}
+      const route=pageCommands.find(item=>item.keys.some(key=>q.includes(key)));
+      if(route){
+        if(route.page==="admin" && !["admin","administrator"].includes(String(profile?.role||"").toLowerCase())){say("Admin panel sirf authorized administrator ke liye hai.");return;}
+        navigate(route.page);
+        say(route.page==="create-gig"?"Create Gig page khol diya. Gig draft bharne ke liye bolo: gig banao.":"Theek hai, "+route.page.replace(/-/g," ")+" page khol diya.");
+        return;
+      }
+      const cat=matchCategory();
+      if(cat && has("category","category filter","filter","show","dikhao")){setCategory(cat);setPage("home");say(cat+" category select kar di hai.");return;}
+      if(has("help","madad","kya kar sakte","commands","command list","features batao","how to use")){
+        say("Main website ke pages khol sakta hoon, services search/filter kar sakta hoon, profile ke fields fill karwa sakta hoon aur gig ka draft bana sakta hoon. Orders, messages, saved services, portfolio, settings, performance aur verification pages bhi khol sakta hoon. Publish, delete, payment ya kisi ko message bhejne jaisa kaam bina safe confirmation ke nahi karta. Aap normal Roman Urdu, Urdu ya English mein keh sakte hain.");
+        return;
+      }
+      if(has("how much","price","payment","paisa","fees","commission")){say("Skill Bridge mein payment interface project ka hissa hai; real payment processing ko enabled samajh kar card ya bank details share na karein. Service ki price listing par check karein.");return;}
+      if(has("thanks","thank you","shukriya")){say("Khushi hui madad karke. Aur koi page ya service search karni ho to bata dein.");return;}
+      say("Yeh command abhi local command list mein nahi hai. Aap keh sakte hain: profile kholo, orders dikhao, messages kholo, gig banao, logo design search karo, ya help.");
+    } catch(error) {
+      speakAssistant(error?.message || "Command execute nahi ho saki. Dobara try karein.");
     } finally {
       setAssistantBusy(false);
     }
