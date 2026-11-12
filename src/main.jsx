@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
-  Search, BriefcaseBusiness, UserRound, Plus, LogOut, Menu, X, Star, Bookmark, Trash2, ExternalLink, Flag, Compass, FolderOpen,
+  Search, BriefcaseBusiness, UserRound, Plus, LogOut, Menu, X, Star, Bookmark, Trash2, ExternalLink, Flag, Compass, FolderOpen, MapPin,
   MessageCircle, LayoutDashboard, ShieldCheck, ArrowRight, CheckCircle2, Bell, Mic, MicOff, Bot, Volume2,
   Clock3, Wallet, Sparkles, Filter, PackageCheck, Send, ChevronRight, ChevronDown, Camera, Save, UserCircle, Settings, ShoppingBag, Eye, Palette, PenLine, Code2, Video, Megaphone, Building2, Hammer, Wrench, Zap, Paintbrush, Sofa, Snowflake, Car, Sprout, Truck, GraduationCap, CalendarDays, Users, UserCog, Ban, Unlock, MessageSquareText, ClipboardList, RefreshCw, ShieldAlert
 } from "lucide-react";
