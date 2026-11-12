@@ -479,7 +479,7 @@ function App() {
   };
 
   const navigate = p => {
-    const privatePages = ["dashboard", "orders", "my-gigs", "create-gig", "messages", "admin", "saved", "portfolio"];
+    const privatePages = ["dashboard", "orders", "my-gigs", "create-gig", "messages", "admin", "saved", "portfolio", "profile", "settings", "performance"];
     if (privatePages.includes(p) && !session) {
       setAuthMode("login");
       setPage("auth");
