@@ -2607,3 +2607,69 @@ button, input, select, textarea { min-width:0; max-width:100%; }
 .hero-video-shade{position:absolute;inset:0;z-index:1;background:linear-gradient(90deg,rgba(8,15,29,.91) 0%,rgba(8,15,29,.74) 52%,rgba(8,15,29,.60) 100%);pointer-events:none}
 .hero-inner{z-index:2}
 @media(prefers-reduced-motion:reduce){.hero-video{display:none}}
+
+
+/* Professional neutral card system: remove loud multicolour box styling */
+:root {
+  --card-bg: #ffffff;
+  --card-border: #e5e7eb;
+  --card-text: #1f2937;
+  --card-muted: #667085;
+}
+.category,
+.choice-card,
+.metric-card,
+.order-card,
+.profile-card,
+.profile-edit-card,
+.dashboard-panel,
+.settings-panel,
+.gig-card,
+.verification-request-card,
+.admin-content-card,
+.admin-chat-card,
+.report-row,
+.quick-actions button,
+.payment-option,
+.seller-verification-panel {
+  background: #ffffff !important;
+  background-image: none !important;
+  border: 1px solid #e5e7eb !important;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.045) !important;
+  color: #1f2937;
+}
+.category:hover,
+.choice-card:hover,
+.gig-card:hover,
+.quick-actions button:hover {
+  background: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.07) !important;
+}
+.category svg,
+.choice-icon,
+.metric-card > span,
+.notification-item-icon,
+.gig-location svg {
+  color: #475569 !important;
+}
+.choice-icon,
+.notification-item-icon {
+  background: #f1f5f9 !important;
+}
+.category span,
+.choice-copy strong,
+.metric-card > span {
+  color: #334155 !important;
+}
+.category,
+.choice-card,
+.metric-card,
+.order-card,
+.profile-card,
+.profile-edit-card,
+.dashboard-panel,
+.settings-panel,
+.verification-request-card {
+  border-radius: 12px;
+}
